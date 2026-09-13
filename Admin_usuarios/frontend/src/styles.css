@@ -1,0 +1,193 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Montserrat", sans-serif;
+}
+.montserrat {
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  background-color: rgb(129, 233, 233);
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  margin-bottom: 8px;
+  color: #050507;
+  font-family: "Montserrat", sans-serif;
+}
+
+.subtitulo {
+  color: #080808;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.form-novo {
+  background-color: #aff8e6;
+  padding: 20px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+}
+
+.form-novo h2 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  color: #0e0d0d;
+}
+
+.form-linha {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.form-campo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 180px;
+}
+
+.form-campo label {
+  font-size: 12px;
+  color: #0c0c0c;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+input,
+select {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-primario {
+  background-color: #053d97;
+  color: white;
+}
+
+.btn-primario:hover {
+  background-color: #2563eb;
+}
+
+.btn-primario:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.btn-perigo {
+  background-color: #ef4444;
+  color: white;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.btn-perigo:hover {
+  background-color: #dc2626;
+}
+
+.btn-secundario {
+  background-color: #e5e7eb;
+  color: #333;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.btn-secundario:hover {
+  background-color: #d1d5db;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+th {
+  background-color: #f9fafb;
+  text-align: left;
+  padding: 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #555;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.status-ativo {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.status-inativo {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.mensagem-erro {
+  background-color: #fee;
+  color: #c00;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.mensagem-sucesso {
+  background-color: #dcfce7;
+  color: #166534;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.carregando {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.acoes {
+  display: flex;
+  gap: 6px;
+}
