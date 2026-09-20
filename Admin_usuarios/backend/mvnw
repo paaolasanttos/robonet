@@ -1,0 +1,21 @@
+#!/bin/sh
+# Maven wrapper simplificado
+# Baixa o Maven Wrapper na primeira execução e roda
+
+WRAPPER_JAR=".mvn/wrapper/maven-wrapper.jar"
+
+if [ ! -f "$WRAPPER_JAR" ]; then
+    echo "Baixando Maven Wrapper..."
+    mkdir -p .mvn/wrapper
+    WRAPPER_URL=$(grep wrapperUrl .mvn/wrapper/maven-wrapper.properties | cut -d= -f2)
+    if command -v curl >/dev/null 2>&1; then
+        curl -sL -o "$WRAPPER_JAR" "$WRAPPER_URL"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q -O "$WRAPPER_JAR" "$WRAPPER_URL"
+    else
+        echo "Precisa de curl ou wget instalado."
+        exit 1
+    fi
+fi
+
+exec java -jar "$WRAPPER_JAR" "$@"
