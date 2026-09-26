@@ -49,7 +49,7 @@ export default function LoginPagina() {
           <button className="button button-primary" type="submit" disabled={loading}>{loading ? (codeRequested ? "Validando..." : "Enviando código...") : (codeRequested ? "Validar código" : "Acessar")}</button>
           {codeRequested && <button className="login-back" type="button" onClick={() => { setCodeRequested(false); setCodigo(""); setError(""); }}>Usar outro e-mail</button>}
         </form>
-        {!codeRequested && <div className="login-options" aria-label="Opções de acesso"><Link to="/recuperar-senha">Esqueci minha senha / primeiro acesso</Link><Link to="/politicas">Políticas de uso</Link></div>}
+        {!codeRequested && <div className="login-options" aria-label="Opções de acesso"><Link to="/recuperar-senha">Esqueci minha senha</Link><Link to="/politicas">Políticas de uso</Link></div>}
       </section>
     </main>
   );
