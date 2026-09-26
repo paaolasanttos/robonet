@@ -28,8 +28,11 @@ CREATE TABLE Usuarios(
 	rgm         VARCHAR(50),
 	Perfil      VARCHAR(50) NOT NULL,
 	Status      VARCHAR(30) NOT NULL DEFAULT 'Ativo',
+	TermoAceite BOOLEAN NOT NULL DEFAULT FALSE,
 	DtRegistro  TIMESTAMP,
-	UsrRegistro VARCHAR(50)
+	UsrRegistro VARCHAR(50),
+	DtAlteracao  TIMESTAMP,
+	UsrAlteracao VARCHAR(50)	
 );
 
 CREATE UNIQUE INDEX ux_usuarios_email ON Usuarios (LOWER(TRIM(email))) WHERE Status = 'Ativo';
@@ -49,6 +52,21 @@ ON Usuarios
 FOR EACH ROW
 EXECUTE FUNCTION usuariosinsertbefore();
 
+CREATE OR REPLACE FUNCTION usuariosupdatebefore()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.DtAlteracao := CURRENT_TIMESTAMP;
+    NEW.UsrAlteracao := COALESCE(NULLIF(CURRENT_SETTING('app.usuario', true), ''),CURRENT_USER);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER UsuariosUpdate
+BEFORE UPDATE
+ON Usuarios
+FOR EACH ROW
+EXECUTE FUNCTION usuariosupdatebefore();
+
 --aulas
 DROP TABLE IF EXISTS Aulas;
 DROP TABLE IF EXISTS AulasTemas;
@@ -59,12 +77,14 @@ CREATE TABLE AulasTemas(
 );
 
 CREATE TABLE Aulas(
-	IdAula      SERIAL PRIMARY KEY,
-	IdAulaTema  INT NOT NULL,
-	Titulo      VARCHAR(2000) NOT NULL,
-	Conteudo    TEXT NOT NULL,
-	DtRegistro  TIMESTAMP,
-	UsrRegistro VARCHAR(50),
+	IdAula       SERIAL PRIMARY KEY,
+	IdAulaTema   INT NOT NULL,
+	Titulo       VARCHAR(2000) NOT NULL,
+	Conteudo     TEXT NOT NULL,
+	DtRegistro   TIMESTAMP,
+	UsrRegistro  VARCHAR(50),
+	DtAlteracao  TIMESTAMP,
+	UsrAlteracao VARCHAR(50),
 	CONSTRAINT fk_idaulatema FOREIGN KEY (IdAulaTema) REFERENCES AulasTemas (IdAulaTema)
 );
 
@@ -82,3 +102,18 @@ BEFORE INSERT
 ON Aulas
 FOR EACH ROW
 EXECUTE FUNCTION aulasinsertbefore();
+
+CREATE OR REPLACE FUNCTION aulasupdatebefore()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.DtAlteracao := CURRENT_TIMESTAMP;
+    NEW.UsrAlteracao := COALESCE(NULLIF(CURRENT_SETTING('app.usuario', true), ''),CURRENT_USER);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER AulasUpdate
+BEFORE UPDATE
+ON Aulas
+FOR EACH ROW
+EXECUTE FUNCTION aulasupdatebefore();
