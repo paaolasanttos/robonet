@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState } from "react";
+import { authApi } from "../servicos/api";
 
 const STORAGE_KEY = "robonet.session";
 const AuthContext = createContext(null);
@@ -20,6 +21,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    authApi.sair().catch(() => {});
     localStorage.removeItem(STORAGE_KEY);
     setSession(null);
   }

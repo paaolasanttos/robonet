@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -30,8 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 Claims claims = jwtService.parse(header.substring(7));
                 String role = claims.get("role", String.class);
-                var authority = new SimpleGrantedAuthority("ROLE_" + role.toUpperCase());
-                var authentication = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, List.of(authority));
+                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+                if (Boolean.TRUE.equals(claims.get("termo", Boolean.class))) {
+                    authorities.add(new SimpleGrantedAuthority("TERMO_ACEITO"));
+                }
+                var authentication = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (RuntimeException ignored) {
                 SecurityContextHolder.clearContext();

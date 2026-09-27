@@ -142,6 +142,8 @@ export default function AulasPagina() {
         <div className="navbar-menu">
           <a className="navbar-link navbar-link-active" href="/aulas" aria-current="page">Aulas</a>
           <a className="navbar-link" href="/usuarios">Usuários</a>
+          {session.usuario.perfil === "admin" && <a className="navbar-link" href="/auditoria">Auditoria</a>}
+          <a className="navbar-link" href="/politicas">Privacidade</a>
         </div>
 
         <div className="navbar-user">

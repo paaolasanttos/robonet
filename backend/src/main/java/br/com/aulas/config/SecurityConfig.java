@@ -1,6 +1,7 @@
 package br.com.aulas.config;
 
 import br.com.aulas.security.JwtAuthenticationFilter;
+import br.com.aulas.service.AuditoriaService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,7 +26,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter, AuditoriaService auditoriaService) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
@@ -41,10 +42,19 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**", "/error").permitAll()
-                        .anyRequest().authenticated())
+                        .requestMatchers("/api/termo/**").authenticated()
+                        .anyRequest().hasAuthority("TERMO_ACEITO"))
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, exception) -> response.sendError(401))
-                        .accessDeniedHandler((request, response, exception) -> response.sendError(403)))
+                        .authenticationEntryPoint((request, response, exception) -> {
+                            auditoriaService.registrar(null, "AUTORIZACAO", "ACESSO_NAO_AUTENTICADO",
+                                    request.getMethod() + " " + request.getRequestURI() + " sem token válido", false);
+                            response.sendError(401);
+                        })
+                        .accessDeniedHandler((request, response, exception) -> {
+                            auditoriaService.registrar("AUTORIZACAO", "ACESSO_NEGADO",
+                                    request.getMethod() + " " + request.getRequestURI() + " sem permissão ou sem aceite do termo", false);
+                            response.sendError(403);
+                        }))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

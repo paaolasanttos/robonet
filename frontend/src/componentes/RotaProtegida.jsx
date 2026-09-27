@@ -9,6 +9,10 @@ export default function RotaProtegida({ roles }) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  if (!session.usuario?.termoAceito) {
+    return <Navigate to="/termo" replace />;
+  }
+
   if (roles && !roles.includes(session.usuario?.perfil)) {
     return <Navigate to="/acesso-negado" replace />;
   }

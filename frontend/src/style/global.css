@@ -662,6 +662,23 @@ tbody tr:hover {
 .policy-panel h2 { margin-bottom: 8px; font-size: 1.08rem; }
 .policy-panel section p { margin-bottom: 0; color: #475467; line-height: 1.7; }
 .policy-panel .button { display: inline-flex; align-items: center; margin-top: 24px; text-decoration: none; }
+.policy-panel h3 { margin: 0 0 8px; font-size: 1.02rem; }
+.termo-conteudo > h2 { margin: 30px 0 4px; color: #5965d8; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
+.termo-conteudo section p + p { margin-top: 12px; }
+.termo-indice { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; padding: 12px 14px; border: 1px solid #dfe3ff; border-radius: 10px; background: #f7f8ff; font-size: .86rem; }
+.termo-indice a { color: #5965d8; font-weight: 700; text-decoration: none; }
+.termo-instrucao { color: #475467; line-height: 1.6; }
+.termo-box { max-height: 420px; overflow-y: auto; margin-top: 18px; padding: 0 22px; border: 1px solid #e4e8ef; border-radius: 12px; background: #fbfcfd; }
+.termo-box:focus { outline: 2px solid #c7ccff; }
+.termo-status { margin: 12px 0 0; color: #8791a3; font-size: .86rem; }
+.termo-status-ok { color: #21733b; font-weight: 700; }
+.termo-declaracao { margin: 18px 0 0; padding: 12px 14px; border: 1px solid #dfe3ff; border-radius: 10px; background: #f7f8ff; color: #172033; font-weight: 600; line-height: 1.5; }
+.termo-acoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.policy-panel .termo-acoes .button { margin-top: 0; }
+.termo-aviso { margin: 14px 0 0; color: #8791a3; font-size: .82rem; }
+.auditoria-filtro { min-width: 200px; }
+.auditoria-filtro select { width: 100%; height: 42px; border: 1px solid #d7dce5; border-radius: 9px; padding: 0 10px; background: #fff; color: #172033; }
+.auditoria-data { white-space: nowrap; }
 
 @media (max-width: 800px) {
   .app-shell {
@@ -692,6 +709,8 @@ tbody tr:hover {
 @media (max-width: 560px) {
   .login-panel, .policy-panel { padding: 24px 20px; }
   .login-options { align-items: flex-start; flex-direction: column; }
+  .termo-box { padding: 0 14px; }
+  .termo-acoes { flex-direction: column-reverse; }
   .modal-backdrop {
     padding: 0;
   }

@@ -134,6 +134,8 @@ export default function UsuariosPagina() {
         <div className="navbar-menu">
           <a className="navbar-link" href="/aulas">Aulas</a>
           <a className="navbar-link navbar-link-active" href="/usuarios" aria-current="page">Usuários</a>
+          <a className="navbar-link" href="/auditoria">Auditoria</a>
+          <a className="navbar-link" href="/politicas">Privacidade</a>
         </div>
         <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
       </nav>

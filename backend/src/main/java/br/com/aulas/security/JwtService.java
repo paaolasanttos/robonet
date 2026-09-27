@@ -25,11 +25,12 @@ public class JwtService {
         this.expiration = expiration;
     }
 
-    public String generate(String email, String role) {
+    public String generate(String email, String role, boolean termoAceito) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
+                .claim("termo", termoAceito)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + expiration))
                 .signWith(signingKey)

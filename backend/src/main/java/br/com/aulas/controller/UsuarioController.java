@@ -4,6 +4,7 @@ import br.com.aulas.dto.UsuarioDTO;
 import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.UsuarioRepository;
 import br.com.aulas.security.DatabaseUserContext;
+import br.com.aulas.service.AuditoriaService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ public class UsuarioController {
 
     @Autowired
     private DatabaseUserContext databaseUserContext;
+
+    @Autowired
+    private AuditoriaService auditoriaService;
 
 
     @GetMapping
@@ -83,6 +87,10 @@ public class UsuarioController {
 
         databaseUserContext.setCurrentUser();
         Usuario salvo = repo.save(u);
+        auditoriaService.registrar("USUARIOS", "USUARIO_CRIADO",
+                "Usuário " + salvo.getId() + " (" + salvo.getEmail() + ") criado com perfil " + perfil, true);
+        auditoriaService.registrar("CRIPTOGRAFIA", "SENHA_CRIPTOGRAFADA",
+                "Senha do usuário " + salvo.getId() + " salva com hash BCrypt", true);
         return ResponseEntity.ok(salvo);
     }
 
@@ -118,8 +126,13 @@ public class UsuarioController {
                 return ResponseEntity.badRequest().body(erro("A senha deve ter pelo menos 8 caracteres."));
             }
             usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+            auditoriaService.registrar("CRIPTOGRAFIA", "SENHA_ALTERADA",
+                    "Senha do usuário " + id + " alterada e salva com hash BCrypt", true);
         }
-        return ResponseEntity.ok(repo.save(usuario));
+        Usuario salvo = repo.save(usuario);
+        auditoriaService.registrar("USUARIOS", "USUARIO_ALTERADO",
+                "Usuário " + id + " (" + email + ") alterado, perfil " + perfil, true);
+        return ResponseEntity.ok(salvo);
     }
 
 
@@ -144,6 +157,7 @@ public class UsuarioController {
             u.setRgm(null);
         }
         repo.save(u);
+        auditoriaService.registrar("USUARIOS", "PERFIL_ALTERADO", "Usuário " + id + " alterado para o perfil " + novoPerfil, true);
         return ResponseEntity.ok(u);
     }
 
@@ -160,6 +174,7 @@ public class UsuarioController {
         Usuario u = encontrado.get();
         u.setAtivo(ativo);
         repo.save(u);
+        auditoriaService.registrar("USUARIOS", ativo ? "USUARIO_ATIVADO" : "USUARIO_INATIVADO", "Usuário " + id + " (" + u.getEmail() + ")", true);
         return ResponseEntity.ok(u);
     }
 
@@ -171,6 +186,7 @@ public class UsuarioController {
         Usuario usuario = encontrado.get();
         usuario.setAtivo(false);
         repo.save(usuario);
+        auditoriaService.registrar("USUARIOS", "USUARIO_EXCLUIDO", "Usuário " + id + " (" + usuario.getEmail() + ") desativado", true);
         return ResponseEntity.noContent().build();
     }
 

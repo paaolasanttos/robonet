@@ -111,4 +111,14 @@ export const authApi = {
     method: "POST",
     body: JSON.stringify(dados),
   }),
+  sair: () => request("/auth/logout", { method: "POST" }),
+};
+
+export const termoApi = {
+  aceitar: () => request("/api/termo/aceitar", { method: "POST" }),
+  recusar: () => request("/api/termo/recusar", { method: "POST" }),
+};
+
+export const auditoriaApi = {
+  listar: () => request("/api/auditoria"),
 };

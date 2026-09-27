@@ -17,7 +17,23 @@ CREATE TABLE LogCodigoVerificacao(
     DtGeracao              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS LogAuditoria;
+
+CREATE TABLE LogAuditoria(
+    IdLogAuditoria BIGSERIAL PRIMARY KEY,
+    Email          VARCHAR(2000),
+    Categoria      VARCHAR(50) NOT NULL,
+    Acao           VARCHAR(100) NOT NULL,
+    Descricao      TEXT,
+    Ip             VARCHAR(100),
+    Sucesso        BOOLEAN NOT NULL DEFAULT TRUE,
+    DtRegistro     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX ix_logauditoria_dtregistro ON LogAuditoria (DtRegistro DESC);
+
 --usuarios
+DROP TABLE IF EXISTS TermosAceites;
 DROP TABLE IF EXISTS Usuarios;
 
 CREATE TABLE Usuarios(
@@ -66,6 +82,16 @@ BEFORE UPDATE
 ON Usuarios
 FOR EACH ROW
 EXECUTE FUNCTION usuariosupdatebefore();
+
+--termo de uso e privacidade
+CREATE TABLE TermosAceites(
+    IdTermoAceite BIGSERIAL PRIMARY KEY,
+    IdUsuario     INT NOT NULL,
+    Versao        VARCHAR(20) NOT NULL,
+    Ip            VARCHAR(100),
+    DtAceite      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_termo_idusuario FOREIGN KEY (IdUsuario) REFERENCES Usuarios (IdUsuario)
+);
 
 --aulas
 DROP TABLE IF EXISTS Aulas;

@@ -19,12 +19,14 @@ public class AulaService {
     private final AulaRepository aulaRepository;
     private final AulaTemaRepository temaRepository;
     private final DatabaseUserContext databaseUserContext;
+    private final AuditoriaService auditoriaService;
 
     public AulaService(AulaRepository aulaRepository, AulaTemaRepository temaRepository,
-                       DatabaseUserContext databaseUserContext) {
+                       DatabaseUserContext databaseUserContext, AuditoriaService auditoriaService) {
         this.aulaRepository = aulaRepository;
         this.temaRepository = temaRepository;
         this.databaseUserContext = databaseUserContext;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional(readOnly = true)
@@ -49,7 +51,9 @@ public class AulaService {
         aula.setTema(buscarTema(dados.getTemaId()));
         aula.setTitulo(dados.getTitulo());
         aula.setDescricao(dados.getDescricao());
-        return toResponse(aulaRepository.save(aula));
+        Aula salva = aulaRepository.save(aula);
+        auditoriaService.registrar("AULAS", "AULA_CRIADA", "Aula " + salva.getId() + " - " + salva.getTitulo(), true);
+        return toResponse(salva);
     }
 
     @Transactional
@@ -58,7 +62,9 @@ public class AulaService {
         aula.setTema(buscarTema(dados.getTemaId()));
         aula.setTitulo(dados.getTitulo());
         aula.setDescricao(dados.getDescricao());
-        return toResponse(aulaRepository.save(aula));
+        Aula salva = aulaRepository.save(aula);
+        auditoriaService.registrar("AULAS", "AULA_ALTERADA", "Aula " + id + " - " + salva.getTitulo(), true);
+        return toResponse(salva);
     }
 
     @Transactional
@@ -67,6 +73,7 @@ public class AulaService {
             throw new AulaNotFoundException(id);
         }
         aulaRepository.deleteById(id);
+        auditoriaService.registrar("AULAS", "AULA_EXCLUIDA", "Aula " + id + " excluída", true);
     }
 
     private Aula buscarEntidade(Integer id) {
