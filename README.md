@@ -275,6 +275,7 @@ Entre as referências utilizadas na documentação estão:
 
 ---
 
+
 ## 📄 Licença
 
 Este projeto foi desenvolvido para fins **acadêmicos** como parte do Trabalho de Finalização do curso de Bacharelado em Sistemas de Informação.
