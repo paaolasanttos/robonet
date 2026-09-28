@@ -394,6 +394,7 @@ O valor padrão utilizado pelo `docker-compose.yml` em ambiente de desenvolvimen
 ```text
 1234
 ```
+Este valor será utilizado durante o desenvolvimento e depois será modificado.
 
 **Recomenda-se alterar essa senha antes de qualquer uso fora de ambiente local.**
 
@@ -859,9 +860,3 @@ Não utilize uma chave de desenvolvimento em produção.
 - A aplicação foi estruturada para uso local/containerizado e requer revisão de credenciais, CORS, segredo JWT, senha administrativa e integração Gmail antes de um ambiente de produção.
 
 ---
-
-## Licença
-
-Não foi identificada uma licença de software específica no conteúdo analisado do projeto.
-
-Defina a licença conforme as regras de distribuição e propriedade intelectual aplicáveis ao projeto.
