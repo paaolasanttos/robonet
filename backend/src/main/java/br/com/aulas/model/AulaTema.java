@@ -19,11 +19,15 @@ public class AulaTema {
     @Column(name = "descricao", nullable = false, length = 120)
     private String tema;
 
-    protected AulaTema() {
+    public AulaTema() {
     }
 
     public Integer getId() {
         return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getTema() {

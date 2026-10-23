@@ -119,6 +119,61 @@ export const termoApi = {
   recusar: () => request("/api/termo/recusar", { method: "POST" }),
 };
 
+export const aulasAlunoApi = {
+  listar: () => request("/api/aulas-aluno"),
+  concluir: (aulaId) => request("/api/aulas-aluno/concluir", {
+    method: "POST",
+    body: JSON.stringify({ aulaId }),
+  }),
+};
+
 export const auditoriaApi = {
   listar: () => request("/api/auditoria"),
+};
+
+export const turmasApi = {
+  listar: () => request("/api/turmas"),
+  minhas: () => request("/api/turmas/minhas"),
+  criar: (turma) => request("/api/turmas", {
+    method: "POST",
+    body: JSON.stringify(turma),
+  }),
+  excluir: (id) => request(`/api/turmas/${id}`, { method: "DELETE" }),
+};
+
+export const equipesApi = {
+  listar: () => request("/api/equipes"),
+  listarAlunos: (turmaId) => request(`/api/equipes/alunos?turmaId=${turmaId}`),
+  criar: (equipe) => request("/api/equipes", {
+    method: "POST",
+    body: JSON.stringify(equipe),
+  }),
+  atualizar: (id, equipe) => request(`/api/equipes/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(equipe),
+  }),
+  excluir: (id) => request(`/api/equipes/${id}`, { method: "DELETE" }),
+};
+
+export const torneiosApi = {
+  listar: () => request("/api/torneios"),
+  buscar: (id) => request(`/api/torneios/${id}`),
+  criar: (torneio) => request("/api/torneios", {
+    method: "POST",
+    body: JSON.stringify(torneio),
+  }),
+  atualizar: (id, torneio) => request(`/api/torneios/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(torneio),
+  }),
+  definirEquipes: (id, equipes) => request(`/api/torneios/${id}/equipes`, {
+    method: "PUT",
+    body: JSON.stringify({ equipes }),
+  }),
+  gerarChaveamento: (id) => request(`/api/torneios/${id}/chaveamento`, { method: "POST" }),
+  registrarVencedor: (idLuta, equipeId) => request(`/api/torneios/lutas/${idLuta}/vencedor`, {
+    method: "PUT",
+    body: JSON.stringify({ equipeId }),
+  }),
+  excluir: (id) => request(`/api/torneios/${id}`, { method: "DELETE" }),
 };

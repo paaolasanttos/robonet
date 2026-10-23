@@ -131,16 +131,17 @@ export default function AulasPagina() {
   return (
     <main className="app-shell">
       <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/aulas" aria-label="ROBONET, página inicial">
+        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial">
           <span className="brand-mark">R</span>
           <span>
             <strong>ROBONET</strong>
-            <small>Gestão de aulas</small>
           </span>
         </a>
 
         <div className="navbar-menu">
+          <a className="navbar-link" href="/home">Home</a>
           <a className="navbar-link navbar-link-active" href="/aulas" aria-current="page">Aulas</a>
+          <a className="navbar-link" href="/torneios">Torneios</a>
           <a className="navbar-link" href="/usuarios">Usuários</a>
           {session.usuario.perfil === "admin" && <a className="navbar-link" href="/auditoria">Auditoria</a>}
           <a className="navbar-link" href="/politicas">Privacidade</a>

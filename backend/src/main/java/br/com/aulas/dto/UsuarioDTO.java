@@ -1,5 +1,6 @@
 package br.com.aulas.dto;
 
+import java.util.List;
 
 public class UsuarioDTO {
     private String nome;
@@ -7,6 +8,8 @@ public class UsuarioDTO {
     private String rgm;
     private String perfil;
     private String senha;
+    private Long turmaId;
+    private List<Long> turmas;
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
@@ -22,4 +25,10 @@ public class UsuarioDTO {
 
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
+
+    public Long getTurmaId() { return turmaId; }
+    public void setTurmaId(Long turmaId) { this.turmaId = turmaId; }
+
+    public List<Long> getTurmas() { return turmas; }
+    public void setTurmas(List<Long> turmas) { this.turmas = turmas; }
 }
