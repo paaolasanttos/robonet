@@ -19,6 +19,7 @@ export default function AulasAlunoPagina() {
         <div className="navbar-menu">
           <Link className="navbar-link" to="/home">Home</Link>
           <Link className="navbar-link navbar-link-active" to="/aulas-aluno" aria-current="page">Aulas</Link>
+          <Link className="navbar-link" to="/torneios">Torneios</Link>
           <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
 

@@ -12,6 +12,9 @@ const categorias = [
   { value: "USUARIOS", label: "Usuários" },
   { value: "AULAS", label: "Aulas" },
   { value: "LGPD", label: "LGPD" },
+  { value: "TURMAS", label: "Turmas" },
+  { value: "EQUIPES", label: "Equipes" },
+  { value: "TORNEIOS", label: "Torneios" },
 ];
 
 function formatarData(data) {
@@ -64,6 +67,7 @@ export default function AuditoriaPagina() {
         <div className="navbar-menu">
           <a className="navbar-link" href="/home">Home</a>
           <a className="navbar-link" href="/aulas">Aulas</a>
+          <a className="navbar-link" href="/torneios">Torneios</a>
           <a className="navbar-link" href="/usuarios">Usuários</a>
           <a className="navbar-link navbar-link-active" href="/auditoria" aria-current="page">Auditoria</a>
           <a className="navbar-link" href="/politicas">Privacidade</a>

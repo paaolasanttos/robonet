@@ -8,14 +8,17 @@ export default function HomePagina() {
   const cards = perfil === "aluno"
     ? [
         { to: "/aulas-aluno", title: "Aulas para alunos", description: "Acesse as aulas disponíveis e acompanhe o conteúdo." },
+        { to: "/torneios", title: "Torneios", description: "Acompanhe o chaveamento e os vencedores das lutas." },
       ]
     : perfil === "professor"
       ? [
           { to: "/aulas", title: "Aulas", description: "Cadastre, edite e acompanhe as aulas da plataforma." },
+          { to: "/torneios", title: "Torneios", description: "Monte as equipes, organize os torneios e registre os vencedores." },
         ]
       : [
           { to: "/aulas", title: "Aulas", description: "Gerencie e acompanhe as aulas cadastradas." },
           { to: "/usuarios", title: "Usuários", description: "Cadastre e mantenha os perfis de acesso." },
+          { to: "/torneios", title: "Torneios", description: "Acompanhe e administre os torneios cadastrados." },
           { to: "/auditoria", title: "Auditoria", description: "Consulte os registros do sistema." },
         ];
 
@@ -33,6 +36,7 @@ export default function HomePagina() {
         <div className="navbar-menu">
           <Link className="navbar-link navbar-link-active" to="/home" aria-current="page">Home</Link>
           {perfil === "aluno" ? <Link className="navbar-link" to="/aulas-aluno">Aulas</Link> : <Link className="navbar-link" to="/aulas">Aulas</Link>}
+          <Link className="navbar-link" to="/torneios">Torneios</Link>
           {perfil !== "aluno" && <Link className="navbar-link" to="/usuarios">Usuários</Link>}
           {perfil !== "aluno" && <Link className="navbar-link" to="/auditoria">Auditoria</Link>}
           <Link className="navbar-link" to="/politicas">Privacidade</Link>

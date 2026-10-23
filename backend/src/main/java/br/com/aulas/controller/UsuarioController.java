@@ -2,9 +2,11 @@ package br.com.aulas.controller;
 
 import br.com.aulas.dto.UsuarioDTO;
 import br.com.aulas.model.Usuario;
+import br.com.aulas.repository.EquipeMembroRepository;
 import br.com.aulas.repository.UsuarioRepository;
 import br.com.aulas.security.DatabaseUserContext;
 import br.com.aulas.service.AuditoriaService;
+import br.com.aulas.service.TurmaService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Locale;
 
@@ -35,10 +38,18 @@ public class UsuarioController {
     @Autowired
     private AuditoriaService auditoriaService;
 
+    @Autowired
+    private TurmaService turmaService;
+
+    @Autowired
+    private EquipeMembroRepository equipeMembroRepository;
+
 
     @GetMapping
     public List<Usuario> listar() {
-        return repo.findAll();
+        List<Usuario> usuarios = repo.findAll();
+        usuarios.forEach(this::carregarTurmas);
+        return usuarios;
     }
 
 
@@ -83,10 +94,15 @@ public class UsuarioController {
         } else {
             u.setRgm(null);
         }
+        if (perfil.equals("aluno") && dto.getTurmaId() != null) {
+            turmaService.validarTurma(dto.getTurmaId());
+        }
         u.setAtivo(true);
 
         databaseUserContext.setCurrentUser();
         Usuario salvo = repo.save(u);
+        turmaService.salvarTurmasUsuario(salvo.getId(), turmasDoPerfil(perfil, dto));
+        carregarTurmas(salvo);
         auditoriaService.registrar("USUARIOS", "USUARIO_CRIADO",
                 "Usuário " + salvo.getId() + " (" + salvo.getEmail() + ") criado com perfil " + perfil, true);
         auditoriaService.registrar("CRIPTOGRAFIA", "SENHA_CRIPTOGRAFADA",
@@ -117,6 +133,14 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body(erro("Já existe um usuário ativo com esse e-mail."));
         }
 
+        Long novaTurma = perfil.equals("aluno") ? dto.getTurmaId() : null;
+        if (novaTurma != null) {
+            turmaService.validarTurma(novaTurma);
+        }
+        if (!Objects.equals(turmaService.turmaDoAluno(id), novaTurma) && equipeMembroRepository.existsByIdUsuario(id)) {
+            return ResponseEntity.badRequest().body(erro("O aluno faz parte de uma equipe. Retire-o da equipe antes de trocar a turma ou o perfil."));
+        }
+
         usuario.setNome(dto.getNome().trim());
         usuario.setEmail(email);
         usuario.setPerfil(perfil);
@@ -130,6 +154,8 @@ public class UsuarioController {
                     "Senha do usuário " + id + " alterada e salva com hash BCrypt", true);
         }
         Usuario salvo = repo.save(usuario);
+        turmaService.salvarTurmasUsuario(id, turmasDoPerfil(perfil, dto));
+        carregarTurmas(salvo);
         auditoriaService.registrar("USUARIOS", "USUARIO_ALTERADO",
                 "Usuário " + id + " (" + email + ") alterado, perfil " + perfil, true);
         return ResponseEntity.ok(salvo);
@@ -152,11 +178,18 @@ public class UsuarioController {
         }
 
         Usuario u = encontrado.get();
+        if (!novoPerfil.equals("aluno") && equipeMembroRepository.existsByIdUsuario(id)) {
+            return ResponseEntity.badRequest().body(erro("O aluno faz parte de uma equipe. Retire-o da equipe antes de mudar o perfil."));
+        }
+        String perfilAnterior = u.getPerfil();
         u.setPerfil(novoPerfil);
         if (!novoPerfil.equals("aluno")) {
             u.setRgm(null);
         }
         repo.save(u);
+        if (!novoPerfil.equals(perfilAnterior)) {
+            turmaService.salvarTurmasUsuario(id, null);
+        }
         auditoriaService.registrar("USUARIOS", "PERFIL_ALTERADO", "Usuário " + id + " alterado para o perfil " + novoPerfil, true);
         return ResponseEntity.ok(u);
     }
@@ -190,6 +223,25 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+
+    private void carregarTurmas(Usuario usuario) {
+        if ("aluno".equals(usuario.getPerfil())) {
+            usuario.setIdTurma(turmaService.turmaDoAluno(usuario.getId()));
+        }
+        if ("professor".equals(usuario.getPerfil())) {
+            usuario.setTurmas(turmaService.idsTurmasDoUsuario(usuario.getId()));
+        }
+    }
+
+    private List<Long> turmasDoPerfil(String perfil, UsuarioDTO dto) {
+        if (perfil.equals("aluno")) {
+            return dto.getTurmaId() == null ? null : List.of(dto.getTurmaId());
+        }
+        if (perfil.equals("professor")) {
+            return dto.getTurmas();
+        }
+        return null;
+    }
 
     private Map<String, String> erro(String msg) {
         Map<String, String> m = new HashMap<>();

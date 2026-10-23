@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**", "/error").permitAll()
                         .requestMatchers("/api/termo/**").authenticated()
-                        .anyRequest().authenticated())
+                        .anyRequest().hasAuthority("TERMO_ACEITO"))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) -> {
                             auditoriaService.registrar(null, "AUTORIZACAO", "ACESSO_NAO_AUTENTICADO",

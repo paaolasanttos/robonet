@@ -45,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (!finalRole.isBlank()) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + finalRole));
                 }
-                if (Boolean.TRUE.equals(claims.get("termo", Boolean.class))) {
+                if (Boolean.TRUE.equals(claims.get("termo", Boolean.class)) || finalRole.equals("ADMIN")) {
                     authorities.add(new SimpleGrantedAuthority("TERMO_ACEITO"));
                 }
                 if (Boolean.TRUE.equals(claims.get("termo", Boolean.class)) && !finalRole.isBlank()) {
