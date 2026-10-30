@@ -77,6 +77,12 @@ public class UsuarioController {
         if (perfil.equals("aluno") && (dto.getRgm() == null || dto.getRgm().trim().isEmpty())) {
             return ResponseEntity.badRequest().body(erro("RGM é obrigatório para aluno."));
         }
+        if (perfil.equals("aluno") && !dto.getRgm().trim().matches("\\d{11}")) {
+            return ResponseEntity.badRequest().body(erro("O RGM deve ter exatamente 11 números."));
+        }
+        if (perfil.equals("aluno") && repo.existsByRgm(dto.getRgm().trim())) {
+            return ResponseEntity.badRequest().body(erro("Já existe um aluno com esse RGM."));
+        }
 
 
         String email = dto.getEmail().trim();
@@ -127,6 +133,12 @@ public class UsuarioController {
         }
         if (perfil.equals("aluno") && (dto.getRgm() == null || dto.getRgm().trim().isEmpty())) {
             return ResponseEntity.badRequest().body(erro("RGM é obrigatório para aluno."));
+        }
+        if (perfil.equals("aluno") && !dto.getRgm().trim().matches("\\d{11}")) {
+            return ResponseEntity.badRequest().body(erro("O RGM deve ter exatamente 11 números."));
+        }
+        if (perfil.equals("aluno") && repo.existsByRgmAndIdNot(dto.getRgm().trim(), id)) {
+            return ResponseEntity.badRequest().body(erro("Já existe um aluno com esse RGM."));
         }
         Usuario usuario = encontrado.get();
         if (!usuario.getEmail().equalsIgnoreCase(email) && repo.existsByEmailIgnoreCaseAndAtivoTrue(email)) {

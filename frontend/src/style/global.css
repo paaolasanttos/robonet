@@ -1493,6 +1493,7 @@ tbody tr:hover {
   padding: 18px 22px 22px;
 }
 
+.equipe-form .equipe-busca,
 .equipe-form .equipe-alunos,
 .equipe-form .user-form-actions {
   grid-column: 1 / -1;
