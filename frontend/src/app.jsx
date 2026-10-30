@@ -11,6 +11,9 @@ import TermoPagina from "./pagina/termo";
 import AuditoriaPagina from "./pagina/auditoria";
 import HomePagina from "./pagina/home";
 import TorneiosPagina from "./pagina/torneios";
+import SimuladosPagina from "./pagina/simulados";
+import SimuladosAlunoPagina from "./pagina/simuladosAluno";
+import TurmasPagina from "./pagina/turmas";
 
 export default function App() {
   return (
@@ -29,15 +32,18 @@ export default function App() {
 
       <Route element={<RotaProtegida roles={["admin", "professor"]} />}>
         <Route path="/aulas" element={<AulasPagina />} />
+        <Route path="/simulados" element={<SimuladosPagina />} />
       </Route>
 
       <Route element={<RotaProtegida roles={['admin']} />}>
         <Route path="/usuarios" element={<UsuariosPagina />} />
+        <Route path="/turmas" element={<TurmasPagina />} />
         <Route path="/auditoria" element={<AuditoriaPagina />} />
       </Route>
 
       <Route element={<RotaProtegida roles={["aluno"]} />}>
         <Route path="/aulas-aluno" element={<AulasAlunoPagina />} />
+        <Route path="/simulados-aluno" element={<SimuladosAlunoPagina />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

@@ -35,9 +35,9 @@ O ROBONET é composto por três partes principais:
 
 A aplicação possui diferentes experiências de acordo com o perfil do usuário:
 
-- **Administrador**: gerenciamento de usuários, aulas e consulta de auditoria.
-- **Professor**: gerenciamento de aulas.
-- **Aluno**: visualização e conclusão das aulas disponibilizadas.
+- **Administrador**: gerenciamento de usuários, aulas e simulados, além de consulta de auditoria.
+- **Professor**: gerenciamento de aulas e simulados.
+- **Aluno**: visualização e conclusão das aulas e realização de simulados vinculados aos temas disponíveis.
 
 O acesso utiliza JWT e as operações protegidas exigem autenticação. O aluno também precisa ter aceitado a versão vigente do termo de uso/privacidade para acessar suas aulas.
 
@@ -157,12 +157,22 @@ Administradores e professores podem:
 
 Quando uma aula é criada, o banco possui uma trigger que gera automaticamente o vínculo da aula com os alunos ativos.
 
+### Simulados
+
+Administradores e professores podem cadastrar simulados vinculados a temas de aula, com perguntas de múltipla escolha, alternativas e uma resposta correta por pergunta. Os cadastros podem ser editados e excluídos.
+
+### Turmas
+
+Administradores podem cadastrar e excluir turmas em uma tela dedicada. As turmas cadastradas podem ser associadas aos alunos e professores na administração de usuários.
+
 ### Área do aluno
 
 Alunos que aceitaram o termo vigente podem:
 
 - Visualizar suas aulas.
 - Marcar uma aula como concluída.
+- Acessar simulados vinculados aos temas das aulas disponíveis.
+- Responder às perguntas e visualizar o resultado ao enviar.
 
 ### Termo de uso e privacidade
 
@@ -199,10 +209,13 @@ A consulta dos registros de auditoria é restrita ao perfil `admin`.
 |---|:---:|:---:|:---:|
 | Acessar sistema | ✓ | ✓ | ✓ |
 | Gerenciar aulas | ✓ | ✓ | — |
+| Gerenciar simulados | ✓ | ✓ | — |
+| Gerenciar turmas | ✓ | — | — |
 | Gerenciar usuários | ✓ | — | — |
 | Consultar auditoria | ✓ | — | — |
 | Visualizar aulas próprias | — | — | ✓ |
 | Concluir aulas | — | — | ✓ |
+| Realizar simulados disponíveis | — | — | ✓ |
 | Aceitar/recusar termo | ✓ | ✓ | ✓ |
 
 > O controle efetivo de autorização é realizado no backend. O frontend também protege as rotas de acordo com o perfil para melhorar a experiência de navegação.
@@ -232,7 +245,10 @@ entrega2809/
 │
 ├── database/
 │   ├── 01-create.sql
-│   └── 02-insert.sql
+│   ├── 02-insert.sql
+│   ├── 03-simulados.sql
+│   ├── 04-turmas.sql
+│   └── 05-dashboard.sql
 │
 ├── frontend/
 │   ├── Dockerfile
@@ -306,7 +322,7 @@ Depois revise os valores do `.env`.
 | `ADMIN_PASSWORD` | Senha do administrador inicial | definida localmente |
 | `GMAIL_ENABLED` | Ativa envio de códigos | `true`/`false` |
 | `GMAIL_SENDER` | Conta remetente do Gmail | e-mail |
-| `GMAIL_CLIENT_ID` | Client ID OAuth do Google | segredo OAuth |
+| `GMAIL_CLIENT_ID` | Client ID OAuth do Google | credencial OAuth |
 | `GMAIL_CLIENT_SECRET` | Client Secret OAuth do Google | segredo OAuth |
 | `GMAIL_REFRESH_TOKEN` | Refresh Token OAuth | token |
 | `VITE_API_URL` | URL da API usada pelo frontend | `http://localhost:4000` |
@@ -400,23 +416,15 @@ Este valor será utilizado durante o desenvolvimento e depois será modificado.
 
 ### Importante sobre o login
 
-O fluxo atual não utiliza somente e-mail e senha.
-
-O login ocorre em duas etapas:
+O usuário configurado em `ADMIN_EMAIL` e usuários com perfil `admin` entram somente com e-mail e senha. Os demais perfis precisam validar um código de acesso enviado por e-mail:
 
 ```text
-1. E-mail + senha
-        ↓
-2. Código de 6 dígitos enviado por e-mail
-        ↓
-3. Validação do código
-        ↓
-4. JWT
-        ↓
-5. Acesso ao sistema
+Admin: e-mail + senha → JWT → acesso ao sistema
+
+Demais perfis: e-mail + senha → código enviado por e-mail → validação → JWT → acesso ao sistema
 ```
 
-Portanto, para o fluxo completo funcionar, o serviço Gmail deve estar configurado e habilitado.
+Portanto, o serviço Gmail precisa estar configurado e habilitado para o login dos demais perfis; o login administrativo não depende do envio de código.
 
 ---
 
@@ -439,6 +447,10 @@ Cria as principais tabelas:
 - `AulasTemas`
 - `Aulas`
 - `AulasAluno`
+- `Simulados`
+- `SimuladosPerguntas`
+- `SimuladosOpcoes`
+- `SimuladosRealizacoes` (criada pela migração `05-dashboard.sql`)
 - `LogAcessos`
 - `LogCodigoVerificacao`
 - `LogAuditoria`
@@ -466,9 +478,24 @@ Usuarios
                                       │
                                       ▼
                                   AulasTemas
+                                      ▲
+                                      │
+                         Simulados ───┘
+                             │
+                             ▼
+                   SimuladosPerguntas
+                             │
+                             ▼
+                    SimuladosOpcoes
 ```
 
 Ao cadastrar uma aula, uma trigger cria registros em `AulasAluno` para os alunos ativos.
+Os simulados são vinculados a `AulasTemas`; a migração `03-simulados.sql` cria suas tabelas e completa os vínculos entre aulas e alunos ativos que ainda não existirem.
+O dashboard registra cada envio válido de simulado em `SimuladosRealizacoes` e compara esses envios com as aulas concluídas. Alunos visualizam seus próprios totais; administradores e professores visualizam os totais dos alunos ativos.
+
+Para uma base já existente, aplique `03-simulados.sql` uma vez. Não reaplique `01-create.sql` em uma base com dados, pois esse script recria tabelas e pode apagá-los. O PostgreSQL executa automaticamente os scripts do diretório apenas quando o volume é inicializado pela primeira vez.
+Para bases que ainda não possuem as tabelas `Turmas` e `UsuariosTurmas`, aplique também `04-turmas.sql`; a migração é aditiva e pode ser executada sem recriar as tabelas existentes.
+Para bases existentes, aplique também `05-dashboard.sql` para criar a tabela de realizações dos simulados.
 
 ---
 
@@ -547,6 +574,18 @@ GMAIL_REFRESH_TOKEN=...
 
 O backend utiliza a API do Gmail com OAuth 2.0.
 
+Para gerar um refresh token, configure `GMAIL_CLIENT_ID` e `GMAIL_CLIENT_SECRET` no `.env` como credenciais de um cliente OAuth Desktop. No PowerShell, execute na raiz do projeto:
+
+```powershell
+Push-Location backend
+mvn.cmd -DskipTests compile exec:java "-Dexec.mainClass=br.com.aulas.config.GmailTokenGenerator"
+Pop-Location
+```
+
+A ferramenta abre o consentimento do Google e recebe a autorização no `http://localhost:8888/Callback`. Após a autorização, ela obtém um refresh token e usa esse token para solicitar e validar um access token. O refresh token é exibido uma única vez no terminal; copie-o para `GMAIL_REFRESH_TOKEN` no `.env` e mantenha-o privado. O access token não é exibido.
+
+O usuário Google precisa autorizar o escopo de envio do Gmail. Se o Google não devolver um refresh token, remova o acesso anterior da aplicação na conta Google e execute a autorização novamente. Mantenha livre a porta local `8888` durante o processo.
+
 O código de acesso possui, por padrão:
 
 ```text
@@ -597,6 +636,27 @@ Requer perfil `admin` ou `professor`.
 | `PUT` | `/aulas/{id}` | Atualiza aula |
 | `DELETE` | `/aulas/{id}` | Exclui aula |
 
+### Simulados
+
+Requer perfil `admin` ou `professor`.
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/simulados` | Lista simulados, perguntas e opções para administração |
+| `POST` | `/simulados` | Cria simulado com perguntas e opções |
+| `PUT` | `/simulados/{id}` | Atualiza simulado, perguntas e opções |
+| `DELETE` | `/simulados/{id}` | Exclui simulado |
+
+### Turmas
+
+Requer perfil `admin`.
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/turmas` | Lista turmas cadastradas |
+| `POST` | `/api/turmas` | Cadastra uma turma |
+| `DELETE` | `/api/turmas/{id}` | Exclui uma turma |
+
 ### Aulas do aluno
 
 Requer perfil `aluno` e aceite do termo vigente.
@@ -613,6 +673,15 @@ Exemplo de payload:
   "aulaId": 1
 }
 ```
+
+### Simulados do aluno
+
+Requer perfil `aluno` e aceite do termo vigente. As respostas corretas não são incluídas na listagem do aluno.
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/simulados-aluno` | Lista simulados dos temas vinculados às aulas disponíveis |
+| `POST` | `/api/simulados-aluno/{id}/responder` | Envia respostas e retorna o resultado |
 
 ### Usuários
 
@@ -701,6 +770,9 @@ O frontend possui páginas para:
 - Home.
 - Aulas.
 - Aulas do aluno.
+- Cadastro de simulados.
+- Simulados do aluno.
+- Cadastro de Turma.
 - Usuários.
 - Auditoria.
 - Termo.

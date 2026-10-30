@@ -22,7 +22,6 @@ export default function UsuariosPagina() {
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [turmas, setTurmas] = useState([]);
-  const [novaTurma, setNovaTurma] = useState("");
 
   async function loadTurmas() {
     try {
@@ -81,35 +80,6 @@ export default function UsuariosPagina() {
     if (usuario.perfil === "aluno") return usuario.idTurma ? nomeTurma(usuario.idTurma) : "-";
     if (usuario.perfil === "professor") return usuario.turmas?.length ? usuario.turmas.map(nomeTurma).join(", ") : "-";
     return "-";
-  }
-
-  async function handleCreateTurma(event) {
-    event.preventDefault();
-    setError("");
-    if (!novaTurma.trim()) {
-      setError("Informe o nome da turma.");
-      return;
-    }
-    try {
-      const turma = await turmasApi.criar({ nome: novaTurma.trim() });
-      setTurmas((current) => [...current, turma].sort((a, b) => a.nome.localeCompare(b.nome)));
-      setNovaTurma("");
-      setFeedback("Turma criada com sucesso.");
-    } catch (err) {
-      setError(err.message || "Não foi possível criar a turma.");
-    }
-  }
-
-  async function handleDeleteTurma(turma) {
-    if (!window.confirm(`Excluir a turma ${turma.nome}?`)) return;
-    setError("");
-    try {
-      await turmasApi.excluir(turma.id);
-      setTurmas((current) => current.filter((item) => item.id !== turma.id));
-      setFeedback("Turma excluída com sucesso.");
-    } catch (err) {
-      setError(err.message || "Não foi possível excluir a turma.");
-    }
   }
 
   async function handleCreate(event) {
@@ -193,7 +163,9 @@ export default function UsuariosPagina() {
         <div className="navbar-menu">
           <a className="navbar-link" href="/home">Home</a>
           <a className="navbar-link" href="/aulas">Aulas</a>
+          <a className="navbar-link" href="/simulados">Simulados</a>
           <a className="navbar-link" href="/torneios">Torneios</a>
+          <a className="navbar-link" href="/turmas">Turmas</a>
           <a className="navbar-link navbar-link-active" href="/usuarios" aria-current="page">Usuários</a>
           <a className="navbar-link" href="/auditoria">Auditoria</a>
           <a className="navbar-link" href="/politicas">Privacidade</a>
@@ -207,19 +179,6 @@ export default function UsuariosPagina() {
         {error && <Alert type="error" message={error} onClose={() => setError("")} />}
 
         <section className="content-card user-create-card">
-          <div className="section-heading"><span className="eyebrow">Turmas</span><h2>Turmas cadastradas</h2></div>
-          <form className="turma-form" onSubmit={handleCreateTurma}>
-            <div className="form-field"><label htmlFor="nova-turma">Nova turma</label><input id="nova-turma" value={novaTurma} onChange={(event) => setNovaTurma(event.target.value)} placeholder="Ex.: Robótica 1º semestre" maxLength="120" /></div>
-            <button className="button button-primary" type="submit">Adicionar turma</button>
-          </form>
-          <div className="turmas-lista">
-            {turmas.length === 0 ? <p className="turmas-vazio">Nenhuma turma cadastrada.</p> : turmas.map((turma) => (
-              <span key={turma.id} className="turma-pill">{turma.nome}<button type="button" onClick={() => handleDeleteTurma(turma)} aria-label={`Excluir turma ${turma.nome}`}>×</button></span>
-            ))}
-          </div>
-        </section>
-
-        <section className="content-card user-create-card">
           <div className="section-heading"><span className="eyebrow">Cadastro</span><h2>{editingId ? "Editar usuário" : "Novo usuário"}</h2></div>
           <form className="user-form" onSubmit={handleCreate}>
             <div className="form-field"><label htmlFor="nome">Nome *</label><input id="nome" name="nome" value={form.nome} onChange={updateForm} placeholder="Nome completo" disabled={saving} /></div>
@@ -231,7 +190,7 @@ export default function UsuariosPagina() {
             {form.perfil === "professor" && (
               <fieldset className="user-form-turmas" disabled={saving}>
                 <legend>Turmas em que dá aula</legend>
-                {turmas.length === 0 ? <span className="turmas-vazio">Cadastre as turmas acima primeiro.</span> : turmas.map((turma) => (
+                {turmas.length === 0 ? <span className="turmas-vazio">Cadastre as turmas na tela Cadastro de Turma primeiro.</span> : turmas.map((turma) => (
                   <label key={turma.id} className="checkbox-item"><input type="checkbox" checked={form.turmas.includes(turma.id)} onChange={() => toggleTurmaProfessor(turma.id)} />{turma.nome}</label>
                 ))}
               </fieldset>

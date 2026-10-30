@@ -68,6 +68,7 @@ export default function AuditoriaPagina() {
           <a className="navbar-link" href="/home">Home</a>
           <a className="navbar-link" href="/aulas">Aulas</a>
           <a className="navbar-link" href="/torneios">Torneios</a>
+          <a className="navbar-link" href="/turmas">Turmas</a>
           <a className="navbar-link" href="/usuarios">Usuários</a>
           <a className="navbar-link navbar-link-active" href="/auditoria" aria-current="page">Auditoria</a>
           <a className="navbar-link" href="/politicas">Privacidade</a>

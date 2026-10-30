@@ -95,12 +95,38 @@ CREATE TABLE TermosAceites(
 );
 
 --aulas
+DROP TABLE IF EXISTS SimuladosOpcoes;
+DROP TABLE IF EXISTS SimuladosPerguntas;
+DROP TABLE IF EXISTS Simulados;
+DROP TABLE IF EXISTS AulasAluno;
 DROP TABLE IF EXISTS Aulas;
 DROP TABLE IF EXISTS AulasTemas;
 
 CREATE TABLE AulasTemas(
 	IdAulaTema SERIAL PRIMARY KEY,
 	Descricao  VARCHAR(120) NOT NULL
+);
+
+CREATE TABLE Simulados(
+    IdSimulado SERIAL PRIMARY KEY,
+    IdAulaTema INTEGER NOT NULL,
+    Titulo     VARCHAR(180) NOT NULL,
+    CONSTRAINT fk_simulados_idaulatema FOREIGN KEY (IdAulaTema) REFERENCES AulasTemas (IdAulaTema)
+);
+
+CREATE TABLE SimuladosPerguntas(
+    IdSimuladoPergunta SERIAL PRIMARY KEY,
+    IdSimulado         INTEGER NOT NULL,
+    Enunciado          TEXT NOT NULL,
+    CONSTRAINT fk_simuladosperguntas_idsimulado FOREIGN KEY (IdSimulado) REFERENCES Simulados (IdSimulado) ON DELETE CASCADE
+);
+
+CREATE TABLE SimuladosOpcoes(
+    IdSimuladoOpcao    SERIAL PRIMARY KEY,
+    IdSimuladoPergunta INTEGER NOT NULL,
+    Texto              VARCHAR(500) NOT NULL,
+    Correta            BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_simuladosopcoes_idpergunta FOREIGN KEY (IdSimuladoPergunta) REFERENCES SimuladosPerguntas (IdSimuladoPergunta) ON DELETE CASCADE
 );
 
 CREATE TABLE Aulas(
@@ -125,6 +151,24 @@ CREATE TABLE AulasAluno(
     CONSTRAINT fk_idaula_aluno FOREIGN KEY (IdAula) REFERENCES Aulas (IdAula),
 	CONSTRAINT fk_idusuario_aluno FOREIGN KEY (IdUsuario) REFERENCES Usuarios (IdUsuario)
 );
+
+CREATE OR REPLACE FUNCTION UsuariosInsertAfter()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.Status = 'Ativo' AND NEW.Perfil = 'aluno' THEN
+        INSERT INTO AulasAluno (IdAula, IdAulaTema, IdUsuario, Concluida)
+        SELECT a.IdAula, a.IdAulaTema, NEW.IdUsuario, 'N'
+          FROM Aulas a;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER UsuariosInsertAfter
+AFTER INSERT
+ON Usuarios
+FOR EACH ROW
+EXECUTE FUNCTION UsuariosInsertAfter();
 
 CREATE OR REPLACE FUNCTION AulasInsertBefore()
 RETURNS TRIGGER AS $$

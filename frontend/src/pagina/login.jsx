@@ -28,7 +28,13 @@ export default function LoginPagina() {
     setLoading(true);
     try {
       if (!codeRequested) {
-        await authApi.solicitarCodigo({ email, senha });
+        const data = await authApi.solicitarCodigo({ email, senha });
+        if (data?.token) {
+          login(data);
+          const destino = destinoAposLogin(data?.usuario);
+          navigate(location.state?.from || destino, { replace: true });
+          return;
+        }
         setCodeRequested(true);
         return;
       }

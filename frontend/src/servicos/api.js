@@ -73,6 +73,19 @@ export const aulasApi = {
     }),
 };
 
+export const simuladosApi = {
+  listar: () => request("/simulados"),
+  criar: (simulado) => request("/simulados", {
+    method: "POST",
+    body: JSON.stringify(simulado),
+  }),
+  atualizar: (id, simulado) => request(`/simulados/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(simulado),
+  }),
+  excluir: (id) => request(`/simulados/${id}`, { method: "DELETE" }),
+};
+
 export const usuariosApi = {
   listar: () => request("/api/usuarios"),
   criar: (usuario) => request("/api/usuarios", {
@@ -125,6 +138,18 @@ export const aulasAlunoApi = {
     method: "POST",
     body: JSON.stringify({ aulaId }),
   }),
+};
+
+export const simuladosAlunoApi = {
+  listar: () => request("/api/simulados-aluno"),
+  responder: (id, respostas) => request(`/api/simulados-aluno/${id}/responder`, {
+    method: "POST",
+    body: JSON.stringify({ respostas }),
+  }),
+};
+
+export const dashboardApi = {
+  resumo: () => request("/api/dashboard"),
 };
 
 export const auditoriaApi = {
