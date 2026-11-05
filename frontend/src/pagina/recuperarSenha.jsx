@@ -39,17 +39,49 @@ export default function RecuperarSenhaPagina() {
   return (
     <main className="login-shell">
       <section className="login-panel">
-        <div className="login-brand"><span className="brand-mark">R</span><div><strong>ROBONET</strong><small>Gestão acadêmica</small></div></div>
-        <div className="login-heading"><span className="eyebrow">Primeiro acesso</span><h1>{codeRequested ? "Defina sua senha" : "Recupere seu acesso"}</h1><p>{codeRequested ? "Use o código enviado para criar uma nova senha." : "Enviaremos um código para o e-mail cadastrado."}</p></div>
+        <div className="login-brand">
+          <span className="brand-mark">R</span>
+          <div>
+            <strong>ROBONET</strong>
+            </div>
+        </div>
+        <div className="login-heading">
+          <h1>{codeRequested ? "Defina sua senha" : "Recupere seu acesso"}</h1>
+          <p>{codeRequested ? "Use o código enviado para criar uma nova senha." : "Enviaremos um código para o e-mail informado."}</p>
+        </div>
         {message && <div className="login-success" role="status">{message}</div>}
         {error && <div className="login-error" role="alert">{error}</div>}
         <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-field"><label htmlFor="recovery-email">E-mail</label><input id="recovery-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required disabled={codeRequested} /></div>
-          {codeRequested && <><div className="form-field"><label htmlFor="recovery-code">Código de acesso</label><input id="recovery-code" inputMode="numeric" pattern="[0-9]{6}" maxLength="6" value={codigo} onChange={(event) => setCodigo(event.target.value.replace(/\D/g, ""))} autoComplete="one-time-code" required /></div><div className="form-field"><label htmlFor="new-password">Nova senha</label><input id="new-password" type="password" minLength="8" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="new-password" required /></div><div className="form-field"><label htmlFor="confirm-password">Confirme a nova senha</label><input id="confirm-password" type="password" minLength="8" value={confirmacao} onChange={(event) => setConfirmacao(event.target.value)} autoComplete="new-password" required /></div></>}
-          <button className="button button-primary" type="submit" disabled={loading}>{loading ? "Aguarde..." : codeRequested ? "Definir senha" : "Enviar código"}</button>
-          {codeRequested && <button className="login-back" type="button" onClick={() => { setCodeRequested(false); setCodigo(""); setMessage(""); }}>Usar outro e-mail</button>}
+          <div className="form-field">
+            <label htmlFor="recovery-email">E-mail</label>
+            <input id="recovery-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required disabled={codeRequested} />
+          </div>
+
+          {codeRequested && (
+            <>
+              <div className="form-field">
+                <label htmlFor="recovery-code">Código de acesso</label>
+                <input id="recovery-code" inputMode="numeric" pattern="[0-9]{6}" maxLength="6" value={codigo} onChange={(event) => setCodigo(event.target.value.replace(/\D/g, ""))} autoComplete="one-time-code" required />
+              </div>
+              <div className="form-field">
+                <label htmlFor="new-password">Nova senha</label>
+                <input id="new-password" type="password" minLength="8" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="new-password" required />
+              </div>
+              <div className="form-field">
+                <label htmlFor="confirm-password">Confirme a nova senha</label>
+                <input id="confirm-password" type="password" minLength="8" value={confirmacao} onChange={(event) => setConfirmacao(event.target.value)} autoComplete="new-password" required />
+              </div>
+            </>
+          )}
+
+          <button className="button button-primary recovery-button" type="submit" disabled={loading}>
+            {loading ? (codeRequested ? "Atualizando..." : "Enviando...") : (codeRequested ? "Redefinir senha" : "Solicitar código")}
+          </button>
         </form>
-        <Link className="login-link" to="/login">Voltar para o login</Link>
+
+        <div className="recovery-actions">
+          <Link className="button button-secondary recovery-button" to="/login">Voltar para o login</Link>
+        </div>
       </section>
     </main>
   );

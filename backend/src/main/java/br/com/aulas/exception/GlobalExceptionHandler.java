@@ -1,5 +1,6 @@
 package br.com.aulas.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,6 +17,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AulaNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(AulaNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message(exception.getMessage()));
+    }
+
+    @ExceptionHandler(RegistroNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> handleRegistroNaoEncontrado(RegistroNaoEncontradoException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message(exception.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleIntegridade(DataIntegrityViolationException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(message("Não foi possível salvar: o registro já existe ou está sendo usado em outro cadastro."));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -13,6 +13,7 @@ import br.com.aulas.service.AuditoriaService;
 import br.com.aulas.service.GmailService;
 import br.com.aulas.service.TermoService;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,10 +30,12 @@ public class AuthController {
     private final JdbcTemplate jdbcTemplate;
     private final AuditoriaService auditoriaService;
     private final TermoService termoService;
+    private final String adminEmail;
 
     public AuthController(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
                           LoginCodeService loginCodeService, GmailService gmailService, JdbcTemplate jdbcTemplate,
-                          AuditoriaService auditoriaService, TermoService termoService) {
+                          AuditoriaService auditoriaService, TermoService termoService,
+                          @Value("${security.admin.email}") String adminEmail) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -41,6 +44,7 @@ public class AuthController {
         this.jdbcTemplate = jdbcTemplate;
         this.auditoriaService = auditoriaService;
         this.termoService = termoService;
+        this.adminEmail = adminEmail;
     }
 
     @PostMapping("/login")
@@ -60,6 +64,13 @@ public class AuthController {
             auditoriaService.registrar(request.getEmail().trim(), "AUTENTICACAO", "LOGIN_FALHA",
                     "E-mail ou senha inválidos na primeira etapa do login", false);
             return ResponseEntity.status(401).body(new ErrorResponse("E-mail ou senha inválidos."));
+        }
+
+        if (isAdmin(usuario)) {
+            AuthResponse response = autenticar(usuario);
+            auditoriaService.registrar(usuario.getEmail(), "AUTENTICACAO", "LOGIN_ADMIN",
+                    "Login de administrador concluído sem código de verificação", true);
+            return ResponseEntity.ok(response);
         }
 
         try {
@@ -87,13 +98,10 @@ public class AuthController {
             return ResponseEntity.status(401).body(new ErrorResponse("Código inválido ou expirado."));
         }
 
-        jdbcTemplate.update("INSERT INTO logacessos (email) VALUES (?)", usuario.getEmail());
-        boolean termoAceito = termoService.aceitouVersaoAtual(usuario);
-        String token = jwtService.generate(usuario.getEmail(), usuario.getPerfil(), termoAceito);
+        AuthResponse response = autenticar(usuario);
         auditoriaService.registrar(usuario.getEmail(), "AUTENTICACAO", "LOGIN",
                 "Login concluído e token JWT assinado emitido para o perfil " + usuario.getPerfil(), true);
-        var resumo = new AuthResponse.UsuarioResumo(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil(), termoAceito);
-        return ResponseEntity.ok(new AuthResponse(token, resumo));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
@@ -151,4 +159,24 @@ public class AuthController {
 
     private record ErrorResponse(String message) {}
     private record CodeSentResponse(String message) {}
+
+    private boolean isAdmin(Usuario usuario) {
+        return (usuario.getPerfil() != null && "admin".equalsIgnoreCase(usuario.getPerfil().trim()))
+                || isConfiguredAdminEmail(usuario);
+    }
+
+    private boolean isConfiguredAdminEmail(Usuario usuario) {
+        return usuario.getEmail() != null && adminEmail != null
+                && usuario.getEmail().trim().equalsIgnoreCase(adminEmail.trim());
+    }
+
+    private AuthResponse autenticar(Usuario usuario) {
+        jdbcTemplate.update("INSERT INTO logacessos (email) VALUES (?)", usuario.getEmail());
+        boolean termoAceito = termoService.aceitouVersaoAtual(usuario);
+        String perfil = isConfiguredAdminEmail(usuario) ? "admin" : usuario.getPerfil();
+        String token = jwtService.generate(usuario.getEmail(), perfil, termoAceito);
+        var resumo = new AuthResponse.UsuarioResumo(usuario.getId(), usuario.getNome(), usuario.getEmail(),
+                perfil, termoAceito);
+        return new AuthResponse(token, resumo);
+    }
 }

@@ -14,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -31,10 +32,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 Claims claims = jwtService.parse(header.substring(7));
                 String role = claims.get("role", String.class);
+                String rawRole = role == null ? "" : role.trim();
+                String normalizedRole = rawRole.startsWith("ROLE_") ? rawRole.substring(5) : rawRole;
+                String finalRole = switch (normalizedRole.toLowerCase(Locale.ROOT)) {
+                    case "administrador", "admin" -> "ADMIN";
+                    case "professor" -> "PROFESSOR";
+                    case "aluno" -> "ALUNO";
+                    default -> normalizedRole.isBlank() ? "" : normalizedRole.toUpperCase(Locale.ROOT);
+                };
+
                 List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
-                if (Boolean.TRUE.equals(claims.get("termo", Boolean.class))) {
+                if (!finalRole.isBlank()) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + finalRole));
+                }
+                if (Boolean.TRUE.equals(claims.get("termo", Boolean.class)) || finalRole.equals("ADMIN")) {
                     authorities.add(new SimpleGrantedAuthority("TERMO_ACEITO"));
+                }
+                if (Boolean.TRUE.equals(claims.get("termo", Boolean.class)) && !finalRole.isBlank()) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + finalRole));
                 }
                 var authentication = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -3,6 +3,8 @@ package br.com.aulas.model;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "usuarios")
@@ -35,6 +37,12 @@ public class Usuario {
     @Column(name = "dtregistro", insertable = false, updatable = false)
     private LocalDateTime criadoEm;
 
+    @Transient
+    private Long idTurma;
+
+    @Transient
+    private List<Long> turmas = new ArrayList<>();
+
 
     @PrePersist
     public void antesDeSalvar() {
@@ -65,4 +73,10 @@ public class Usuario {
 
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
+
+    public Long getIdTurma() { return idTurma; }
+    public void setIdTurma(Long idTurma) { this.idTurma = idTurma; }
+
+    public List<Long> getTurmas() { return turmas; }
+    public void setTurmas(List<Long> turmas) { this.turmas = turmas; }
 }

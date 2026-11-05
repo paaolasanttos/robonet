@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Alert from "../componentes/aulaModalAlert";
 import Loading from "../componentes/aulaModalCarregando";
-import { usuariosApi } from "../servicos/api";
+import { turmasApi, usuariosApi } from "../servicos/api";
 import { useAuth } from "../context/AuthContext";
 
 const perfis = [
@@ -9,7 +9,7 @@ const perfis = [
   { value: "professor", label: "Professor" },
   { value: "admin", label: "Administrador" },
 ];
-const formularioInicial = { nome: "", email: "", senha: "", rgm: "", perfil: "aluno" };
+const formularioInicial = { nome: "", email: "", senha: "", rgm: "", perfil: "aluno", turmaId: "", turmas: [] };
 
 export default function UsuariosPagina() {
   const { session, logout } = useAuth();
@@ -21,6 +21,16 @@ export default function UsuariosPagina() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [turmas, setTurmas] = useState([]);
+
+  async function loadTurmas() {
+    try {
+      const data = await turmasApi.listar();
+      setTurmas(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Não foi possível carregar as turmas.");
+    }
+  }
 
   async function loadUsuarios() {
     setLoading(true);
@@ -34,7 +44,7 @@ export default function UsuariosPagina() {
     }
   }
 
-  useEffect(() => { loadUsuarios(); }, []);
+  useEffect(() => { loadUsuarios(); loadTurmas(); }, []);
   useEffect(() => {
     if (!feedback) return undefined;
     const timer = setTimeout(() => setFeedback(""), 4000);
@@ -52,7 +62,24 @@ export default function UsuariosPagina() {
 
   function updateForm(event) {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => ({ ...current, [name]: name === "rgm" ? value.replace(/\D/g, "").slice(0, 11) : value }));
+  }
+
+  function toggleTurmaProfessor(id) {
+    setForm((current) => ({
+      ...current,
+      turmas: current.turmas.includes(id) ? current.turmas.filter((turma) => turma !== id) : [...current.turmas, id],
+    }));
+  }
+
+  function nomeTurma(id) {
+    return turmas.find((turma) => turma.id === id)?.nome || "-";
+  }
+
+  function turmasDoUsuario(usuario) {
+    if (usuario.perfil === "aluno") return usuario.idTurma ? nomeTurma(usuario.idTurma) : "-";
+    if (usuario.perfil === "professor") return usuario.turmas?.length ? usuario.turmas.map(nomeTurma).join(", ") : "-";
+    return "-";
   }
 
   async function handleCreate(event) {
@@ -62,9 +89,13 @@ export default function UsuariosPagina() {
       setError(form.senha.length < 8 && (!editingId || form.senha.length > 0) ? "A senha deve ter pelo menos 8 caracteres." : form.perfil === "aluno" ? "Preencha nome, e-mail e RGM." : "Preencha nome e e-mail.");
       return;
     }
+    if (form.perfil === "aluno" && form.rgm.length !== 11) {
+      setError("O RGM deve ter exatamente 11 números.");
+      return;
+    }
     setSaving(true);
     try {
-      const dados = { ...form, nome: form.nome.trim(), email: form.email.trim(), rgm: form.rgm.trim() };
+      const dados = { ...form, nome: form.nome.trim(), email: form.email.trim(), rgm: form.rgm.trim(), turmaId: form.turmaId ? Number(form.turmaId) : null };
       if (!dados.senha) delete dados.senha;
       if (editingId) {
         const usuario = await usuariosApi.atualizar(editingId, dados);
@@ -86,7 +117,7 @@ export default function UsuariosPagina() {
 
   function startEditing(usuario) {
     setEditingId(usuario.id);
-    setForm({ nome: usuario.nome, email: usuario.email, senha: "", rgm: usuario.rgm || "", perfil: usuario.perfil });
+    setForm({ nome: usuario.nome, email: usuario.email, senha: "", rgm: usuario.rgm || "", perfil: usuario.perfil, turmaId: usuario.idTurma || "", turmas: usuario.turmas || [] });
     setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -127,12 +158,18 @@ export default function UsuariosPagina() {
   return (
     <main className="app-shell">
       <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/aulas" aria-label="ROBONET, página inicial">
+        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial">
           <span className="brand-mark">R</span>
-          <span><strong>ROBONET</strong><small>Gestão acadêmica</small></span>
+          <span>
+            <strong>ROBONET</strong>
+          </span>
         </a>
         <div className="navbar-menu">
+          <a className="navbar-link" href="/home">Home</a>
           <a className="navbar-link" href="/aulas">Aulas</a>
+          <a className="navbar-link" href="/simulados">Simulados</a>
+          <a className="navbar-link" href="/torneios">Torneios</a>
+          <a className="navbar-link" href="/turmas">Turmas</a>
           <a className="navbar-link navbar-link-active" href="/usuarios" aria-current="page">Usuários</a>
           <a className="navbar-link" href="/auditoria">Auditoria</a>
           <a className="navbar-link" href="/politicas">Privacidade</a>
@@ -152,7 +189,16 @@ export default function UsuariosPagina() {
             <div className="form-field"><label htmlFor="email">E-mail *</label><input id="email" name="email" type="email" value={form.email} onChange={updateForm} placeholder="email@umc.br" disabled={saving} /></div>
             <div className="form-field"><label htmlFor="senha">Senha {editingId ? "(opcional)" : "*"}</label><input id="senha" name="senha" type="password" value={form.senha} onChange={updateForm} placeholder={editingId ? "Deixe vazia para manter" : "Mínimo de 8 caracteres"} disabled={saving} required={!editingId} /></div>
             <div className="form-field"><label htmlFor="perfil">Perfil *</label><select id="perfil" name="perfil" value={form.perfil} onChange={updateForm} disabled={saving}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></div>
-            {form.perfil === "aluno" && <div className="form-field"><label htmlFor="rgm">RGM *</label><input id="rgm" name="rgm" value={form.rgm} onChange={updateForm} placeholder="Número do RGM" disabled={saving} /></div>}
+            {form.perfil === "aluno" && <div className="form-field"><label htmlFor="rgm">RGM *</label><input id="rgm" name="rgm" value={form.rgm} onChange={updateForm} placeholder="11 números" inputMode="numeric" maxLength="11" disabled={saving} /></div>}
+            {form.perfil === "aluno" && <div className="form-field"><label htmlFor="turmaId">Turma</label><select id="turmaId" name="turmaId" value={form.turmaId} onChange={updateForm} disabled={saving}><option value="">Sem turma</option>{turmas.map((turma) => <option key={turma.id} value={turma.id}>{turma.nome}</option>)}</select></div>}
+            {form.perfil === "professor" && (
+              <fieldset className="user-form-turmas" disabled={saving}>
+                <legend>Turmas em que dá aula</legend>
+                {turmas.length === 0 ? <span className="turmas-vazio">Cadastre as turmas na tela Cadastro de Turma primeiro.</span> : turmas.map((turma) => (
+                  <label key={turma.id} className="checkbox-item"><input type="checkbox" checked={form.turmas.includes(turma.id)} onChange={() => toggleTurmaProfessor(turma.id)} />{turma.nome}</label>
+                ))}
+              </fieldset>
+            )}
             <div className="user-form-actions">
               <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar usuário"}</button>
               {editingId && <button className="button button-light" type="button" onClick={cancelEditing} disabled={saving}>Cancelar edição</button>}
@@ -163,9 +209,9 @@ export default function UsuariosPagina() {
         <section className="content-card">
           <div className="toolbar"><div className="search-wrapper"><label htmlFor="search-users">Pesquisar usuários</label><input id="search-users" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, e-mail, RGM ou perfil..." /></div><span className="result-count">{filteredUsuarios.length} {filteredUsuarios.length === 1 ? "usuário" : "usuários"}</span></div>
           {loading ? <Loading text="Carregando usuários..." /> : filteredUsuarios.length === 0 ? <div className="empty-state"><h2>Nenhum usuário encontrado.</h2><p>{search ? "Tente alterar os termos da pesquisa." : "Cadastre o primeiro usuário acima."}</p></div> : (
-            <div className="table-container"><table><thead><tr><th>Nome</th><th>E-mail</th><th>RGM</th><th>Perfil</th><th>Status</th><th className="actions-column">Ações</th></tr></thead><tbody>{filteredUsuarios.map((usuario) => {
+            <div className="table-container"><table><thead><tr><th>Nome</th><th>E-mail</th><th>RGM</th><th>Turma</th><th>Perfil</th><th>Status</th><th className="actions-column">Ações</th></tr></thead><tbody>{filteredUsuarios.map((usuario) => {
               const isAdministrator = usuario.perfil?.toLowerCase() === "admin";
-              return <tr key={usuario.id}><td><strong>{usuario.nome}</strong></td><td>{usuario.email}</td><td>{usuario.rgm || "-"}</td><td><select value={usuario.perfil} disabled aria-label={`Perfil de ${usuario.nome}`}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></td><td><span className={`status-pill ${usuario.ativo ? "status-active" : "status-inactive"}`}>{usuario.ativo ? "Ativo" : "Inativo"}</span></td><td><div className="row-actions">{!isAdministrator && <><button className="button button-small button-light" onClick={() => startEditing(usuario)}>Editar</button>{!usuario.ativo && <button className="button button-small button-light" onClick={() => handleActivateUser(usuario)}>Ativar</button>}{usuario.ativo && <button className="button button-small button-danger" onClick={() => handleDelete(usuario)}>Excluir</button>}</>}</div></td></tr>;
+              return <tr key={usuario.id}><td><strong>{usuario.nome}</strong></td><td>{usuario.email}</td><td>{usuario.rgm || "-"}</td><td>{turmasDoUsuario(usuario)}</td><td><select value={usuario.perfil} disabled aria-label={`Perfil de ${usuario.nome}`}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></td><td><span className={`status-pill ${usuario.ativo ? "status-active" : "status-inactive"}`}>{usuario.ativo ? "Ativo" : "Inativo"}</span></td><td><div className="row-actions">{!isAdministrator && <><button className="button button-small button-light" onClick={() => startEditing(usuario)}>Editar</button>{!usuario.ativo && <button className="button button-small button-light" onClick={() => handleActivateUser(usuario)}>Ativar</button>}{usuario.ativo && <button className="button button-small button-danger" onClick={() => handleDelete(usuario)}>Excluir</button>}</>}</div></td></tr>;
             })}</tbody></table></div>
           )}
         </section>
