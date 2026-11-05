@@ -12,9 +12,11 @@ import java.util.Objects;
 @Service
 public class TurmaService {
     private final JdbcTemplate jdbcTemplate;
+    private final AuditoriaService auditoriaService;
 
-    public TurmaService(JdbcTemplate jdbcTemplate) {
+    public TurmaService(JdbcTemplate jdbcTemplate, AuditoriaService auditoriaService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.auditoriaService = auditoriaService;
     }
 
     public List<TurmaResponse> listar() {
@@ -26,18 +28,23 @@ public class TurmaService {
 
     @Transactional
     public TurmaResponse cadastrar(String nome) {
-        return jdbcTemplate.queryForObject(
+        TurmaResponse turma = jdbcTemplate.queryForObject(
                 "INSERT INTO turmas (nome) VALUES (?) RETURNING idturma, nome",
                 (result, rowNumber) -> new TurmaResponse(result.getLong("idturma"), result.getString("nome")),
                 nome.trim()
         );
+        auditoriaService.registrar("TURMAS", "TURMA_CRIADA", "Turma " + turma.id() + " - " + turma.nome(), true);
+        return turma;
     }
 
     @Transactional
     public void excluir(Long idTurma) {
+        String nome = jdbcTemplate.queryForList("SELECT nome FROM turmas WHERE idturma = ?", String.class, idTurma)
+                .stream().findFirst().orElse(null);
         if (jdbcTemplate.update("DELETE FROM turmas WHERE idturma = ?", idTurma) == 0) {
             throw new RegistroNaoEncontradoException("Turma não encontrada.");
         }
+        auditoriaService.registrar("TURMAS", "TURMA_EXCLUIDA", "Turma " + idTurma + " - " + nome, true);
     }
 
     public void validarTurma(Long idTurma) {
@@ -85,6 +92,25 @@ public class TurmaService {
                 "SELECT idturma FROM usuariosturmas WHERE idusuario = ? ORDER BY idturma",
                 Long.class,
                 idUsuario
+        );
+    }
+
+    public List<Long> idsUsuariosDaTurma(Long idTurma) {
+        return jdbcTemplate.queryForList(
+                "SELECT idusuario FROM usuariosturmas WHERE idturma = ?",
+                Long.class,
+                idTurma
+        );
+    }
+
+    public List<TurmaResponse> listarDoUsuario(String email) {
+        return jdbcTemplate.query(
+                "SELECT t.idturma, t.nome FROM turmas t "
+                        + "JOIN usuariosturmas ut ON ut.idturma = t.idturma "
+                        + "JOIN usuarios u ON u.idusuario = ut.idusuario "
+                        + "WHERE LOWER(u.email) = LOWER(?) AND u.status = 'Ativo' ORDER BY t.nome",
+                (result, rowNumber) -> new TurmaResponse(result.getLong("idturma"), result.getString("nome")),
+                email
         );
     }
 }

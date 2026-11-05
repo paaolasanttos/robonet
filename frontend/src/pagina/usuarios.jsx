@@ -62,7 +62,7 @@ export default function UsuariosPagina() {
 
   function updateForm(event) {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => ({ ...current, [name]: name === "rgm" ? value.replace(/\D/g, "").slice(0, 11) : value }));
   }
 
   function toggleTurmaProfessor(id) {
@@ -87,6 +87,10 @@ export default function UsuariosPagina() {
     setError("");
     if (!form.nome.trim() || !form.email.trim() || (form.senha.length < 8 && (!editingId || form.senha.length > 0)) || (form.perfil === "aluno" && !form.rgm.trim())) {
       setError(form.senha.length < 8 && (!editingId || form.senha.length > 0) ? "A senha deve ter pelo menos 8 caracteres." : form.perfil === "aluno" ? "Preencha nome, e-mail e RGM." : "Preencha nome e e-mail.");
+      return;
+    }
+    if (form.perfil === "aluno" && form.rgm.length !== 11) {
+      setError("O RGM deve ter exatamente 11 números.");
       return;
     }
     setSaving(true);
@@ -185,7 +189,7 @@ export default function UsuariosPagina() {
             <div className="form-field"><label htmlFor="email">E-mail *</label><input id="email" name="email" type="email" value={form.email} onChange={updateForm} placeholder="email@umc.br" disabled={saving} /></div>
             <div className="form-field"><label htmlFor="senha">Senha {editingId ? "(opcional)" : "*"}</label><input id="senha" name="senha" type="password" value={form.senha} onChange={updateForm} placeholder={editingId ? "Deixe vazia para manter" : "Mínimo de 8 caracteres"} disabled={saving} required={!editingId} /></div>
             <div className="form-field"><label htmlFor="perfil">Perfil *</label><select id="perfil" name="perfil" value={form.perfil} onChange={updateForm} disabled={saving}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></div>
-            {form.perfil === "aluno" && <div className="form-field"><label htmlFor="rgm">RGM *</label><input id="rgm" name="rgm" value={form.rgm} onChange={updateForm} placeholder="Número do RGM" disabled={saving} /></div>}
+            {form.perfil === "aluno" && <div className="form-field"><label htmlFor="rgm">RGM *</label><input id="rgm" name="rgm" value={form.rgm} onChange={updateForm} placeholder="11 números" inputMode="numeric" maxLength="11" disabled={saving} /></div>}
             {form.perfil === "aluno" && <div className="form-field"><label htmlFor="turmaId">Turma</label><select id="turmaId" name="turmaId" value={form.turmaId} onChange={updateForm} disabled={saving}><option value="">Sem turma</option>{turmas.map((turma) => <option key={turma.id} value={turma.id}>{turma.nome}</option>)}</select></div>}
             {form.perfil === "professor" && (
               <fieldset className="user-form-turmas" disabled={saving}>
