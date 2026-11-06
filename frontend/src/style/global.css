@@ -1706,6 +1706,138 @@ tbody tr:hover {
   text-transform: uppercase;
 }
 
+.senha-requisitos {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  color: #697386;
+  font-size: .84rem;
+  list-style: none;
+}
+
+.user-form .senha-requisitos {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  gap: 6px 18px;
+  margin: 0;
+}
+
+.senha-requisitos li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.senha-requisito-marca {
+  display: inline-flex;
+  flex: 0 0 18px;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #c9d0db;
+  border-radius: 999px;
+  background: #fff;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.senha-requisito-ok {
+  color: #21733b;
+  font-weight: 600;
+}
+
+.senha-requisito-ok .senha-requisito-marca {
+  border-color: #21733b;
+  background: #21733b;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.meus-dados-secao {
+  margin-bottom: 22px;
+  padding-bottom: 22px;
+}
+
+.meus-dados-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 18px 22px 0;
+}
+
+.meus-dados-lista div {
+  min-width: 0;
+  border: 1px solid #edf0f4;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fbfcfd;
+}
+
+.meus-dados-lista dt {
+  margin-bottom: 4px;
+  color: #8791a3;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.meus-dados-lista dd {
+  margin: 0;
+  color: #172033;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.meus-dados-lista .meus-dados-perfil {
+  text-transform: capitalize;
+}
+
+.meus-dados-ajuda {
+  margin: 16px 22px 0;
+  color: #697386;
+  line-height: 1.5;
+}
+
+.meus-dados-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 18px 22px 0;
+}
+
+.meus-dados-form .meus-dados-campo-inteiro,
+.meus-dados-form .user-form-actions {
+  grid-column: 1 / -1;
+}
+
+.meus-dados-form .user-form-actions {
+  justify-content: flex-end;
+}
+
+.meus-dados-form .user-form-actions .button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 800px) {
+  .meus-dados-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 .ranking-campeao td {
   background: #fffbea;
 }

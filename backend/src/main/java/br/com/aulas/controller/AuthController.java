@@ -9,6 +9,7 @@ import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.UsuarioRepository;
 import br.com.aulas.security.JwtService;
 import br.com.aulas.security.LoginCodeService;
+import br.com.aulas.security.SenhaPolitica;
 import br.com.aulas.service.AuditoriaService;
 import br.com.aulas.service.GmailService;
 import br.com.aulas.service.TermoService;
@@ -137,9 +138,11 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody PasswordResetRequest request) {
-        if (request.getEmail() == null || request.getCodigo() == null || request.getCodigo().length() != 6
-                || request.getSenha() == null || request.getSenha().length() < 8) {
-            return ResponseEntity.badRequest().body(new ErrorResponse("Informe e-mail, código de 6 dígitos e senha com pelo menos 8 caracteres."));
+        if (request.getEmail() == null || request.getCodigo() == null || request.getCodigo().length() != 6) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Informe o e-mail e o código de 6 dígitos."));
+        }
+        if (!SenhaPolitica.valida(request.getSenha())) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(SenhaPolitica.MENSAGEM));
         }
 
         Usuario usuario = usuarioRepository.findByEmailIgnoreCaseAndAtivoTrue(request.getEmail().trim()).orElse(null);

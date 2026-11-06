@@ -14,6 +14,7 @@ import TorneiosPagina from "./pagina/torneios";
 import SimuladosPagina from "./pagina/simulados";
 import SimuladosAlunoPagina from "./pagina/simuladosAluno";
 import TurmasPagina from "./pagina/turmas";
+import MeusDadosPagina from "./pagina/meusDados";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
       <Route element={<RotaProtegida />}>
         <Route path="/home" element={<HomePagina />} />
         <Route path="/torneios" element={<TorneiosPagina />} />
+        <Route path="/meus-dados" element={<MeusDadosPagina />} />
       </Route>
 
       <Route element={<RotaProtegida roles={["admin", "professor"]} />}>

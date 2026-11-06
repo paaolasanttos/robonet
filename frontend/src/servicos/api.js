@@ -132,6 +132,22 @@ export const termoApi = {
   recusar: () => request("/api/termo/recusar", { method: "POST" }),
 };
 
+export const meusDadosApi = {
+  consultar: () => request("/api/meus-dados"),
+  solicitarCodigoEmail: (dados) => request("/api/meus-dados/email/codigo", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  }),
+  confirmarEmail: (dados) => request("/api/meus-dados/email", {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  }),
+  alterarSenha: (dados) => request("/api/meus-dados/senha", {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  }),
+};
+
 export const aulasAlunoApi = {
   listar: () => request("/api/aulas-aluno"),
   concluir: (aulaId) => request("/api/aulas-aluno/concluir", {

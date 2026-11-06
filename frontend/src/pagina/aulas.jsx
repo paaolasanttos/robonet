@@ -146,6 +146,7 @@ export default function AulasPagina() {
           {session.usuario.perfil === "admin" && <a className="navbar-link" href="/turmas">Turmas</a>}
           {session.usuario.perfil === "admin" && <a className="navbar-link" href="/usuarios">Usuários</a>}
           {session.usuario.perfil === "admin" && <a className="navbar-link" href="/auditoria">Auditoria</a>}
+          {session.usuario.perfil !== "admin" && <a className="navbar-link" href="/meus-dados">Meus dados</a>}
           <a className="navbar-link" href="/politicas">Privacidade</a>
         </div>
 
