@@ -9,6 +9,22 @@ export function formatarData(data) {
   return new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR");
 }
 
+function dataParaCampo(data) {
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${data.getFullYear()}-${mes}-${dia}`;
+}
+
+export function dataDeHoje() {
+  return dataParaCampo(new Date());
+}
+
+export function diaSeguinte(data) {
+  const proximo = new Date(`${data}T00:00:00`);
+  proximo.setDate(proximo.getDate() + 1);
+  return dataParaCampo(proximo);
+}
+
 export function periodoTorneio(torneio) {
   if (!torneio.dtFim || torneio.dtFim === torneio.dtInicio) return formatarData(torneio.dtInicio);
   return `${formatarData(torneio.dtInicio)} a ${formatarData(torneio.dtFim)}`;

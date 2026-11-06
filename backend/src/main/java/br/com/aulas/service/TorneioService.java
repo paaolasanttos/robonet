@@ -22,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -100,7 +101,8 @@ public class TorneioService {
 
     @Transactional
     public TorneioResponse cadastrar(Usuario usuario, TorneioRequest dados) {
-        validarDatas(dados);
+        validarInicioHoje(dados);
+        validarTermino(dados);
 
         Torneio torneio = new Torneio();
         preencher(torneio, dados);
@@ -117,7 +119,8 @@ public class TorneioService {
         Torneio torneio = buscar(id);
         validarResponsavel(usuario, torneio);
         validarAberto(torneio);
-        validarDatas(dados);
+        validarInicioMantido(torneio, dados);
+        validarTermino(dados);
 
         preencher(torneio, dados);
         Torneio salvo = torneioRepository.save(torneio);
@@ -343,9 +346,21 @@ public class TorneioService {
         }
     }
 
-    private void validarDatas(TorneioRequest dados) {
-        if (dados.getDtFim() != null && dados.getDtFim().isBefore(dados.getDtInicio())) {
-            throw new IllegalArgumentException("A data de término não pode ser anterior à data de início.");
+    private void validarInicioHoje(TorneioRequest dados) {
+        if (!LocalDate.now().equals(dados.getDtInicio())) {
+            throw new IllegalArgumentException("A data de início do torneio deve ser a data de hoje.");
+        }
+    }
+
+    private void validarInicioMantido(Torneio torneio, TorneioRequest dados) {
+        if (!torneio.getDtInicio().equals(dados.getDtInicio())) {
+            throw new IllegalArgumentException("A data de início do torneio não pode ser alterada.");
+        }
+    }
+
+    private void validarTermino(TorneioRequest dados) {
+        if (dados.getDtFim() != null && !dados.getDtFim().isAfter(dados.getDtInicio())) {
+            throw new IllegalArgumentException("A data de término deve ser posterior à data de início.");
         }
     }
 
