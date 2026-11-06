@@ -77,6 +77,7 @@ export default function SimuladosAlunoPagina() {
           <Link className="navbar-link" to="/aulas-aluno">Aulas</Link>
           <Link className="navbar-link navbar-link-active" to="/simulados-aluno" aria-current="page">Simulados</Link>
           <Link className="navbar-link" to="/torneios">Torneios</Link>
+          <Link className="navbar-link" to="/meus-dados">Meus dados</Link>
           <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
         <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>

@@ -71,6 +71,7 @@ export default function HomePagina() {
           {perfil !== "aluno" && <Link className="navbar-link" to="/usuarios">Usuários</Link>}
           {perfil === "admin" && <Link className="navbar-link" to="/turmas">Turmas</Link>}
           {perfil !== "aluno" && <Link className="navbar-link" to="/auditoria">Auditoria</Link>}
+          {perfil !== "admin" && <Link className="navbar-link" to="/meus-dados">Meus dados</Link>}
           <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
 

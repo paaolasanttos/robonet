@@ -102,6 +102,7 @@ export default function SimuladosPagina() {
           {session.usuario.perfil === "admin" && <Link className="navbar-link" to="/turmas">Turmas</Link>}
           {session.usuario.perfil === "admin" && <Link className="navbar-link" to="/usuarios">Usuários</Link>}
           {session.usuario.perfil === "admin" && <Link className="navbar-link" to="/auditoria">Auditoria</Link>}
+          {session.usuario.perfil !== "admin" && <Link className="navbar-link" to="/meus-dados">Meus dados</Link>}
           <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
         <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>

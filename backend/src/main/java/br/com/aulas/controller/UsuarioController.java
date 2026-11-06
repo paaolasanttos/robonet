@@ -5,6 +5,7 @@ import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.EquipeMembroRepository;
 import br.com.aulas.repository.UsuarioRepository;
 import br.com.aulas.security.DatabaseUserContext;
+import br.com.aulas.security.SenhaPolitica;
 import br.com.aulas.service.AuditoriaService;
 import br.com.aulas.service.TurmaService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -63,8 +64,8 @@ public class UsuarioController {
         if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(erro("O e-mail é obrigatório."));
         }
-        if (dto.getSenha() == null || dto.getSenha().length() < 8) {
-            return ResponseEntity.badRequest().body(erro("A senha deve ter pelo menos 8 caracteres."));
+        if (!SenhaPolitica.valida(dto.getSenha())) {
+            return ResponseEntity.badRequest().body(erro(SenhaPolitica.MENSAGEM));
         }
         if (dto.getPerfil() == null) {
             return ResponseEntity.badRequest().body(erro("O perfil é obrigatório."));
@@ -158,8 +159,8 @@ public class UsuarioController {
         usuario.setPerfil(perfil);
         usuario.setRgm(perfil.equals("aluno") ? dto.getRgm().trim() : null);
         if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
-            if (dto.getSenha().length() < 8) {
-                return ResponseEntity.badRequest().body(erro("A senha deve ter pelo menos 8 caracteres."));
+            if (!SenhaPolitica.valida(dto.getSenha())) {
+                return ResponseEntity.badRequest().body(erro(SenhaPolitica.MENSAGEM));
             }
             usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
             auditoriaService.registrar("CRIPTOGRAFIA", "SENHA_ALTERADA",

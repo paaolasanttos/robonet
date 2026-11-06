@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { dataDeHoje, diaSeguinte } from "./torneioFormato";
 
 function getInitialData(torneio) {
   return {
     nome: torneio?.nome ?? "",
     local: torneio?.local ?? "",
-    dtInicio: torneio?.dtInicio ?? "",
+    dtInicio: torneio?.dtInicio ?? dataDeHoje(),
     dtFim: torneio?.dtFim ?? "",
     regras: torneio?.regras ?? "",
   };
@@ -24,8 +25,7 @@ export default function TorneioFormModal({ torneio, loading, onClose, onSubmit }
     const nextErrors = {};
 
     if (!form.nome.trim()) nextErrors.nome = "Informe o nome do torneio.";
-    if (!form.dtInicio) nextErrors.dtInicio = "Informe a data de início.";
-    if (form.dtInicio && form.dtFim && form.dtFim < form.dtInicio) nextErrors.dtFim = "O término não pode ser antes do início.";
+    if (form.dtFim && form.dtFim <= form.dtInicio) nextErrors.dtFim = "O término deve ser depois do início.";
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -67,13 +67,12 @@ export default function TorneioFormModal({ torneio, loading, onClose, onSubmit }
 
             <div className="form-field">
               <label htmlFor="torneio-inicio">Data de início *</label>
-              <input id="torneio-inicio" name="dtInicio" type="date" value={form.dtInicio} onChange={handleChange} disabled={loading} />
-              {errors.dtInicio && <span className="field-error">{errors.dtInicio}</span>}
+              <input id="torneio-inicio" name="dtInicio" type="date" value={form.dtInicio} disabled />
             </div>
 
             <div className="form-field">
               <label htmlFor="torneio-fim">Data de término</label>
-              <input id="torneio-fim" name="dtFim" type="date" value={form.dtFim} onChange={handleChange} disabled={loading} />
+              <input id="torneio-fim" name="dtFim" type="date" min={diaSeguinte(form.dtInicio)} value={form.dtFim} onChange={handleChange} disabled={loading} />
               {errors.dtFim && <span className="field-error">{errors.dtFim}</span>}
             </div>
 

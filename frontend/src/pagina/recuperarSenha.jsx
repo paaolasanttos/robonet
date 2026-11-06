@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../servicos/api";
+import SenhaRequisitos from "../componentes/senhaRequisitos";
+import { MENSAGEM_SENHA, senhaValida } from "../componentes/senhaRegras";
 
 export default function RecuperarSenhaPagina() {
   const navigate = useNavigate();
@@ -24,6 +26,7 @@ export default function RecuperarSenhaPagina() {
         setCodeRequested(true);
         setMessage("Confira seu e-mail e informe o código recebido.");
       } else {
+        if (!senhaValida(senha)) throw new Error(MENSAGEM_SENHA);
         if (senha !== confirmacao) throw new Error("As senhas não coincidem.");
         await authApi.redefinirSenha({ email, codigo, senha });
         setMessage("Senha definida com sucesso. Redirecionando para o login...");
@@ -65,11 +68,12 @@ export default function RecuperarSenhaPagina() {
               </div>
               <div className="form-field">
                 <label htmlFor="new-password">Nova senha</label>
-                <input id="new-password" type="password" minLength="8" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="new-password" required />
+                <input id="new-password" type="password" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="new-password" required />
+                <SenhaRequisitos senha={senha} />
               </div>
               <div className="form-field">
                 <label htmlFor="confirm-password">Confirme a nova senha</label>
-                <input id="confirm-password" type="password" minLength="8" value={confirmacao} onChange={(event) => setConfirmacao(event.target.value)} autoComplete="new-password" required />
+                <input id="confirm-password" type="password" value={confirmacao} onChange={(event) => setConfirmacao(event.target.value)} autoComplete="new-password" required />
               </div>
             </>
           )}

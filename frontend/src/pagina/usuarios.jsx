@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Alert from "../componentes/aulaModalAlert";
 import Loading from "../componentes/aulaModalCarregando";
+import SenhaRequisitos from "../componentes/senhaRequisitos";
+import { MENSAGEM_SENHA, senhaValida } from "../componentes/senhaRegras";
 import { turmasApi, usuariosApi } from "../servicos/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -85,8 +87,9 @@ export default function UsuariosPagina() {
   async function handleCreate(event) {
     event.preventDefault();
     setError("");
-    if (!form.nome.trim() || !form.email.trim() || (form.senha.length < 8 && (!editingId || form.senha.length > 0)) || (form.perfil === "aluno" && !form.rgm.trim())) {
-      setError(form.senha.length < 8 && (!editingId || form.senha.length > 0) ? "A senha deve ter pelo menos 8 caracteres." : form.perfil === "aluno" ? "Preencha nome, e-mail e RGM." : "Preencha nome e e-mail.");
+    const senhaInvalida = (!editingId || form.senha.length > 0) && !senhaValida(form.senha);
+    if (!form.nome.trim() || !form.email.trim() || senhaInvalida || (form.perfil === "aluno" && !form.rgm.trim())) {
+      setError(senhaInvalida ? MENSAGEM_SENHA : form.perfil === "aluno" ? "Preencha nome, e-mail e RGM." : "Preencha nome e e-mail.");
       return;
     }
     if (form.perfil === "aluno" && form.rgm.length !== 11) {
@@ -187,7 +190,7 @@ export default function UsuariosPagina() {
           <form className="user-form" onSubmit={handleCreate}>
             <div className="form-field"><label htmlFor="nome">Nome *</label><input id="nome" name="nome" value={form.nome} onChange={updateForm} placeholder="Nome completo" disabled={saving} /></div>
             <div className="form-field"><label htmlFor="email">E-mail *</label><input id="email" name="email" type="email" value={form.email} onChange={updateForm} placeholder="email@umc.br" disabled={saving} /></div>
-            <div className="form-field"><label htmlFor="senha">Senha {editingId ? "(opcional)" : "*"}</label><input id="senha" name="senha" type="password" value={form.senha} onChange={updateForm} placeholder={editingId ? "Deixe vazia para manter" : "Mínimo de 8 caracteres"} disabled={saving} required={!editingId} /></div>
+            <div className="form-field"><label htmlFor="senha">Senha {editingId ? "(opcional)" : "*"}</label><input id="senha" name="senha" type="password" value={form.senha} onChange={updateForm} placeholder={editingId ? "Deixe vazia para manter" : "Crie uma senha"} disabled={saving} required={!editingId} /></div>
             <div className="form-field"><label htmlFor="perfil">Perfil *</label><select id="perfil" name="perfil" value={form.perfil} onChange={updateForm} disabled={saving}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></div>
             {form.perfil === "aluno" && <div className="form-field"><label htmlFor="rgm">RGM *</label><input id="rgm" name="rgm" value={form.rgm} onChange={updateForm} placeholder="11 números" inputMode="numeric" maxLength="11" disabled={saving} /></div>}
             {form.perfil === "aluno" && <div className="form-field"><label htmlFor="turmaId">Turma</label><select id="turmaId" name="turmaId" value={form.turmaId} onChange={updateForm} disabled={saving}><option value="">Sem turma</option>{turmas.map((turma) => <option key={turma.id} value={turma.id}>{turma.nome}</option>)}</select></div>}
@@ -199,6 +202,7 @@ export default function UsuariosPagina() {
                 ))}
               </fieldset>
             )}
+            {(!editingId || form.senha) && <SenhaRequisitos senha={form.senha} />}
             <div className="user-form-actions">
               <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar usuário"}</button>
               {editingId && <button className="button button-light" type="button" onClick={cancelEditing} disabled={saving}>Cancelar edição</button>}
