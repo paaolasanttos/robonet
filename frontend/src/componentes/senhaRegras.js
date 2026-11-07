@@ -1,5 +1,5 @@
 export const requisitosSenha = [
-  { chave: "tamanho", texto: "Pelo menos 8 caracteres", atendido: (senha) => senha.length >= 8 },
+  { chave: "tamanho", texto: "De 8 a 50 caracteres", atendido: (senha) => senha.length >= 8 && senha.length <= 50 },
   { chave: "maiuscula", texto: "Uma letra maiúscula", atendido: (senha) => /\p{Lu}/u.test(senha) },
   { chave: "minuscula", texto: "Uma letra minúscula", atendido: (senha) => /\p{Ll}/u.test(senha) },
   { chave: "numero", texto: "Um número", atendido: (senha) => /\d/.test(senha) },

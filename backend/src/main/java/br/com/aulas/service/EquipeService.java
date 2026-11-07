@@ -3,6 +3,7 @@ package br.com.aulas.service;
 import br.com.aulas.dto.AlunoTurmaResponse;
 import br.com.aulas.dto.EquipeRequest;
 import br.com.aulas.dto.EquipeResponse;
+import br.com.aulas.dto.MinhaEquipeResponse;
 import br.com.aulas.dto.TurmaResponse;
 import br.com.aulas.exception.RegistroNaoEncontradoException;
 import br.com.aulas.model.Equipe;
@@ -57,6 +58,18 @@ public class EquipeService {
             return List.of();
         }
         return montarRespostas(equipeRepository.findByIdTurmaInOrderByNomeAsc(turmas));
+    }
+
+    @Transactional(readOnly = true)
+    public MinhaEquipeResponse minhaEquipe(Usuario usuario) {
+        Long idEquipe = equipeMembroRepository.equipeDoUsuario(usuario.getId());
+        if (idEquipe == null) {
+            return null;
+        }
+
+        EquipeResponse equipe = montarRespostas(List.of(buscar(idEquipe))).get(0);
+        return new MinhaEquipeResponse(equipe.nome(), equipe.turma(),
+                equipe.membros().stream().map(EquipeResponse.Membro::nome).sorted().toList());
     }
 
     @Transactional(readOnly = true)

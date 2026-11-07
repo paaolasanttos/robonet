@@ -38,6 +38,7 @@ public class TorneioService {
     public static final String ABERTO = "Aberto";
     public static final String ANDAMENTO = "Andamento";
     public static final String FINALIZADO = "Finalizado";
+    private static final long PONTOS_POR_VITORIA = 1;
 
     private final TorneioRepository torneioRepository;
     private final TorneioEquipeRepository torneioEquipeRepository;
@@ -287,6 +288,9 @@ public class TorneioService {
 
     private List<Posicao> montarRanking(List<Luta> lutas, int totalFases, Map<Long, EquipeTorneio> mapaEquipes) {
         List<Posicao> ranking = new ArrayList<>();
+        Map<Long, Long> pontos = lutas.stream()
+                .filter(luta -> luta.getIdVencedor() != null && luta.getIdEquipeA() != null && luta.getIdEquipeB() != null)
+                .collect(Collectors.groupingBy(Luta::getIdVencedor, Collectors.summingLong(luta -> PONTOS_POR_VITORIA)));
 
         for (Luta luta : lutas) {
             if (luta.getIdVencedor() == null || luta.getIdEquipeA() == null || luta.getIdEquipeB() == null) {
@@ -295,20 +299,23 @@ public class TorneioService {
 
             Long perdedor = luta.getIdVencedor().equals(luta.getIdEquipeA()) ? luta.getIdEquipeB() : luta.getIdEquipeA();
             int posicaoPerdedor = (int) Math.pow(2, totalFases - luta.getFase()) + 1;
-            ranking.add(novaPosicao(posicaoPerdedor, perdedor, mapaEquipes));
+            ranking.add(novaPosicao(posicaoPerdedor, perdedor, mapaEquipes, pontos));
 
             if (luta.getFase() == totalFases) {
-                ranking.add(novaPosicao(1, luta.getIdVencedor(), mapaEquipes));
+                ranking.add(novaPosicao(1, luta.getIdVencedor(), mapaEquipes, pontos));
             }
         }
 
-        ranking.sort(Comparator.comparingInt(Posicao::posicao).thenComparing(Posicao::equipe));
+        ranking.sort(Comparator.comparingInt(Posicao::posicao)
+                .thenComparing(Comparator.comparingLong(Posicao::pontos).reversed())
+                .thenComparing(Posicao::equipe));
         return ranking;
     }
 
-    private Posicao novaPosicao(int posicao, Long idEquipe, Map<Long, EquipeTorneio> mapaEquipes) {
+    private Posicao novaPosicao(int posicao, Long idEquipe, Map<Long, EquipeTorneio> mapaEquipes, Map<Long, Long> pontos) {
         EquipeTorneio equipe = mapaEquipes.get(idEquipe);
-        return new Posicao(posicao, idEquipe, equipe != null ? equipe.nome() : "-", equipe != null ? equipe.turma() : "-");
+        return new Posicao(posicao, idEquipe, equipe != null ? equipe.nome() : "-", equipe != null ? equipe.turma() : "-",
+                pontos.getOrDefault(idEquipe, 0L));
     }
 
     private boolean lutaApta(Luta luta) {

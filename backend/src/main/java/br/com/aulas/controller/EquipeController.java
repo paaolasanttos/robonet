@@ -3,6 +3,7 @@ package br.com.aulas.controller;
 import br.com.aulas.dto.AlunoTurmaResponse;
 import br.com.aulas.dto.EquipeRequest;
 import br.com.aulas.dto.EquipeResponse;
+import br.com.aulas.dto.MinhaEquipeResponse;
 import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.UsuarioRepository;
 import br.com.aulas.service.EquipeService;
@@ -31,6 +32,13 @@ public class EquipeController {
     @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
     public ResponseEntity<List<EquipeResponse>> listar(Authentication authentication) {
         return ResponseEntity.ok(service.listar(usuarioLogado(authentication)));
+    }
+
+    @GetMapping("/minha")
+    @PreAuthorize("hasRole('ALUNO')")
+    public ResponseEntity<MinhaEquipeResponse> minhaEquipe(Authentication authentication) {
+        MinhaEquipeResponse equipe = service.minhaEquipe(usuarioLogado(authentication));
+        return equipe == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(equipe);
     }
 
     @GetMapping("/alunos")

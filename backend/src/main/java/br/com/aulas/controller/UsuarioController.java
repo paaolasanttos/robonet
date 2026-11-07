@@ -61,6 +61,9 @@ public class UsuarioController {
         if (dto.getNome() == null || dto.getNome().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(erro("O nome é obrigatório."));
         }
+        if (dto.getNome().trim().length() > 50) {
+            return ResponseEntity.badRequest().body(erro("O nome deve ter no máximo 50 caracteres."));
+        }
         if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(erro("O e-mail é obrigatório."));
         }
@@ -125,6 +128,9 @@ public class UsuarioController {
                 || dto.getEmail() == null || dto.getEmail().trim().isEmpty()
                 || dto.getPerfil() == null || dto.getPerfil().isBlank()) {
             return ResponseEntity.badRequest().body(erro("Nome, e-mail e perfil são obrigatórios."));
+        }
+        if (dto.getNome().trim().length() > 50) {
+            return ResponseEntity.badRequest().body(erro("O nome deve ter no máximo 50 caracteres."));
         }
 
         String email = dto.getEmail().trim();

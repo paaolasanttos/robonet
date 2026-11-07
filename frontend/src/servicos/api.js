@@ -146,6 +146,12 @@ export const meusDadosApi = {
     method: "PUT",
     body: JSON.stringify(dados),
   }),
+  exportar: () => request("/api/meus-dados/exportar"),
+  solicitarExclusao: (dados) => request("/api/meus-dados/exclusao", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  }),
+  cancelarExclusao: () => request("/api/meus-dados/exclusao", { method: "DELETE" }),
 };
 
 export const aulasAlunoApi = {
@@ -184,6 +190,7 @@ export const turmasApi = {
 
 export const equipesApi = {
   listar: () => request("/api/equipes"),
+  minha: () => request("/api/equipes/minha"),
   listarAlunos: (turmaId) => request(`/api/equipes/alunos?turmaId=${turmaId}`),
   criar: (equipe) => request("/api/equipes", {
     method: "POST",

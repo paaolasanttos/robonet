@@ -5,6 +5,7 @@ import Alert from "../componentes/aulaModalAlert";
 import Loading from "../componentes/aulaModalCarregando";
 import SenhaRequisitos from "../componentes/senhaRequisitos";
 import { MENSAGEM_SENHA, senhaValida } from "../componentes/senhaRegras";
+import { formatarData } from "../componentes/torneioFormato";
 import { meusDadosApi } from "../servicos/api";
 
 const EMAIL_ATENDIMENTO = "robonet.umc@gmail.com";
@@ -33,6 +34,8 @@ export default function MeusDadosPagina() {
   const [formEmail, setFormEmail] = useState({ novoEmail: "", senhaAtual: "", codigo: "" });
   const [codigoEnviado, setCodigoEnviado] = useState(false);
   const [formSenha, setFormSenha] = useState({ senhaAtual: "", novaSenha: "", confirmacao: "" });
+  const [senhaExclusao, setSenhaExclusao] = useState("");
+  const [exclusaoConfirmada, setExclusaoConfirmada] = useState(false);
 
   useEffect(() => {
     if (perfil === "admin") return;
@@ -70,6 +73,7 @@ export default function MeusDadosPagina() {
       setError(err.message || "Não foi possível concluir a operação.");
     } finally {
       setSaving(false);
+      window.scrollTo(0, 0);
     }
   }
 
@@ -114,6 +118,39 @@ export default function MeusDadosPagina() {
     });
   }
 
+  function baixarDados() {
+    executar(async () => {
+      const exportacao = await meusDadosApi.exportar();
+      const arquivo = new Blob([JSON.stringify(exportacao, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(arquivo);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "robonet-meus-dados.json";
+      link.click();
+      URL.revokeObjectURL(url);
+      setFeedback("Cópia dos seus dados gerada.");
+    });
+  }
+
+  function solicitarExclusao(event) {
+    event.preventDefault();
+    executar(async () => {
+      await meusDadosApi.solicitarExclusao({ senhaAtual: senhaExclusao });
+      setDados(await meusDadosApi.consultar());
+      setSenhaExclusao("");
+      setExclusaoConfirmada(false);
+      setFeedback("Solicitação de exclusão registrada.");
+    });
+  }
+
+  function cancelarExclusao() {
+    executar(async () => {
+      await meusDadosApi.cancelarExclusao();
+      setDados(await meusDadosApi.consultar());
+      setFeedback("Solicitação de exclusão cancelada.");
+    });
+  }
+
   return (
     <main className="app-shell">
       <nav className="navbar" aria-label="Navegação principal">
@@ -147,7 +184,7 @@ export default function MeusDadosPagina() {
           <div>
             <span className="eyebrow">ROBONET</span>
             <h1>Meus dados</h1>
-            <p>Consulte seu cadastro e altere o e-mail e a senha de acesso.</p>
+            <p>Consulte seu cadastro, altere o acesso e exerça seus direitos sobre os dados.</p>
           </div>
         </header>
 
@@ -218,6 +255,60 @@ export default function MeusDadosPagina() {
                   <button type="submit" className="button button-primary" disabled={saving}>Alterar senha</button>
                 </div>
               </form>
+            </section>
+
+            <section className="content-card meus-dados-secao">
+              <div className="section-heading"><span className="eyebrow">LGPD</span><h2>Cópia dos meus dados</h2></div>
+              <p className="meus-dados-ajuda">Baixe um arquivo com seu cadastro, turmas, equipe, aulas concluídas, simulados realizados, aceites do termo e acessos. Você pode guardar ou compartilhar esse arquivo como preferir.</p>
+              <div className="meus-dados-acoes">
+                <button type="button" className="button button-light" onClick={baixarDados} disabled={saving}>Baixar meus dados</button>
+              </div>
+            </section>
+
+            <section className="content-card meus-dados-secao">
+              <div className="section-heading"><span className="eyebrow">LGPD</span><h2>Excluir minha conta</h2></div>
+              {dados.exclusaoAte ? (
+                <>
+                  <p className="meus-dados-ajuda">Exclusão solicitada em <strong>{formatarData(dados.exclusaoSolicitadaEm)}</strong>. Seus dados serão excluídos até <strong>{formatarData(dados.exclusaoAte)}</strong>. Até lá, você continua com acesso e pode cancelar o pedido.</p>
+                  <div className="meus-dados-acoes">
+                    <button type="button" className="button button-secondary" onClick={cancelarExclusao} disabled={saving}>Cancelar solicitação</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="meus-dados-exclusao">
+                    <div>
+                      <h3>O que será excluído</h3>
+                      <ul>
+                        <li>Nome, RGM, e-mail e senha da conta</li>
+                        <li>Vínculos com turmas e equipes</li>
+                        <li>Aulas concluídas e simulados realizados</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h3>O que será mantido para auditoria</h3>
+                      <ul>
+                        <li>Registros de auditoria e de acesso</li>
+                        <li>Aceites do termo e o pedido de exclusão</li>
+                        <li>Resultados de torneios, sem identificar você</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <form className="meus-dados-form" onSubmit={solicitarExclusao}>
+                    <div className="form-field meus-dados-campo-inteiro">
+                      <label htmlFor="senha-exclusao">Senha atual</label>
+                      <input id="senha-exclusao" type="password" value={senhaExclusao} onChange={(event) => setSenhaExclusao(event.target.value)} autoComplete="current-password" required disabled={saving} />
+                    </div>
+                    <label className="checkbox-item meus-dados-campo-inteiro">
+                      <input type="checkbox" checked={exclusaoConfirmada} onChange={(event) => setExclusaoConfirmada(event.target.checked)} disabled={saving} />
+                      Entendo que, após o prazo de até 15 dias, a conta não poderá ser recuperada.
+                    </label>
+                    <div className="user-form-actions">
+                      <button type="submit" className="button button-danger" disabled={saving || !exclusaoConfirmada}>Solicitar exclusão</button>
+                    </div>
+                  </form>
+                </>
+              )}
             </section>
           </>
         )}

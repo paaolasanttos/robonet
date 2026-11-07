@@ -234,15 +234,17 @@ export default function TorneioDetalhe({ id, perfil, onVoltar }) {
       {ranking.length > 0 && (
         <section className="content-card torneio-secao">
           <div className="section-heading"><span className="eyebrow">Ranking</span><h2>{torneio.status === "Finalizado" ? "Classificação final" : "Classificação parcial"}</h2></div>
+          <p className="torneio-ajuda">Cada luta vencida vale 1 ponto. A posição é definida pela fase alcançada e, na mesma fase, pelos pontos.</p>
           <div className="table-container">
             <table>
-              <thead><tr><th>Posição</th><th>Equipe</th><th>Turma</th></tr></thead>
+              <thead><tr><th>Posição</th><th>Equipe</th><th>Turma</th><th>Pontos</th></tr></thead>
               <tbody>
                 {ranking.map((item) => (
                   <tr key={item.equipeId} className={item.posicao === 1 ? "ranking-campeao" : ""}>
                     <td><strong>{item.posicao}º</strong>{item.posicao === 1 && " Campeão"}</td>
                     <td>{item.equipe}</td>
                     <td>{item.turma || "-"}</td>
+                    <td>{item.pontos}</td>
                   </tr>
                 ))}
               </tbody>

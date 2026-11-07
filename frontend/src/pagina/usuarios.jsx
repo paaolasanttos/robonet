@@ -188,7 +188,7 @@ export default function UsuariosPagina() {
         <section className="content-card user-create-card">
           <div className="section-heading"><span className="eyebrow">Cadastro</span><h2>{editingId ? "Editar usuário" : "Novo usuário"}</h2></div>
           <form className="user-form" onSubmit={handleCreate}>
-            <div className="form-field"><label htmlFor="nome">Nome *</label><input id="nome" name="nome" value={form.nome} onChange={updateForm} placeholder="Nome completo" disabled={saving} /></div>
+            <div className="form-field"><label htmlFor="nome">Nome *</label><input id="nome" name="nome" value={form.nome} onChange={updateForm} placeholder="Nome completo" maxLength="50" disabled={saving} /></div>
             <div className="form-field"><label htmlFor="email">E-mail *</label><input id="email" name="email" type="email" value={form.email} onChange={updateForm} placeholder="email@umc.br" disabled={saving} /></div>
             <div className="form-field"><label htmlFor="senha">Senha {editingId ? "(opcional)" : "*"}</label><input id="senha" name="senha" type="password" value={form.senha} onChange={updateForm} placeholder={editingId ? "Deixe vazia para manter" : "Crie uma senha"} disabled={saving} required={!editingId} /></div>
             <div className="form-field"><label htmlFor="perfil">Perfil *</label><select id="perfil" name="perfil" value={form.perfil} onChange={updateForm} disabled={saving}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></div>

@@ -9,5 +9,5 @@ public record TorneioDetalheResponse(TorneioResponse torneio, List<EquipeTorneio
     public record LutaResponse(Long id, int fase, int ordem, EquipeTorneio equipeA, EquipeTorneio equipeB,
                                Long vencedorId, boolean apta) {}
 
-    public record Posicao(int posicao, Long equipeId, String equipe, String turma) {}
+    public record Posicao(int posicao, Long equipeId, String equipe, String turma, long pontos) {}
 }
