@@ -2,6 +2,7 @@ package br.com.aulas.controller;
 
 import br.com.aulas.dto.AulaRequest;
 import br.com.aulas.dto.AulaResponse;
+import br.com.aulas.dto.AulaUsuarioResponse;
 import br.com.aulas.model.AulaTema;
 import br.com.aulas.service.AulaService;
 import jakarta.validation.Valid;
@@ -31,6 +32,11 @@ public class AulaController {
     @GetMapping("/{id:\\d+}")
     public ResponseEntity<AulaResponse> buscarPorId(@PathVariable Integer id) {
         return ResponseEntity.ok(service.buscarPorId(id));
+    }
+
+    @GetMapping("/{id:\\d+}/usuarios")
+    public ResponseEntity<List<AulaUsuarioResponse>> listarUsuarios(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.listarUsuariosAssociados(id));
     }
 
     @GetMapping("/temas")

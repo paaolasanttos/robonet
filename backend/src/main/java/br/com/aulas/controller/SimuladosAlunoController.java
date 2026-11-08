@@ -1,6 +1,7 @@
 package br.com.aulas.controller;
 
 import br.com.aulas.dto.SimuladoAlunoResponse;
+import br.com.aulas.dto.SimuladoRealizadoResponse;
 import br.com.aulas.dto.SimuladoRespostaRequest;
 import br.com.aulas.dto.SimuladoResultadoResponse;
 import br.com.aulas.model.Usuario;
@@ -29,6 +30,16 @@ public class SimuladosAlunoController {
     @GetMapping
     public ResponseEntity<List<SimuladoAlunoResponse>> listar(Authentication authentication) {
         return ResponseEntity.ok(service.listarParaAluno(usuarioAtual(authentication).getId()));
+    }
+
+    @GetMapping("/realizados")
+    public ResponseEntity<List<SimuladoRealizadoResponse>> listarRealizados(Authentication authentication) {
+        return ResponseEntity.ok(service.listarRealizados(usuarioAtual(authentication).getId()));
+    }
+
+    @GetMapping("/{id:\\d+}")
+    public ResponseEntity<SimuladoAlunoResponse> buscar(@PathVariable Integer id, Authentication authentication) {
+        return ResponseEntity.ok(service.buscarParaAluno(usuarioAtual(authentication).getId(), id));
     }
 
     @PostMapping("/{id:\\d+}/responder")

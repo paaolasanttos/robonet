@@ -7,6 +7,7 @@ import SenhaRequisitos from "../componentes/senhaRequisitos";
 import { MENSAGEM_SENHA, senhaValida } from "../componentes/senhaRegras";
 import { formatarData } from "../componentes/torneioFormato";
 import { meusDadosApi } from "../servicos/api";
+import TermoConteudo, { TERMO_DATA, TERMO_VERSAO } from "../componentes/termoConteudo";
 
 export default function MeusDadosPagina() {
   const { session, logout } = useAuth();
@@ -143,12 +144,11 @@ export default function MeusDadosPagina() {
         </a>
 
         <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Home</Link>
+          <Link className="navbar-link" to="/home">Dashboard</Link>
           {perfil === "aluno" ? <Link className="navbar-link" to="/aulas-aluno">Aulas</Link> : <Link className="navbar-link" to="/aulas">Aulas</Link>}
           {perfil === "aluno" ? <Link className="navbar-link" to="/simulados-aluno">Simulados</Link> : <Link className="navbar-link" to="/simulados">Simulados</Link>}
           <Link className="navbar-link" to="/torneios">Torneios</Link>
           <Link className="navbar-link navbar-link-active" to="/meus-dados" aria-current="page">Meus dados</Link>
-          <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
 
         <div className="navbar-user">
@@ -176,10 +176,11 @@ export default function MeusDadosPagina() {
           <>
             <div className="abas meus-dados-abas" role="tablist" aria-label="Opções de meus dados">
               <button type="button" className={`aba ${aba === "cadastro" ? "aba-ativa" : ""}`} role="tab" id="aba-cadastro" aria-controls="painel-cadastro" aria-selected={aba === "cadastro"} onClick={() => setAba("cadastro")}>Dados Cadastrais</button>
-              <button type="button" className={`aba ${aba === "alteracao" ? "aba-ativa" : ""}`} role="tab" id="aba-alteracao" aria-controls="painel-alteracao" aria-selected={aba === "alteracao"} onClick={() => setAba("alteracao")}>Alterar Dados</button>
+              <button type="button" className={`aba ${aba === "alteracao" ? "aba-ativa" : ""}`} role="tab" id="aba-alteracao" aria-controls="painel-alteracao" aria-selected={aba === "alteracao"} onClick={() => setAba("alteracao")}>Solicitar Alteração</button>
               <button type="button" className={`aba ${aba === "senha" ? "aba-ativa" : ""}`} role="tab" id="aba-senha" aria-controls="painel-senha" aria-selected={aba === "senha"} onClick={() => setAba("senha")}>Alterar Senha</button>
               <button type="button" className={`aba ${aba === "copia" ? "aba-ativa" : ""}`} role="tab" id="aba-copia" aria-controls="painel-copia" aria-selected={aba === "copia"} onClick={() => setAba("copia")}>Cópia dos Dados</button>
               <button type="button" className={`aba ${aba === "exclusao" ? "aba-ativa" : ""}`} role="tab" id="aba-exclusao" aria-controls="painel-exclusao" aria-selected={aba === "exclusao"} onClick={() => setAba("exclusao")}>Excluir Conta</button>
+              <button type="button" className={`aba ${aba === "termo" ? "aba-ativa" : ""}`} role="tab" id="aba-termo" aria-controls="painel-termo" aria-selected={aba === "termo"} onClick={() => setAba("termo")}>Termo de Uso e Privacidade</button>
             </div>
 
             {aba === "cadastro" && <section className="content-card meus-dados-secao" role="tabpanel" id="painel-cadastro" aria-labelledby="aba-cadastro" tabIndex="0">
@@ -330,6 +331,12 @@ export default function MeusDadosPagina() {
                 </>
               )}
             </section>}
+            
+            {aba === "termo" && <section className="content-card meus-dados-secao" role="tabpanel" id="painel-termo" aria-labelledby="aba-termo" tabIndex="0">
+              <div className="section-heading"><span className="eyebrow">Termo</span><h2>Termo de uso e Privacidade</h2></div>
+              <p className="meus-dados-ajuda">Versão {TERMO_VERSAO} • {TERMO_DATA}</p>
+              <div className="termo-box meus-dados-termo-box" aria-label="Conteúdo do termo de uso e aviso de privacidade"><TermoConteudo /></div>
+            </section>}            
           </>
         )}
       </section>

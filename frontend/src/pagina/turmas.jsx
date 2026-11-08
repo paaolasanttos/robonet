@@ -79,14 +79,13 @@ export default function TurmasPagina() {
           <span><strong>ROBONET</strong></span>
         </Link>
         <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Home</Link>
+          <Link className="navbar-link" to="/home">Dashboard</Link>
           <Link className="navbar-link" to="/aulas">Aulas</Link>
           <Link className="navbar-link" to="/simulados">Simulados</Link>
           <Link className="navbar-link" to="/torneios">Torneios</Link>
           <Link className="navbar-link navbar-link-active" to="/turmas" aria-current="page">Turmas</Link>
           <Link className="navbar-link" to="/usuarios">Usuários</Link>
           <Link className="navbar-link" to="/auditoria">Auditoria</Link>
-          <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
         <div className="navbar-user">
           <div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div>

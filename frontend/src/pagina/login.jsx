@@ -15,6 +15,7 @@ export default function LoginPagina() {
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [codigo, setCodigo] = useState("");
   const [codeRequested, setCodeRequested] = useState(false);
   const [error, setError] = useState("");
@@ -72,7 +73,16 @@ export default function LoginPagina() {
           {!codeRequested && 
             <div className="form-field">
               <label htmlFor="login-password">Senha</label>
-              <input id="login-password" type="password" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required />
+              <div className="login-password-field">
+                <input id="login-password" type={mostrarSenha ? "text" : "password"} value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required />
+                <button className="login-password-toggle" type="button" onClick={() => setMostrarSenha((mostrar) => !mostrar)} aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"} aria-pressed={mostrarSenha}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                    <circle cx="12" cy="12" r="3" />
+                    {!mostrarSenha && <path d="m3 3 18 18" />}
+                  </svg>
+                </button>
+              </div>
             </div>
           }
           {codeRequested && 

@@ -7,6 +7,8 @@ import { simuladosAlunoApi } from "../servicos/api";
 export default function SimuladosAlunoPagina() {
   const { session, logout } = useAuth();
   const [simulados, setSimulados] = useState([]);
+  const [realizados, setRealizados] = useState([]);
+  const [aba, setAba] = useState("abertos");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -14,12 +16,17 @@ export default function SimuladosAlunoPagina() {
   const [respostas, setRespostas] = useState({});
   const [resultado, setResultado] = useState(null);
   const [enviando, setEnviando] = useState(false);
+  const [carregandoSimulado, setCarregandoSimulado] = useState(null);
 
   useEffect(() => {
     async function carregar() {
       try {
-        const data = await simuladosAlunoApi.listar();
-        setSimulados(Array.isArray(data) ? data : []);
+        const [abertos, concluidos] = await Promise.all([
+          simuladosAlunoApi.listar(),
+          simuladosAlunoApi.listarRealizados(),
+        ]);
+        setSimulados(Array.isArray(abertos) ? abertos : []);
+        setRealizados(Array.isArray(concluidos) ? concluidos : []);
       } catch (err) {
         setError(err.message || "Não foi possível carregar os simulados.");
       } finally {
@@ -42,6 +49,18 @@ export default function SimuladosAlunoPagina() {
     setError("");
   }
 
+  async function refazer(simuladoId) {
+    setCarregandoSimulado(simuladoId);
+    setError("");
+    try {
+      abrir(await simuladosAlunoApi.buscar(simuladoId));
+    } catch (err) {
+      setError(err.message || "Não foi possível abrir o simulado.");
+    } finally {
+      setCarregandoSimulado(null);
+    }
+  }
+
   async function enviarRespostas(event) {
     event.preventDefault();
     if (!selectedSimulado || Object.keys(respostas).length !== selectedSimulado.perguntas.length) {
@@ -60,7 +79,17 @@ export default function SimuladosAlunoPagina() {
         }))
       );
       setResultado(resultadoObtido);
-      setFeedback(`Simulado concluído: ${resultadoObtido.acertos} de ${resultadoObtido.total} acertos.`);
+      setFeedback(`Simulado concluído: ${resultadoObtido.acertos} de ${resultadoObtido.total} acertos na tentativa ${resultadoObtido.tentativa}.`);
+      try {
+        const [abertos, concluidos] = await Promise.all([
+          simuladosAlunoApi.listar(),
+          simuladosAlunoApi.listarRealizados(),
+        ]);
+        setSimulados(Array.isArray(abertos) ? abertos : []);
+        setRealizados(Array.isArray(concluidos) ? concluidos : []);
+      } catch (err) {
+        setError(`Suas respostas foram registradas, mas não foi possível atualizar o histórico: ${err.message || "tente novamente."}`);
+      }
     } catch (err) {
       setError(err.message || "Não foi possível enviar suas respostas.");
     } finally {
@@ -73,12 +102,11 @@ export default function SimuladosAlunoPagina() {
       <nav className="navbar" aria-label="Navegação principal">
         <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial"><span className="brand-mark">R</span><span><strong>ROBONET</strong><small>Aluno</small></span></a>
         <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Home</Link>
+          <Link className="navbar-link" to="/home">Dashboard</Link>
           <Link className="navbar-link" to="/aulas-aluno">Aulas</Link>
           <Link className="navbar-link navbar-link-active" to="/simulados-aluno" aria-current="page">Simulados</Link>
           <Link className="navbar-link" to="/torneios">Torneios</Link>
           <Link className="navbar-link" to="/meus-dados">Meus dados</Link>
-          <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
         <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
       </nav>
@@ -91,11 +119,37 @@ export default function SimuladosAlunoPagina() {
           {feedback && <Alert type="success" message={feedback} onClose={() => setFeedback("")} />}
           {error && !selectedSimulado && <Alert type="error" message={error} onClose={() => setError("")} />}
 
-          {loading ? <div className="empty-state"><h2>Carregando simulados...</h2></div> : simulados.length === 0 ? (
-            <div className="empty-state"><h2>Nenhum simulado disponível no momento.</h2><p>Os simulados aparecem aqui quando são vinculados aos temas das suas aulas.</p></div>
-          ) : (
-            <div className="student-grid">
-              {simulados.map((simulado) => (
+          <div className="student-simulado-tabs" role="tablist" aria-label="Lista de simulados">
+            <button
+              className={`student-simulado-tab${aba === "abertos" ? " student-simulado-tab-active" : ""}`}
+              id="tab-simulados-abertos"
+              type="button"
+              role="tab"
+              aria-selected={aba === "abertos"}
+              aria-controls="painel-simulados-abertos"
+              onClick={() => setAba("abertos")}
+            >
+              Simulados em Aberto
+            </button>
+            <button
+              className={`student-simulado-tab${aba === "realizados" ? " student-simulado-tab-active" : ""}`}
+              id="tab-simulados-realizados"
+              type="button"
+              role="tab"
+              aria-selected={aba === "realizados"}
+              aria-controls="painel-simulados-realizados"
+              onClick={() => setAba("realizados")}
+            >
+              Simulados já realizados
+            </button>
+          </div>
+
+          {loading ? <div className="empty-state"><h2>Carregando simulados...</h2></div> : aba === "abertos" ? (
+            <div id="painel-simulados-abertos" role="tabpanel" aria-labelledby="tab-simulados-abertos">
+              {simulados.length === 0 ? (
+                <div className="empty-state"><h2>Nenhum simulado em aberto.</h2><p>Os simulados aparecem aqui quando são vinculados aos temas das suas aulas.</p></div>
+              ) : <div className="student-grid">
+                {simulados.map((simulado) => (
                 <article className="student-aula-card" key={simulado.id}>
                   <div className="student-aula-top"><span className="student-aula-tema">{simulado.tema || "Tema geral"}</span></div>
                   <h2>{simulado.titulo}</h2>
@@ -103,6 +157,42 @@ export default function SimuladosAlunoPagina() {
                   <button className="button button-primary" onClick={() => abrir(simulado)}>Iniciar simulado</button>
                 </article>
               ))}
+              </div>}
+            </div>
+          ) : (
+            <div id="painel-simulados-realizados" role="tabpanel" aria-labelledby="tab-simulados-realizados">
+              {realizados.length === 0 ? (
+                <div className="empty-state"><h2>Você ainda não realizou simulados.</h2><p>Quando concluir um simulado, seu resultado aparecerá aqui.</p></div>
+              ) : <div className="student-grid">
+                {realizados.map((realizado) => (
+                  <article className="student-aula-card student-simulado-realizado-card" key={`${realizado.simuladoId}-${realizado.tentativa}`}>
+                    <div className="student-aula-top"><span className="student-aula-tema">{realizado.tema || "Tema geral"}</span></div>
+                    <h2>{realizado.titulo}</h2>
+                    <p className="student-simulado-tentativa">Tentativa {realizado.tentativa} · {new Date(realizado.dataRealizacao).toLocaleString("pt-BR")}</p>
+                    <div className="simulado-result">
+                      <strong>{realizado.acertos}/{realizado.total} questões</strong>
+                      <span>{Math.round(realizado.percentual)}% de aproveitamento</span>
+                    </div>
+                    <ul className="student-simulado-perguntas">
+                      {realizado.perguntas.map((pergunta) => (
+                        <li key={pergunta.id}>
+                          <span>{pergunta.enunciado}</span>
+                          <strong className={pergunta.correta ? "student-simulado-correta" : "student-simulado-incorreta"}>
+                            {pergunta.correta ? "Acertou" : "Errou"}
+                          </strong>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      className="button button-secondary"
+                      onClick={() => refazer(realizado.simuladoId)}
+                      disabled={carregandoSimulado === realizado.simuladoId}
+                    >
+                      {carregandoSimulado === realizado.simuladoId ? "Carregando..." : "Refazer simulado"}
+                    </button>
+                  </article>
+                ))}
+              </div>}
             </div>
           )}
         </div>

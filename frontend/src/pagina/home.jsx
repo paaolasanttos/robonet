@@ -4,6 +4,31 @@ import Alert from "../componentes/aulaModalAlert";
 import { useAuth } from "../context/AuthContext";
 import { dashboardApi } from "../servicos/api";
 
+const formatarNumero = (valor) => Number(valor || 0).toLocaleString("pt-BR");
+
+function LinhaResultado({ label, valor, total, className }) {
+  const percentual = total > 0 ? (valor / total) * 100 : 0;
+
+  return (
+    <div className="dashboard-chart-row">
+      <div className="dashboard-chart-label">
+        <span>{label}</span>
+        <strong>{formatarNumero(valor)}</strong>
+      </div>
+      <div
+        className="dashboard-chart-track"
+        role="progressbar"
+        aria-label={label}
+        aria-valuenow={valor}
+        aria-valuemin={0}
+        aria-valuemax={total}
+      >
+        <span className={`dashboard-chart-bar ${className}`} style={{ width: `${percentual}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export default function HomePagina() {
   const { session, logout } = useAuth();
   const perfil = String(session?.usuario?.perfil || "").toLowerCase();
@@ -25,33 +50,16 @@ export default function HomePagina() {
     carregarResumo();
   }, []);
 
-  const metricas = [
-    { key: "aulas", label: "Aulas concluídas", value: resumo?.aulasConcluidas || 0, className: "dashboard-bar-lessons" },
-    { key: "simulados", label: "Simulados realizados", value: resumo?.simuladosRealizados || 0, className: "dashboard-bar-quizzes" },
-  ];
-  const maiorMetrica = Math.max(...metricas.map((metrica) => metrica.value), 1);
-
-  const cards = perfil === "aluno"
-    ? [
-        { to: "/aulas-aluno", title: "Aulas para alunos", description: "Acesse as aulas disponíveis e acompanhe o conteúdo." },
-      { to: "/simulados-aluno", title: "Simulados", description: "Pratique os conteúdos das aulas e confira seu resultado." },
-      { to: "/torneios", title: "Torneios", description: "Acompanhe o chaveamento e os vencedores das lutas." },
-    ]
-    : perfil === "professor"
-    ? [
-        { to: "/aulas", title: "Aulas", description: "Cadastre, edite e acompanhe as aulas da plataforma." },
-        { to: "/simulados", title: "Simulados", description: "Crie questões de múltipla escolha vinculadas aos temas das aulas." },
-        { to: "/torneios", title: "Torneios", description: "Monte as equipes, organize os torneios e registre os vencedores." },
-      ]
-    : [
-        { to: "/aulas", title: "Aulas", description: "Gerencie e acompanhe as aulas cadastradas." },
-        { to: "/simulados", title: "Simulados", description: "Crie questões de múltipla escolha vinculadas aos temas das aulas." },
-        { to: "/turmas", title: "Cadastro de Turma", description: "Cadastre e gerencie as turmas da plataforma." },
-        { to: "/usuarios", title: "Usuários", description: "Cadastre e mantenha os perfis de acesso." },
-        { to: "/torneios", title: "Torneios", description: "Acompanhe e administre os torneios cadastrados." },
-        { to: "/auditoria", title: "Auditoria", description: "Consulte os registros do sistema." },
-      ];
-
+  const simulados = {
+    total: resumo?.simuladosRealizados || 0,
+    acertos: resumo?.acertos || 0,
+    erros: resumo?.erros || 0,
+  };
+  const torneios = {
+    total: resumo?.torneiosDisputados || 0,
+    vitorias: resumo?.vitorias || 0,
+    derrotas: resumo?.derrotas || 0,
+  };
   return (
     <main className="app-shell">
       <nav className="navbar" aria-label="Navegação principal">
@@ -72,7 +80,6 @@ export default function HomePagina() {
           {perfil === "admin" && <Link className="navbar-link" to="/turmas">Turmas</Link>}
           {perfil !== "aluno" && <Link className="navbar-link" to="/auditoria">Auditoria</Link>}
           {perfil !== "admin" && <Link className="navbar-link" to="/meus-dados">Meus dados</Link>}
-          <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
 
         <div className="navbar-user">
@@ -90,65 +97,59 @@ export default function HomePagina() {
             <span className="eyebrow">Dashboard</span>
             <h1>Bem-vindo ao ROBONET</h1>
             <p>{perfil === "aluno"
-              ? "Acompanhe seu progresso em aulas e simulados."
-              : "Acompanhe o progresso dos alunos ativos em aulas e simulados."}</p>
+              ? "Acompanhe seu desempenho em simulados e torneios."
+              : "Acompanhe o desempenho dos alunos em simulados e torneios."}</p>
           </div>
         </header>
 
-        <section className="content-card dashboard-panel" aria-labelledby="dashboard-chart-title">
-          <div className="dashboard-panel-heading">
-            <div>
-              <span className="eyebrow">Progresso</span>
-              <h2 id="dashboard-chart-title">Aulas concluídas x simulados realizados</h2>
-              <p>{perfil === "aluno"
-                ? "Seus totais registrados na plataforma."
-                : "Totais registrados pelos alunos ativos da plataforma."}</p>
-            </div>
-            {!loadingResumo && resumo && (
-              <span className="dashboard-period">{perfil === "aluno" ? "Seu resumo" : "Visão geral"}</span>
-            )}
-          </div>
+        {erroResumo && <Alert type="error" message={erroResumo} onClose={() => setErroResumo("")} />}
 
-          {erroResumo && <Alert type="error" message={erroResumo} onClose={() => setErroResumo("")} />}
-          {loadingResumo ? (
-            <div className="dashboard-loading" role="status">Carregando dados do dashboard...</div>
-          ) : resumo && (
-            <div className="dashboard-chart" role="img" aria-label={`Gráfico de barras: ${metricas[0].label}: ${metricas[0].value}; ${metricas[1].label}: ${metricas[1].value}.`}>
-              {metricas.map((metrica) => (
-                <div className="dashboard-chart-row" key={metrica.key}>
-                  <div className="dashboard-chart-label">
-                    <span>{metrica.label}</span>
-                    <strong>{metrica.value}</strong>
-                  </div>
-                  <div className="dashboard-chart-track" aria-hidden="true">
-                    <span
-                      className={`dashboard-chart-bar ${metrica.className}`}
-                      style={{ width: `${(metrica.value / maiorMetrica) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-              <div className="dashboard-chart-legend" aria-hidden="true">
-                <span><i className="dashboard-legend-lessons" />Aulas</span>
-                <span><i className="dashboard-legend-quizzes" />Simulados</span>
+        <section className="dashboard-results" aria-label="Resultados de simulados e torneios">
+          <article className="content-card dashboard-panel" aria-labelledby="dashboard-simulados">
+            <div className="dashboard-panel-heading">
+              <div>
+                <span className="eyebrow">Desempenho</span>
+                <h2 id="dashboard-simulados">Simulados</h2>
+                <p>Realizados, acertos e erros.</p>
               </div>
             </div>
-          )}
+            {loadingResumo ? (
+              <div className="dashboard-loading" role="status">Carregando resultados...</div>
+            ) : (
+              <div className="dashboard-chart" aria-label={`${formatarNumero(simulados.total)} simulados realizados, ${formatarNumero(simulados.acertos)} acertos e ${formatarNumero(simulados.erros)} erros.`}>
+                <div className="dashboard-total">
+                  <strong>{formatarNumero(simulados.total)}</strong>
+                  <span>simulados realizados</span>
+                </div>
+                <LinhaResultado label="Acertos" valor={simulados.acertos} total={simulados.acertos + simulados.erros} className="dashboard-bar-correct" />
+                <LinhaResultado label="Erros" valor={simulados.erros} total={simulados.acertos + simulados.erros} className="dashboard-bar-incorrect" />
+              </div>
+            )}
+          </article>
+
+          <article className="content-card dashboard-panel" aria-labelledby="dashboard-torneios">
+            <div className="dashboard-panel-heading">
+              <div>
+                <span className="eyebrow">Desempenho</span>
+                <h2 id="dashboard-torneios">Torneios</h2>
+                <p>Participações, vitórias e derrotas.</p>
+              </div>
+            </div>
+            {loadingResumo ? (
+              <div className="dashboard-loading" role="status">Carregando resultados...</div>
+            ) : (
+              <div className="dashboard-chart" aria-label={`${formatarNumero(torneios.total)} torneios participados, ${formatarNumero(torneios.vitorias)} vitórias e ${formatarNumero(torneios.derrotas)} derrotas.`}>
+                <div className="dashboard-total">
+                  <strong>{formatarNumero(torneios.total)}</strong>
+                  <span>torneios participados</span>
+                </div>
+                <LinhaResultado label="Vitórias" valor={torneios.vitorias} total={torneios.vitorias + torneios.derrotas} className="dashboard-bar-wins" />
+                <LinhaResultado label="Derrotas" valor={torneios.derrotas} total={torneios.vitorias + torneios.derrotas} className="dashboard-bar-incorrect" />
+              </div>
+            )}
+          </article>
         </section>
 
-        <section className="dashboard-cards">
-          {cards.map((card) => (
-            <Link key={card.title} to={card.to} className="dashboard-card-link">
-              <article className="content-card dashboard-card">
-                <div>
-                  <h2>{card.title}</h2>
-                  <p>{card.description}</p>
-                </div>
-                <span className="button button-primary">Acessar</span>
-              </article>
-            </Link>
-          ))}
-        </section>
       </section>
     </main>
   );

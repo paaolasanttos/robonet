@@ -57,6 +57,7 @@ export const aulasApi = {
   listar: () => request("/aulas"),
   listarTemas: () => request("/aulas/temas"),
   buscarPorId: (id) => request(`/aulas/${id}`),
+  listarUsuarios: (id) => request(`/aulas/${id}/usuarios`),
   criar: (aula) =>
     request("/aulas", {
       method: "POST",
@@ -168,6 +169,8 @@ export const aulasAlunoApi = {
 
 export const simuladosAlunoApi = {
   listar: () => request("/api/simulados-aluno"),
+  listarRealizados: () => request("/api/simulados-aluno/realizados"),
+  buscar: (id) => request(`/api/simulados-aluno/${id}`),
   responder: (id, respostas) => request(`/api/simulados-aluno/${id}/responder`, {
     method: "POST",
     body: JSON.stringify({ respostas }),

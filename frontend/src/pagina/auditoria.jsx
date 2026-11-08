@@ -65,13 +65,12 @@ export default function AuditoriaPagina() {
           </span>
         </a>
         <div className="navbar-menu">
-          <a className="navbar-link" href="/home">Home</a>
+          <a className="navbar-link" href="/home">Dashboard</a>
           <a className="navbar-link" href="/aulas">Aulas</a>
           <a className="navbar-link" href="/torneios">Torneios</a>
           <a className="navbar-link" href="/turmas">Turmas</a>
           <a className="navbar-link" href="/usuarios">Usuários</a>
           <a className="navbar-link navbar-link-active" href="/auditoria" aria-current="page">Auditoria</a>
-          <a className="navbar-link" href="/politicas">Privacidade</a>
         </div>
         <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
       </nav>

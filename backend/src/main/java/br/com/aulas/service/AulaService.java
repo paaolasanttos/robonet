@@ -2,11 +2,13 @@ package br.com.aulas.service;
 
 import br.com.aulas.dto.AulaRequest;
 import br.com.aulas.dto.AulaResponse;
+import br.com.aulas.dto.AulaUsuarioResponse;
 import br.com.aulas.exception.AulaNotFoundException;
 import br.com.aulas.model.Aula;
 import br.com.aulas.model.AulaTema;
 import br.com.aulas.repository.AulaRepository;
 import br.com.aulas.repository.AulaTemaRepository;
+import br.com.aulas.repository.AulasAlunoRepository;
 import br.com.aulas.security.DatabaseUserContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +20,16 @@ public class AulaService {
 
     private final AulaRepository aulaRepository;
     private final AulaTemaRepository temaRepository;
+    private final AulasAlunoRepository aulasAlunoRepository;
     private final DatabaseUserContext databaseUserContext;
     private final AuditoriaService auditoriaService;
 
     public AulaService(AulaRepository aulaRepository, AulaTemaRepository temaRepository,
+                       AulasAlunoRepository aulasAlunoRepository,
                        DatabaseUserContext databaseUserContext, AuditoriaService auditoriaService) {
         this.aulaRepository = aulaRepository;
         this.temaRepository = temaRepository;
+        this.aulasAlunoRepository = aulasAlunoRepository;
         this.databaseUserContext = databaseUserContext;
         this.auditoriaService = auditoriaService;
     }
@@ -37,6 +42,19 @@ public class AulaService {
     @Transactional(readOnly = true)
     public AulaResponse buscarPorId(Integer id) {
         return toResponse(buscarEntidade(id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AulaUsuarioResponse> listarUsuariosAssociados(Integer idAula) {
+        buscarEntidade(idAula);
+        return aulasAlunoRepository.findUsuariosAssociados(idAula.longValue()).stream()
+                .map(usuario -> new AulaUsuarioResponse(
+                        usuario.getId(),
+                        usuario.getNome(),
+                        usuario.getEmail(),
+                        Boolean.TRUE.equals(usuario.getConcluida())
+                ))
+                .toList();
     }
 
     @Transactional(readOnly = true)

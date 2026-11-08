@@ -95,7 +95,7 @@ export default function SimuladosPagina() {
       <nav className="navbar" aria-label="Navegação principal">
         <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial"><span className="brand-mark">R</span><span><strong>ROBONET</strong></span></a>
         <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Home</Link>
+          <Link className="navbar-link" to="/home">Dashboard</Link>
           <Link className="navbar-link" to="/aulas">Aulas</Link>
           <Link className="navbar-link navbar-link-active" to="/simulados" aria-current="page">Simulados</Link>
           <Link className="navbar-link" to="/torneios">Torneios</Link>
@@ -103,7 +103,6 @@ export default function SimuladosPagina() {
           {session.usuario.perfil === "admin" && <Link className="navbar-link" to="/usuarios">Usuários</Link>}
           {session.usuario.perfil === "admin" && <Link className="navbar-link" to="/auditoria">Auditoria</Link>}
           {session.usuario.perfil !== "admin" && <Link className="navbar-link" to="/meus-dados">Meus dados</Link>}
-          <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
         <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
       </nav>

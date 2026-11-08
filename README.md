@@ -7,4 +7,5 @@ Alterações realizadas pela feature:
 - Criada opção para o Administrador analisar as solicitações de alteração dos dados dos usuários.
 - Alterada a application properties para application profile.
 - Ajustada a configuração das variáveis de ambiente.
-- Remodelada a visualização do "Meus Dados" para uma melhor experiência de usuário.
+- Remodelada a visualização do "Meus Dados", "Aulas", "Simulados" para uma melhor experiência de usuário.
+- Desenvolvido o DashBoard.

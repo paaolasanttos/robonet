@@ -8,9 +8,11 @@ export default function AulaListaAluno() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedAula, setSelectedAula] = useState(null);
+  const [activeTab, setActiveTab] = useState("disponiveis");
 
   const aulasDisponiveis = aulas.filter((aula) => !aula.concluida);
   const aulasConcluidas = aulas.filter((aula) => aula.concluida);
+  const aulasDaAba = activeTab === "disponiveis" ? aulasDisponiveis : aulasConcluidas;
 
   useEffect(() => {
     carregarAulas();
@@ -52,11 +54,10 @@ export default function AulaListaAluno() {
     return <div className="empty-state"><h2>Carregando aulas...</h2></div>;
   }
 
-  function renderGrid(title, itens) {
+  function renderGrid(itens) {
     if (!itens.length) {
       return (
         <section className="student-grid-section">
-          <h2>{title}</h2>
           <div className="empty-state"><h2>Nenhuma aula neste grupo.</h2></div>
         </section>
       );
@@ -64,7 +65,6 @@ export default function AulaListaAluno() {
 
     return (
       <section className="student-grid-section">
-        <h2>{title}</h2>
         <div className="student-grid">
           {itens.map((aula) => (
             <article key={aula.id} className="student-aula-card">
@@ -104,14 +104,39 @@ export default function AulaListaAluno() {
       {message && <Alert type="success" message={message} onClose={() => setMessage("")} />}
       {error && <Alert type="error" message={error} onClose={() => setError("")} />}
 
-      {aulas.length === 0 ? (
-        <div className="empty-state"><h2>Nenhuma aula disponível no momento.</h2></div>
-      ) : (
-        <>
-          {renderGrid("Aulas Disponíveis", aulasDisponiveis)}
-          {renderGrid("Aulas Concluídas", aulasConcluidas)}
-        </>
-      )}
+      <div className="student-aulas-tabs" role="tablist" aria-label="Categorias de aulas">
+        <button
+          id="aulas-disponiveis-tab"
+          className={`student-aulas-tab${activeTab === "disponiveis" ? " student-aulas-tab-active" : ""}`}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "disponiveis"}
+          aria-controls="aulas-disponiveis-panel"
+          onClick={() => setActiveTab("disponiveis")}
+        >
+          Aulas Disponíveis
+        </button>
+        <button
+          id="aulas-concluidas-tab"
+          className={`student-aulas-tab${activeTab === "concluidas" ? " student-aulas-tab-active" : ""}`}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "concluidas"}
+          aria-controls="aulas-concluidas-panel"
+          onClick={() => setActiveTab("concluidas")}
+        >
+          Aulas Concluídas
+        </button>
+      </div>
+
+      <section
+        id={`aulas-${activeTab}-panel`}
+        role="tabpanel"
+        aria-labelledby={`aulas-${activeTab}-tab`}
+        className="student-aulas-tab-panel"
+      >
+        {renderGrid(aulasDaAba)}
+      </section>
 
       {selectedAula && (
         <div

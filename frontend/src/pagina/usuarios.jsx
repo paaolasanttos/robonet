@@ -5,6 +5,7 @@ import SenhaRequisitos from "../componentes/senhaRequisitos";
 import { MENSAGEM_SENHA, senhaValida } from "../componentes/senhaRegras";
 import { turmasApi, usuariosApi } from "../servicos/api";
 import { useAuth } from "../context/AuthContext";
+import TermoConteudo, { TERMO_DATA, TERMO_VERSAO } from "../componentes/termoConteudo";
 
 const perfis = [
   { value: "aluno", label: "Aluno" },
@@ -224,14 +225,13 @@ export default function UsuariosPagina() {
           </span>
         </a>
         <div className="navbar-menu">
-          <a className="navbar-link" href="/home">Home</a>
+          <a className="navbar-link" href="/home">Dashboard</a>
           <a className="navbar-link" href="/aulas">Aulas</a>
           <a className="navbar-link" href="/simulados">Simulados</a>
           <a className="navbar-link" href="/torneios">Torneios</a>
           <a className="navbar-link" href="/turmas">Turmas</a>
           <a className="navbar-link navbar-link-active" href="/usuarios" aria-current="page">Usuários</a>
           <a className="navbar-link" href="/auditoria">Auditoria</a>
-          <a className="navbar-link" href="/politicas">Privacidade</a>
         </div>
         <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
       </nav>
@@ -245,6 +245,7 @@ export default function UsuariosPagina() {
           <button type="button" className={`aba ${aba === "usuarios" ? "aba-ativa" : ""}`} role="tab" id="aba-usuarios" aria-controls="painel-usuarios" aria-selected={aba === "usuarios"} onClick={() => setAba("usuarios")}>Usuários Cadastrados</button>
           <button type="button" className={`aba ${aba === "novo" ? "aba-ativa" : ""}`} role="tab" id="aba-novo-usuario" aria-controls="painel-novo-usuario" aria-selected={aba === "novo"} onClick={() => setAba("novo")}>Criar novo usuário</button>
           <button type="button" className={`aba ${aba === "solicitacoes" ? "aba-ativa" : ""}`} role="tab" id="aba-solicitacoes" aria-controls="painel-solicitacoes" aria-selected={aba === "solicitacoes"} onClick={() => setAba("solicitacoes")}>Solicitações ({solicitacoes.filter((item) => item.status === "Pendente de análise").length})</button>
+          <button type="button" className={`aba ${aba === "termo" ? "aba-ativa" : ""}`} role="tab" id="aba-termo" aria-controls="painel-termo" aria-selected={aba === "termo"} onClick={() => setAba("termo")}>Termo de Uso e Privacidade</button>
         </div>
 
         {aba === "novo" && <section className="content-card user-create-card" role="tabpanel" id="painel-novo-usuario" aria-labelledby="aba-novo-usuario" tabIndex="0">
@@ -310,6 +311,12 @@ export default function UsuariosPagina() {
               </tr>;
             })}</tbody></table></div>
           )}
+        </section>}
+
+        {aba === "termo" && <section className="content-card" role="tabpanel" id="painel-termo" aria-labelledby="aba-termo" tabIndex="0">
+          <div className="section-heading"><span className="eyebrow">Termo</span><h2>Termo de Uso e Privacidade</h2></div>
+          <p className="meus-dados-ajuda">Versão {TERMO_VERSAO} • {TERMO_DATA}</p>
+          <div className="termo-box" aria-label="Conteúdo do termo de uso e aviso de privacidade"><TermoConteudo /></div>
         </section>}
       </section>
       {solicitacaoEmAnalise && (

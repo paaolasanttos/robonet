@@ -2,6 +2,7 @@ package br.com.aulas.service;
 
 import br.com.aulas.dto.SimuladoAlunoResponse;
 import br.com.aulas.dto.SimuladoRequest;
+import br.com.aulas.dto.SimuladoRealizadoResponse;
 import br.com.aulas.dto.SimuladoResponse;
 import br.com.aulas.dto.SimuladoRespostaRequest;
 import br.com.aulas.dto.SimuladoResultadoResponse;
@@ -11,10 +12,12 @@ import br.com.aulas.model.Simulado;
 import br.com.aulas.model.SimuladoOpcao;
 import br.com.aulas.model.SimuladoPergunta;
 import br.com.aulas.model.SimuladoRealizacao;
+import br.com.aulas.model.SimuladoRealizado;
 import br.com.aulas.repository.AulaTemaRepository;
 import br.com.aulas.repository.AulasAlunoRepository;
 import br.com.aulas.repository.SimuladoRepository;
 import br.com.aulas.repository.SimuladoRealizacaoRepository;
+import br.com.aulas.repository.SimuladoRealizadoRepository;
 import br.com.aulas.security.DatabaseUserContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,24 +25,30 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class SimuladoService {
     private final SimuladoRepository simuladoRepository;
     private final SimuladoRealizacaoRepository simuladosRealizacaoRepository;
+    private final SimuladoRealizadoRepository simuladoRealizadoRepository;
     private final AulaTemaRepository temaRepository;
     private final AulasAlunoRepository aulasAlunoRepository;
     private final DatabaseUserContext databaseUserContext;
     private final AuditoriaService auditoriaService;
 
     public SimuladoService(SimuladoRepository simuladoRepository, SimuladoRealizacaoRepository simuladosRealizacaoRepository,
+                           SimuladoRealizadoRepository simuladoRealizadoRepository,
                            AulaTemaRepository temaRepository,
                            AulasAlunoRepository aulasAlunoRepository, DatabaseUserContext databaseUserContext,
                            AuditoriaService auditoriaService) {
         this.simuladoRepository = simuladoRepository;
         this.simuladosRealizacaoRepository = simuladosRealizacaoRepository;
+        this.simuladoRealizadoRepository = simuladoRealizadoRepository;
         this.temaRepository = temaRepository;
         this.aulasAlunoRepository = aulasAlunoRepository;
         this.databaseUserContext = databaseUserContext;
@@ -88,9 +97,61 @@ public class SimuladoService {
         if (temasAcessiveis.isEmpty()) {
             return List.of();
         }
+        Set<Integer> realizados = simuladoRealizadoRepository.findByIdUsuarioOrderByDataTentativaDescTentativaDescIdSimuladoPerguntaAsc(usuarioId)
+                .stream().map(SimuladoRealizado::getIdSimulado).collect(Collectors.toSet());
         return simuladoRepository.findByTemaIdIn(temasAcessiveis).stream()
+                .filter(simulado -> !realizados.contains(simulado.getId()))
                 .map(SimuladoAlunoResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SimuladoAlunoResponse buscarParaAluno(Long usuarioId, Integer simuladoId) {
+        Simulado simulado = buscar(simuladoId);
+        if (!aulasAlunoRepository.existsByIdUsuarioAndIdAulaTema(usuarioId, simulado.getTema().getId())) {
+            throw new IllegalArgumentException("Este simulado não está vinculado a uma aula disponível para você.");
+        }
+        return SimuladoAlunoResponse.from(simulado);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SimuladoRealizadoResponse> listarRealizados(Long usuarioId) {
+        List<SimuladoRealizado> respostas = simuladoRealizadoRepository
+                .findByIdUsuarioOrderByDataTentativaDescTentativaDescIdSimuladoPerguntaAsc(usuarioId);
+        if (respostas.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Integer, Simulado> simulados = new LinkedHashMap<>();
+        for (SimuladoRealizado resposta : respostas) {
+            simulados.computeIfAbsent(resposta.getIdSimulado(), this::buscar);
+        }
+
+        Map<String, List<SimuladoRealizado>> tentativas = new LinkedHashMap<>();
+        for (SimuladoRealizado resposta : respostas) {
+            String chave = resposta.getIdSimulado() + ":" + resposta.getTentativa();
+            tentativas.computeIfAbsent(chave, ignored -> new ArrayList<>()).add(resposta);
+        }
+
+        return tentativas.values().stream().map(itens -> {
+            SimuladoRealizado primeiraResposta = itens.get(0);
+            Simulado simulado = simulados.get(primeiraResposta.getIdSimulado());
+            Map<Integer, SimuladoPergunta> perguntas = new LinkedHashMap<>();
+            simulado.getPerguntas().forEach(pergunta -> perguntas.put(pergunta.getId(), pergunta));
+            List<SimuladoRealizadoResponse.PerguntaResponse> detalhes = itens.stream()
+                    .map(item -> {
+                        SimuladoPergunta pergunta = perguntas.get(item.getIdSimuladoPergunta());
+                        return new SimuladoRealizadoResponse.PerguntaResponse(
+                                pergunta.getId(), pergunta.getEnunciado(), item.isRespostaCorreta());
+                    })
+                    .toList();
+            int acertos = (int) itens.stream().filter(SimuladoRealizado::isRespostaCorreta).count();
+            int total = itens.size();
+            return new SimuladoRealizadoResponse(
+                    simulado.getId(), simulado.getTema().getTema(), simulado.getTitulo(),
+                    primeiraResposta.getTentativa(), primeiraResposta.getDataTentativa(),
+                    acertos, total, total == 0 ? 0 : 100.0 * acertos / total, detalhes);
+        }).toList();
     }
 
     @Transactional
@@ -106,6 +167,9 @@ public class SimuladoService {
 
         Set<Integer> perguntasRespondidas = new HashSet<>();
         int acertos = 0;
+        int tentativa = Math.toIntExact(simuladosRealizacaoRepository.countByIdUsuarioAndIdSimulado(usuarioId, simuladoId) + 1);
+        LocalDateTime dataTentativa = LocalDateTime.now();
+        List<SimuladoRealizado> respostasRealizadas = new ArrayList<>();
         for (SimuladoRespostaRequest.Resposta item : resposta.respostas()) {
             if (!perguntasRespondidas.add(item.perguntaId())) {
                 throw new IllegalArgumentException("Cada pergunta deve ter apenas uma resposta.");
@@ -121,11 +185,14 @@ public class SimuladoService {
             if (opcao.isCorreta()) {
                 acertos++;
             }
+            respostasRealizadas.add(new SimuladoRealizado(simuladoId, pergunta.getId(), opcao.getId(),
+                    opcao.isCorreta(), usuarioId, dataTentativa, tentativa));
         }
 
         SimuladoResultadoResponse resultado = new SimuladoResultadoResponse(acertos, simulado.getPerguntas().size(),
-                100.0 * acertos / simulado.getPerguntas().size());
-        simuladosRealizacaoRepository.save(new SimuladoRealizacao(usuarioId, simuladoId, LocalDateTime.now()));
+                100.0 * acertos / simulado.getPerguntas().size(), tentativa);
+        simuladoRealizadoRepository.saveAll(respostasRealizadas);
+        simuladosRealizacaoRepository.save(new SimuladoRealizacao(usuarioId, simuladoId, dataTentativa));
         return resultado;
     }
 

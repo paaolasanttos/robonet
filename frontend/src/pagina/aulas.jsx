@@ -139,7 +139,7 @@ export default function AulasPagina() {
         </a>
 
         <div className="navbar-menu">
-          <a className="navbar-link" href="/home">Home</a>
+          <a className="navbar-link" href="/home">Dashboard</a>
           <a className="navbar-link navbar-link-active" href="/aulas" aria-current="page">Aulas</a>
           <a className="navbar-link" href="/simulados">Simulados</a>
           <a className="navbar-link" href="/torneios">Torneios</a>
@@ -147,7 +147,6 @@ export default function AulasPagina() {
           {session.usuario.perfil === "admin" && <a className="navbar-link" href="/usuarios">Usuários</a>}
           {session.usuario.perfil === "admin" && <a className="navbar-link" href="/auditoria">Auditoria</a>}
           {session.usuario.perfil !== "admin" && <a className="navbar-link" href="/meus-dados">Meus dados</a>}
-          <a className="navbar-link" href="/politicas">Privacidade</a>
         </div>
 
         <div className="navbar-user">
@@ -207,7 +206,6 @@ export default function AulasPagina() {
                   <tr>
                     <th>Título</th>
                     <th>Tema</th>
-                    <th>Descrição</th>
                     <th className="actions-column">Ações</th>
                   </tr>
                 </thead>
@@ -220,7 +218,6 @@ export default function AulasPagina() {
                         </div>
                       </td>
                       <td>{aula.tema || "—"}</td>
-                      <td className="description-cell">{aula.descricao || "—"}</td>
                       <td>
                         <div className="row-actions">
                           <button className="button button-small button-light" onClick={() => openView(aula)}>

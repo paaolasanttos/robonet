@@ -17,12 +17,11 @@ export default function AulasAlunoPagina() {
         </a>
 
         <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Home</Link>
+          <Link className="navbar-link" to="/home">Dashboard</Link>
           <Link className="navbar-link navbar-link-active" to="/aulas-aluno" aria-current="page">Aulas</Link>
           <Link className="navbar-link" to="/simulados-aluno">Simulados</Link>
           <Link className="navbar-link" to="/torneios">Torneios</Link>
           <Link className="navbar-link" to="/meus-dados">Meus dados</Link>
-          <Link className="navbar-link" to="/politicas">Privacidade</Link>
         </div>
 
         <div className="navbar-user">

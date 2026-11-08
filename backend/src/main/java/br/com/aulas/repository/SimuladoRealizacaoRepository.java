@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface SimuladoRealizacaoRepository extends JpaRepository<SimuladoRealizacao, Long> {
     long countByIdUsuario(Long idUsuario);
 
+    long countByIdUsuarioAndIdSimulado(Long idUsuario, Integer idSimulado);
+
     @Query(value = """
             SELECT COUNT(*)
               FROM simuladosrealizacoes sr
