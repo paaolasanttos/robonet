@@ -8,4 +8,4 @@ Alterações realizadas pela feature:
 - Alterada a application properties para application profile.
 - Ajustada a configuração das variáveis de ambiente.
 - Remodelada a visualização do "Meus Dados", "Aulas", "Simulados" para uma melhor experiência de usuário.
-- Desenvolvido o DashBoard.
+- Desenvolvido o DashBoardb
