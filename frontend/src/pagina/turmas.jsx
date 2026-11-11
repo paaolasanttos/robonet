@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Alert from "../componentes/aulaModalAlert";
 import Loading from "../componentes/aulaModalCarregando";
 import { useAuth } from "../context/AuthContext";
-import { turmasApi } from "../servicos/api";
+import { turmasApi, usuariosApi } from "../servicos/api";
 
 export default function TurmasPagina() {
   const { session, logout } = useAuth();
   const [turmas, setTurmas] = useState([]);
   const [nome, setNome] = useState("");
+  const [usuarios, setUsuarios] = useState([]);
+  const [professores, setProfessores] = useState([]);
+  const [alunos, setAlunos] = useState([]);
+  const [buscaAluno, setBuscaAluno] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -27,9 +31,43 @@ export default function TurmasPagina() {
     }
   }, []);
 
+  const carregarUsuarios = useCallback(async () => {
+    try {
+      const data = await usuariosApi.listar();
+      setUsuarios(Array.isArray(data) ? data.filter((usuario) => usuario.ativo) : []);
+    } catch (err) {
+      setError(err.message || "Não foi possível carregar os usuários.");
+    }
+  }, []);
+
   useEffect(() => {
     carregarTurmas();
-  }, [carregarTurmas]);
+    carregarUsuarios();
+  }, [carregarTurmas, carregarUsuarios]);
+
+  const professoresAtivos = useMemo(
+    () => usuarios.filter((usuario) => usuario.perfil === "professor").sort((a, b) => a.nome.localeCompare(b.nome)),
+    [usuarios]
+  );
+
+  const alunosFiltrados = useMemo(() => {
+    const term = buscaAluno.trim().toLowerCase();
+    const ativos = usuarios.filter((usuario) => usuario.perfil === "aluno").sort((a, b) => a.nome.localeCompare(b.nome));
+    if (!term) return ativos;
+    return ativos.filter((aluno) =>
+      alunos.includes(aluno.id)
+      || aluno.nome.toLowerCase().includes(term)
+      || String(aluno.rgm || "").includes(term)
+    );
+  }, [usuarios, buscaAluno, alunos]);
+
+  function alternar(lista, setLista, id) {
+    setLista(lista.includes(id) ? lista.filter((item) => item !== id) : [...lista, id]);
+  }
+
+  function nomeTurma(id) {
+    return turmas.find((turma) => turma.id === id)?.nome;
+  }
 
   useEffect(() => {
     if (!feedback) return undefined;
@@ -48,9 +86,13 @@ export default function TurmasPagina() {
     setSaving(true);
     setError("");
     try {
-      const turma = await turmasApi.criar({ nome: nomeTurma });
+      const turma = await turmasApi.criar({ nome: nomeTurma, professores, alunos });
       setTurmas((atuais) => [...atuais, turma].sort((a, b) => a.nome.localeCompare(b.nome)));
       setNome("");
+      setProfessores([]);
+      setAlunos([]);
+      setBuscaAluno("");
+      carregarUsuarios();
       setFeedback("Turma cadastrada com sucesso.");
     } catch (err) {
       setError(err.message || "Não foi possível cadastrar a turma.");
@@ -102,12 +144,43 @@ export default function TurmasPagina() {
 
         <section className="content-card user-create-card">
           <div className="section-heading"><span className="eyebrow">Cadastro</span><h2>Nova turma</h2></div>
-          <form className="turma-form turma-form-page" onSubmit={cadastrar}>
+          <form className="equipe-form" onSubmit={cadastrar}>
             <div className="form-field">
               <label htmlFor="nova-turma">Nome da turma</label>
               <input id="nova-turma" value={nome} onChange={(event) => setNome(event.target.value)} placeholder="Ex.: Robótica 1º semestre" maxLength={120} disabled={saving} required />
             </div>
-            <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Salvando..." : "Cadastrar turma"}</button>
+
+            <fieldset className="user-form-turmas" disabled={saving}>
+              <legend>Professores ({professores.length})</legend>
+              {professoresAtivos.length === 0 ? <span className="turmas-vazio">Nenhum professor ativo cadastrado.</span>
+                : professoresAtivos.map((professor) => (
+                  <label key={professor.id} className="checkbox-item">
+                    <input type="checkbox" checked={professores.includes(professor.id)} onChange={() => alternar(professores, setProfessores, professor.id)} />
+                    {professor.nome}
+                  </label>
+                ))}
+            </fieldset>
+
+            <div className="form-field equipe-busca">
+              <label htmlFor="turma-busca-aluno">Pesquisar aluno</label>
+              <input id="turma-busca-aluno" type="search" value={buscaAluno} onChange={(event) => setBuscaAluno(event.target.value)} placeholder="Nome ou RGM do aluno" disabled={saving} />
+            </div>
+
+            <fieldset className="user-form-turmas" disabled={saving}>
+              <legend>Alunos ({alunos.length})</legend>
+              {alunosFiltrados.length === 0 ? <span className="turmas-vazio">{buscaAluno.trim() ? "Nenhum aluno encontrado com esse nome ou RGM." : "Nenhum aluno ativo cadastrado."}</span>
+                : alunosFiltrados.map((aluno) => (
+                  <label key={aluno.id} className="checkbox-item">
+                    <input type="checkbox" checked={alunos.includes(aluno.id)} onChange={() => alternar(alunos, setAlunos, aluno.id)} />
+                    {aluno.nome}{aluno.rgm && <small> - RGM {aluno.rgm}</small>}{aluno.idTurma && <small> (turma atual: {nomeTurma(aluno.idTurma) || "-"})</small>}
+                  </label>
+                ))}
+            </fieldset>
+            {alunos.some((id) => usuarios.find((usuario) => usuario.id === id)?.idTurma) && <p className="turmas-vazio turma-aviso">Alunos que já têm turma serão transferidos para a nova turma.</p>}
+
+            <div className="user-form-actions">
+              <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Salvando..." : "Cadastrar turma"}</button>
+            </div>
           </form>
         </section>
 

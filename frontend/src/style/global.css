@@ -1733,6 +1733,10 @@ tbody tr:hover {
   grid-column: 1 / -1;
 }
 
+.equipe-form .turma-aviso {
+  grid-column: 1 / -1;
+}
+
 .equipe-form .user-form-actions .button {
   flex: 0 0 auto;
 }

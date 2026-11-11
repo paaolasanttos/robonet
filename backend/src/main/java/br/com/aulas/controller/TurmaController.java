@@ -35,7 +35,7 @@ public class TurmaController {
 
     @PostMapping
     public ResponseEntity<TurmaResponse> cadastrar(@Valid @RequestBody TurmaRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(turmaService.cadastrar(request.nome()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(turmaService.cadastrar(request));
     }
 
     @DeleteMapping("/{id:\\d+}")

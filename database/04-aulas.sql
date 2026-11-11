@@ -1,6 +1,11 @@
 DROP TABLE IF EXISTS AulasAluno;
-DROP TABLE IF EXISTS AulasTemas;
 DROP TABLE IF EXISTS Aulas;
+DROP TABLE IF EXISTS AulasTemas;
+
+CREATE TABLE AulasTemas(
+	IdAulaTema SERIAL PRIMARY KEY,
+	Descricao  VARCHAR(120) NOT NULL
+);
 
 CREATE TABLE Aulas(
 	IdAula       SERIAL PRIMARY KEY,
@@ -12,11 +17,6 @@ CREATE TABLE Aulas(
 	DtAlteracao  TIMESTAMP,
 	UsrAlteracao VARCHAR(2000),
 	CONSTRAINT fk_idaulatema FOREIGN KEY (IdAulaTema) REFERENCES AulasTemas (IdAulaTema)
-);
-
-CREATE TABLE AulasTemas(
-	IdAulaTema SERIAL PRIMARY KEY,
-	Descricao  VARCHAR(120) NOT NULL
 );
 
 CREATE TABLE AulasAluno(

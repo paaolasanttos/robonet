@@ -1,5 +1,6 @@
 package br.com.aulas.service;
 
+import br.com.aulas.dto.TurmaRequest;
 import br.com.aulas.dto.TurmaResponse;
 import br.com.aulas.exception.RegistroNaoEncontradoException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -27,14 +28,56 @@ public class TurmaService {
     }
 
     @Transactional
-    public TurmaResponse cadastrar(String nome) {
+    public TurmaResponse cadastrar(TurmaRequest dados) {
+        List<Long> professores = idsUnicos(dados.professores());
+        List<Long> alunos = idsUnicos(dados.alunos());
+        professores.forEach(idProfessor -> validarUsuarioAtivo(idProfessor, "professor"));
+        alunos.forEach(idAluno -> validarAlunoSemEquipe(validarUsuarioAtivo(idAluno, "aluno"), idAluno));
+
         TurmaResponse turma = jdbcTemplate.queryForObject(
                 "INSERT INTO turmas (nome) VALUES (?) RETURNING idturma, nome",
                 (result, rowNumber) -> new TurmaResponse(result.getLong("idturma"), result.getString("nome")),
-                nome.trim()
+                dados.nome().trim()
         );
-        auditoriaService.registrar("TURMAS", "TURMA_CRIADA", "Turma " + turma.id() + " - " + turma.nome(), true);
+
+        professores.forEach(idProfessor ->
+                jdbcTemplate.update(
+                        "INSERT INTO usuariosturmas (idusuario, idturma) VALUES (?, ?)",
+                        idProfessor,
+                        turma.id()
+                )
+        );
+        alunos.forEach(idAluno -> salvarTurmasUsuario(idAluno, List.of(turma.id())));
+
+        auditoriaService.registrar("TURMAS", "TURMA_CRIADA", "Turma " + turma.id() + " - " + turma.nome()
+                + " com " + professores.size() + " professor(es) e " + alunos.size() + " aluno(s)", true);
         return turma;
+    }
+
+    private List<Long> idsUnicos(List<Long> ids) {
+        return ids == null ? List.of() : ids.stream().filter(Objects::nonNull).distinct().toList();
+    }
+
+    private String validarUsuarioAtivo(Long idUsuario, String perfil) {
+        return jdbcTemplate.queryForList(
+                "SELECT nome FROM usuarios WHERE idusuario = ? AND LOWER(perfil) = ? AND status = 'Ativo'",
+                String.class,
+                idUsuario,
+                perfil
+        ).stream().findFirst().orElseThrow(() -> new IllegalArgumentException(
+                "Selecione apenas " + ("aluno".equals(perfil) ? "alunos" : "professores") + " ativos."));
+    }
+
+    private void validarAlunoSemEquipe(String nome, Long idAluno) {
+        Boolean emEquipe = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM equipesmembros WHERE idusuario = ?)",
+                Boolean.class,
+                idAluno
+        );
+        if (Boolean.TRUE.equals(emEquipe)) {
+            throw new IllegalArgumentException("O aluno " + nome
+                    + " faz parte de uma equipe. Retire-o da equipe antes de trocar a turma.");
+        }
     }
 
     @Transactional
