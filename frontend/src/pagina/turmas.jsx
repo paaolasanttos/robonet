@@ -57,7 +57,7 @@ export default function TurmasPagina() {
     return ativos.filter((aluno) =>
       alunos.includes(aluno.id)
       || aluno.nome.toLowerCase().includes(term)
-      || String(aluno.rgm || "").includes(term)
+      || String(aluno.ra || "").includes(term)
     );
   }, [usuarios, buscaAluno, alunos]);
 
@@ -163,16 +163,16 @@ export default function TurmasPagina() {
 
             <div className="form-field equipe-busca">
               <label htmlFor="turma-busca-aluno">Pesquisar aluno</label>
-              <input id="turma-busca-aluno" type="search" value={buscaAluno} onChange={(event) => setBuscaAluno(event.target.value)} placeholder="Nome ou RGM do aluno" disabled={saving} />
+              <input id="turma-busca-aluno" type="search" value={buscaAluno} onChange={(event) => setBuscaAluno(event.target.value)} placeholder="Nome ou RA do aluno" disabled={saving} />
             </div>
 
             <fieldset className="user-form-turmas" disabled={saving}>
               <legend>Alunos ({alunos.length})</legend>
-              {alunosFiltrados.length === 0 ? <span className="turmas-vazio">{buscaAluno.trim() ? "Nenhum aluno encontrado com esse nome ou RGM." : "Nenhum aluno ativo cadastrado."}</span>
+              {alunosFiltrados.length === 0 ? <span className="turmas-vazio">{buscaAluno.trim() ? "Nenhum aluno encontrado com esse nome ou RA." : "Nenhum aluno ativo cadastrado."}</span>
                 : alunosFiltrados.map((aluno) => (
                   <label key={aluno.id} className="checkbox-item">
                     <input type="checkbox" checked={alunos.includes(aluno.id)} onChange={() => alternar(alunos, setAlunos, aluno.id)} />
-                    {aluno.nome}{aluno.rgm && <small> - RGM {aluno.rgm}</small>}{aluno.idTurma && <small> (turma atual: {nomeTurma(aluno.idTurma) || "-"})</small>}
+                    {aluno.nome}{aluno.ra && <small> - RA {aluno.ra}</small>}{aluno.idTurma && <small> (turma atual: {nomeTurma(aluno.idTurma) || "-"})</small>}
                   </label>
                 ))}
             </fieldset>

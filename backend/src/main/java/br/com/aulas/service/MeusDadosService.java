@@ -53,7 +53,7 @@ public class MeusDadosService {
                 usuario.getNome(),
                 usuario.getEmail(),
                 usuario.getPerfil(),
-                usuario.getRgm(),
+                usuario.getRa(),
                 turmasDoUsuario(usuario),
                 exclusao == null ? null : exclusao.getDtSolicitacao().toLocalDate(),
                 exclusao == null ? null : exclusao.getDtLimite().toLocalDate(),
@@ -64,13 +64,13 @@ public class MeusDadosService {
 
     private List<SolicitacaoAlteracaoResponse> solicitacoesAlteracao(String email) {
         return jdbcTemplate.query(
-                "SELECT idusuario, nome, rgm, perfil, turma, status, motivo, dtregistro "
+                "SELECT idusuario, nome, ra, perfil, turma, status, motivo, dtregistro "
                         + "FROM usuariossolicitacoes WHERE LOWER(email) = LOWER(?) "
                         + "ORDER BY dtregistro DESC, idusuario DESC",
                 (result, rowNumber) -> new SolicitacaoAlteracaoResponse(
                         result.getLong("idusuario"),
                         result.getString("nome"),
-                        result.getString("rgm"),
+                        result.getString("ra"),
                         result.getString("perfil"),
                         result.getString("turma"),
                         normalizarStatusSolicitacao(result.getString("status")),
@@ -126,10 +126,10 @@ public class MeusDadosService {
                         dataHora(result.getTimestamp("dttentativa"))),
                 usuario.getId());
         List<MeusDadosExportResponse.SolicitacaoAlteracao> alteracoes = jdbcTemplate.query(
-                "SELECT nome, email, rgm, perfil, turma, status, motivo, dtregistro, dtanalise FROM usuariossolicitacoes "
+                "SELECT nome, email, ra, perfil, turma, status, motivo, dtregistro, dtanalise FROM usuariossolicitacoes "
                         + "WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?) ORDER BY dtregistro, idusuario",
                 (result, rowNumber) -> new MeusDadosExportResponse.SolicitacaoAlteracao(
-                        result.getString("nome"), result.getString("email"), result.getString("rgm"),
+                        result.getString("nome"), result.getString("email"), result.getString("ra"),
                         result.getString("perfil"), result.getString("turma"),
                         normalizarStatusSolicitacao(result.getString("status")), result.getString("motivo"),
                         dataHora(result.getTimestamp("dtregistro")), dataHora(result.getTimestamp("dtanalise"))),
@@ -161,7 +161,7 @@ public class MeusDadosService {
         auditoriaService.registrar("LGPD", "DADOS_EXPORTADOS",
                 "Usuário " + usuario.getId() + " baixou uma cópia dos próprios dados", true);
         return new MeusDadosExportResponse(LocalDateTime.now(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil(),
-                usuario.getRgm(), Boolean.TRUE.equals(usuario.getAtivo()) ? "Ativo" : "Inativo",
+                usuario.getRa(), Boolean.TRUE.equals(usuario.getAtivo()) ? "Ativo" : "Inativo",
                 "S".equalsIgnoreCase(usuario.getAcessoMFV()) ? "Sim" : "Não", usuario.getCriadoEm(),
                 turmasDoUsuario(usuario), equipe.isEmpty() ? null : equipe.get(0), aulas, simulados, resultados, respostas,
                 alteracoes, exclusoes, aceites, acessos, auditoria);
@@ -179,11 +179,11 @@ public class MeusDadosService {
         }
 
         jdbcTemplate.update(
-                "INSERT INTO usuariossolicitacoes (nome, email, rgm, perfil, turma, dtregistro, usrregistro) "
+                "INSERT INTO usuariossolicitacoes (nome, email, ra, perfil, turma, dtregistro, usrregistro) "
                         + "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
                 dados.nome().trim(),
                 usuario.getEmail(),
-                dados.rgm() == null || dados.rgm().isBlank() ? null : dados.rgm().trim(),
+                dados.ra() == null || dados.ra().isBlank() ? null : dados.ra().trim(),
                 perfil,
                 dados.turma() == null || dados.turma().isBlank() ? null : dados.turma().trim(),
                 usuario.getEmail()

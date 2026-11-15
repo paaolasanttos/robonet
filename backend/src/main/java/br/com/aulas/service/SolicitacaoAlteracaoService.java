@@ -49,8 +49,8 @@ public class SolicitacaoAlteracaoService {
     @Transactional(readOnly = true)
     public List<SolicitacaoAlteracaoAnaliseResponse> listar() {
         return jdbcTemplate.query(
-                "SELECT s.idusuario, s.email, s.nome, s.rgm, s.perfil, s.turma, s.status, s.motivo, "
-                        + "s.dtregistro, s.dtanalise, u.nome AS nomeatual, u.rgm AS rgmatual, "
+                "SELECT s.idusuario, s.email, s.nome, s.ra, s.perfil, s.turma, s.status, s.motivo, "
+                        + "s.dtregistro, s.dtanalise, u.nome AS nomeatual, u.ra AS raatual, "
                         + "u.perfil AS perfilatual, COALESCE((SELECT string_agg(t.nome, ', ' ORDER BY t.nome) "
                         + "FROM usuariosturmas ut JOIN turmas t ON t.idturma = ut.idturma "
                         + "WHERE ut.idusuario = u.idusuario), '-') AS turmaatual "
@@ -113,22 +113,22 @@ public class SolicitacaoAlteracaoService {
         }
 
         String nome = solicitacao.nome().trim();
-        String rgm = solicitacao.rgm() == null || solicitacao.rgm().isBlank()
-                ? null : solicitacao.rgm().trim();
+        String ra = solicitacao.ra() == null || solicitacao.ra().isBlank()
+                ? null : solicitacao.ra().trim();
         String turma = solicitacao.turma() == null || solicitacao.turma().isBlank()
                 ? null : solicitacao.turma().trim();
         Long idTurma = turma == null ? null : localizarTurma(turma);
         boolean perfilAlterado = !perfil.equalsIgnoreCase(usuario.getPerfil());
         boolean nomeAlterado = !Objects.equals(nome, usuario.getNome());
         boolean turmaAlterada = turmaAlterada(usuario, turma);
-        String rgmFinal = perfil.equals("aluno") ? rgm : null;
-        boolean rgmAlterado = !Objects.equals(rgmFinal, usuario.getRgm());
+        String raFinal = perfil.equals("aluno") ? ra : null;
+        boolean raAlterado = !Objects.equals(raFinal, usuario.getRa());
 
-        if (perfil.equals("aluno") && (rgm == null || !rgm.matches("\\d{11}"))) {
-            throw new IllegalArgumentException("O RGM solicitado deve conter exatamente 11 números.");
+        if (perfil.equals("aluno") && (ra == null || !ra.matches("\\d{11}"))) {
+            throw new IllegalArgumentException("O RA solicitado deve conter exatamente 11 números.");
         }
-        if (perfil.equals("aluno") && usuarioRepository.existsByRgmAndIdNot(rgm, usuario.getId())) {
-            throw new IllegalArgumentException("Já existe um aluno com esse RGM.");
+        if (perfil.equals("aluno") && usuarioRepository.existsByRaAndIdNot(ra, usuario.getId())) {
+            throw new IllegalArgumentException("Já existe um aluno com esse RA.");
         }
         if ((perfilAlterado || turmaAlterada) && equipeMembroRepository.existsByIdUsuario(usuario.getId())) {
             throw new IllegalArgumentException(
@@ -137,8 +137,8 @@ public class SolicitacaoAlteracaoService {
 
         if (nomeAlterado) usuario.setNome(nome);
         if (perfilAlterado) usuario.setPerfil(perfil);
-        if (rgmAlterado) usuario.setRgm(rgmFinal);
-        if (nomeAlterado || perfilAlterado || rgmAlterado) {
+        if (raAlterado) usuario.setRa(raFinal);
+        if (nomeAlterado || perfilAlterado || raAlterado) {
             usuarioRepository.save(usuario);
         }
         if (turmaAlterada) {
@@ -162,11 +162,11 @@ public class SolicitacaoAlteracaoService {
 
     private Solicitacao buscarPendenteParaAtualizacao(Long id) {
         List<Solicitacao> solicitacoes = jdbcTemplate.query(
-                "SELECT idusuario, email, nome, rgm, perfil, turma, status FROM usuariossolicitacoes "
+                "SELECT idusuario, email, nome, ra, perfil, turma, status FROM usuariossolicitacoes "
                         + "WHERE idusuario = ? FOR UPDATE",
                 (result, rowNumber) -> new Solicitacao(
                         result.getLong("idusuario"), result.getString("email"), result.getString("nome"),
-                        result.getString("rgm"), result.getString("perfil"), result.getString("turma"),
+                        result.getString("ra"), result.getString("perfil"), result.getString("turma"),
                         result.getString("status")),
                 id
         );
@@ -193,7 +193,7 @@ public class SolicitacaoAlteracaoService {
                 result.getLong("idusuario"),
                 result.getString("email"),
                 result.getString("nome"),
-                result.getString("rgm"),
+                result.getString("ra"),
                 result.getString("perfil"),
                 result.getString("turma"),
                 normalizarStatus(result.getString("status")),
@@ -201,7 +201,7 @@ public class SolicitacaoAlteracaoService {
                 data(result, "dtregistro"),
                 data(result, "dtanalise"),
                 result.getString("nomeatual"),
-                result.getString("rgmatual"),
+                result.getString("raatual"),
                 result.getString("perfilatual"),
                 result.getString("turmaatual")
         );
@@ -211,6 +211,6 @@ public class SolicitacaoAlteracaoService {
         return result.getTimestamp(coluna) == null ? null : result.getTimestamp(coluna).toLocalDateTime();
     }
 
-    private record Solicitacao(Long id, String email, String nome, String rgm, String perfil, String turma,
+    private record Solicitacao(Long id, String email, String nome, String ra, String perfil, String turma,
                                String status) { }
 }

@@ -79,7 +79,7 @@ public class EquipeService {
         return usuarioRepository.findAllById(turmaService.idsUsuariosDaTurma(turmaId)).stream()
                 .filter(aluno -> Boolean.TRUE.equals(aluno.getAtivo()) && "aluno".equals(aluno.getPerfil()))
                 .sorted(Comparator.comparing(Usuario::getNome))
-                .map(aluno -> new AlunoTurmaResponse(aluno.getId(), aluno.getNome(), aluno.getRgm(),
+                .map(aluno -> new AlunoTurmaResponse(aluno.getId(), aluno.getNome(), aluno.getRa(),
                         equipeMembroRepository.equipeDoUsuario(aluno.getId())))
                 .toList();
     }

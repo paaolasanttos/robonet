@@ -25,7 +25,7 @@ public class Usuario {
     @Column(name = "senha")
     private String senha;
 
-    private String rgm;
+    private String ra;
 
     @Column(name = "perfil", nullable = false)
     private String perfil;
@@ -66,8 +66,8 @@ public class Usuario {
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
 
-    public String getRgm() { return rgm; }
-    public void setRgm(String rgm) { this.rgm = rgm; }
+    public String getRa() { return ra; }
+    public void setRa(String ra) { this.ra = ra; }
 
     public String getPerfil() { return perfil; }
     public void setPerfil(String perfil) { this.perfil = perfil; }

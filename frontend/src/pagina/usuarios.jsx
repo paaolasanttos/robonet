@@ -12,7 +12,7 @@ const perfis = [
   { value: "professor", label: "Professor" },
   { value: "admin", label: "Administrador" },
 ];
-const formularioInicial = { nome: "", email: "", senha: "", rgm: "", perfil: "aluno", acessoMFV: "N", turmaId: "", turmas: [] };
+const formularioInicial = { nome: "", email: "", senha: "", ra: "", perfil: "aluno", acessoMFV: "N", turmaId: "", turmas: [] };
 
 export default function UsuariosPagina() {
   const { session, logout } = useAuth();
@@ -77,14 +77,14 @@ export default function UsuariosPagina() {
     const term = search.trim().toLowerCase();
     if (!term) return usuarios;
     return usuarios.filter((usuario) =>
-      [usuario.nome, usuario.email, usuario.rgm, usuario.perfil]
+      [usuario.nome, usuario.email, usuario.ra, usuario.perfil]
         .filter(Boolean).join(" ").toLowerCase().includes(term)
     );
   }, [usuarios, search]);
 
   function updateForm(event) {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: name === "rgm" ? value.replace(/\D/g, "").slice(0, 11) : value }));
+    setForm((current) => ({ ...current, [name]: name === "ra" ? value.replace(/\D/g, "").slice(0, 11) : value }));
   }
 
   function toggleTurmaProfessor(id) {
@@ -108,17 +108,17 @@ export default function UsuariosPagina() {
     event.preventDefault();
     setError("");
     const senhaInvalida = (!editingId || form.senha.length > 0) && !senhaValida(form.senha);
-    if (!form.nome.trim() || !form.email.trim() || senhaInvalida || (form.perfil === "aluno" && !form.rgm.trim())) {
-      setError(senhaInvalida ? MENSAGEM_SENHA : form.perfil === "aluno" ? "Preencha nome, e-mail e RGM." : "Preencha nome e e-mail.");
+    if (!form.nome.trim() || !form.email.trim() || senhaInvalida || (form.perfil === "aluno" && !form.ra.trim())) {
+      setError(senhaInvalida ? MENSAGEM_SENHA : form.perfil === "aluno" ? "Preencha nome, e-mail e RA." : "Preencha nome e e-mail.");
       return;
     }
-    if (form.perfil === "aluno" && form.rgm.length !== 11) {
-      setError("O RGM deve ter exatamente 11 números.");
+    if (form.perfil === "aluno" && form.ra.length !== 11) {
+      setError("O RA deve ter exatamente 11 números.");
       return;
     }
     setSaving(true);
     try {
-      const dados = { ...form, nome: form.nome.trim(), email: form.email.trim(), rgm: form.rgm.trim(), turmaId: form.turmaId ? Number(form.turmaId) : null };
+      const dados = { ...form, nome: form.nome.trim(), email: form.email.trim(), ra: form.ra.trim(), turmaId: form.turmaId ? Number(form.turmaId) : null };
       if (!dados.senha) delete dados.senha;
       if (editingId) {
         const usuario = await usuariosApi.atualizar(editingId, dados);
@@ -141,7 +141,7 @@ export default function UsuariosPagina() {
   function startEditing(usuario) {
     setEditingId(usuario.id);
     setAba("novo");
-    setForm({ nome: usuario.nome, email: usuario.email, senha: "", rgm: usuario.rgm || "", perfil: usuario.perfil, acessoMFV: usuario.acessoMFV || "N", turmaId: usuario.idTurma || "", turmas: usuario.turmas || [] });
+    setForm({ nome: usuario.nome, email: usuario.email, senha: "", ra: usuario.ra || "", perfil: usuario.perfil, acessoMFV: usuario.acessoMFV || "N", turmaId: usuario.idTurma || "", turmas: usuario.turmas || [] });
     setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -254,7 +254,7 @@ export default function UsuariosPagina() {
             <div className="form-field"><label htmlFor="nome">Nome completo *</label><input id="nome" name="nome" value={form.nome} onChange={updateForm} placeholder="Nome completo" maxLength="50" disabled={saving} /></div>
             <div className="form-field"><label htmlFor="email">E-mail *</label><input id="email" name="email" type="email" value={form.email} onChange={updateForm} placeholder="email@umc.br" disabled={saving} /></div>
             <div className="form-field"><label htmlFor="perfil">Perfil *</label><select id="perfil" name="perfil" value={form.perfil} onChange={updateForm} disabled={saving}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></div>
-            {form.perfil === "aluno" && <div className="form-field"><label htmlFor="rgm">RGM *</label><input id="rgm" name="rgm" value={form.rgm} onChange={updateForm} placeholder="11 números" inputMode="numeric" maxLength="11" disabled={saving} /></div>}
+            {form.perfil === "aluno" && <div className="form-field"><label htmlFor="ra">RA *</label><input id="ra" name="ra" value={form.ra} onChange={updateForm} placeholder="11 números" inputMode="numeric" maxLength="11" disabled={saving} /></div>}
             {form.perfil === "aluno" && <div className="form-field"><label htmlFor="turmaId">Turma</label><select id="turmaId" name="turmaId" value={form.turmaId} onChange={updateForm} disabled={saving}><option value="">Sem turma</option>{turmas.map((turma) => <option key={turma.id} value={turma.id}>{turma.nome}</option>)}</select></div>}
             {form.perfil === "professor" && (
               <fieldset className="user-form-turmas" disabled={saving}>
@@ -275,11 +275,11 @@ export default function UsuariosPagina() {
         </section>}
 
         {aba === "usuarios" && <section className="content-card" role="tabpanel" id="painel-usuarios" aria-labelledby="aba-usuarios" tabIndex="0">
-          <div className="toolbar"><div className="search-wrapper"><label htmlFor="search-users">Pesquisar usuários</label><input id="search-users" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, e-mail, RGM ou perfil..." /></div><span className="result-count">{filteredUsuarios.length} {filteredUsuarios.length === 1 ? "usuário" : "usuários"}</span></div>
+          <div className="toolbar"><div className="search-wrapper"><label htmlFor="search-users">Pesquisar usuários</label><input id="search-users" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, e-mail, RA ou perfil..." /></div><span className="result-count">{filteredUsuarios.length} {filteredUsuarios.length === 1 ? "usuário" : "usuários"}</span></div>
           {loading ? <Loading text="Carregando usuários..." /> : filteredUsuarios.length === 0 ? <div className="empty-state"><h2>Nenhum usuário encontrado.</h2><p>{search ? "Tente alterar os termos da pesquisa." : "Cadastre o primeiro usuário acima."}</p></div> : (
-            <div className="table-container"><table><thead><tr><th>Nome</th><th>E-mail</th><th>RGM</th><th>Turma</th><th>Perfil</th><th>Acesso MFV</th><th>Status</th><th className="actions-column">Ações</th></tr></thead><tbody>{filteredUsuarios.map((usuario) => {
+            <div className="table-container"><table><thead><tr><th>Nome</th><th>E-mail</th><th>RA</th><th>Turma</th><th>Perfil</th><th>Acesso MFV</th><th>Status</th><th className="actions-column">Ações</th></tr></thead><tbody>{filteredUsuarios.map((usuario) => {
               const isAdministrator = usuario.perfil?.toLowerCase() === "admin";
-              return <tr key={usuario.id}><td><strong>{usuario.nome}</strong></td><td>{usuario.email}</td><td>{usuario.rgm || "-"}</td><td>{turmasDoUsuario(usuario)}</td><td><select value={usuario.perfil} disabled aria-label={`Perfil de ${usuario.nome}`}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></td><td>{usuario.acessoMFV === "S" ? "Sim" : "Não"}</td><td><span className={`status-pill ${usuario.ativo ? "status-active" : "status-inactive"}`}>{usuario.ativo ? "Ativo" : "Inativo"}</span></td><td><div className="row-actions">{!isAdministrator && <><button className="button button-small button-light" onClick={() => startEditing(usuario)}>Editar</button>{!usuario.ativo && <button className="button button-small button-light" onClick={() => handleActivateUser(usuario)}>Ativar</button>}{usuario.ativo && <button className="button button-small button-danger" onClick={() => handleDelete(usuario)}>Excluir</button>}</>}</div></td></tr>;
+              return <tr key={usuario.id}><td><strong>{usuario.nome}</strong></td><td>{usuario.email}</td><td>{usuario.ra || "-"}</td><td>{turmasDoUsuario(usuario)}</td><td><select value={usuario.perfil} disabled aria-label={`Perfil de ${usuario.nome}`}>{perfis.map((perfil) => <option key={perfil.value} value={perfil.value}>{perfil.label}</option>)}</select></td><td>{usuario.acessoMFV === "S" ? "Sim" : "Não"}</td><td><span className={`status-pill ${usuario.ativo ? "status-active" : "status-inactive"}`}>{usuario.ativo ? "Ativo" : "Inativo"}</span></td><td><div className="row-actions">{!isAdministrator && <><button className="button button-small button-light" onClick={() => startEditing(usuario)}>Editar</button>{!usuario.ativo && <button className="button button-small button-light" onClick={() => handleActivateUser(usuario)}>Ativar</button>}{usuario.ativo && <button className="button button-small button-danger" onClick={() => handleDelete(usuario)}>Excluir</button>}</>}</div></td></tr>;
             })}</tbody></table></div>
           )}
         </section>}
@@ -292,16 +292,16 @@ export default function UsuariosPagina() {
             <div className="table-container"><table><thead><tr><th>Usuário</th><th>Dados atuais</th><th>Dados solicitados</th><th>Data</th><th>Status</th><th>Motivo</th><th className="actions-column">Ações</th></tr></thead><tbody>{solicitacoes.map((solicitacao) => {
               const pendente = solicitacao.status === "Pendente de análise";
               const classeStatus = pendente ? "status-pending" : solicitacao.status === "Deferido" ? "status-active" : "status-inactive";
-              const exibirDados = (nome, rgm, perfil, turma) => (
+              const exibirDados = (nome, ra, perfil, turma) => (
                 <div className="meus-dados-solicitacao-info">
                   <strong>{nome || "-"}</strong>
-                  <span>RGM: {rgm || "-"} · Perfil: {perfil || "-"} · Turma: {turma || "-"}</span>
+                  <span>RA: {ra || "-"} · Perfil: {perfil || "-"} · Turma: {turma || "-"}</span>
                 </div>
               );
               return <tr key={solicitacao.id}>
                 <td>{solicitacao.email}</td>
-                <td>{exibirDados(solicitacao.nomeAtual, solicitacao.rgmAtual, solicitacao.perfilAtual, solicitacao.turmaAtual)}</td>
-                <td>{exibirDados(solicitacao.nome, solicitacao.rgm, solicitacao.perfil, solicitacao.turma)}</td>
+                <td>{exibirDados(solicitacao.nomeAtual, solicitacao.raAtual, solicitacao.perfilAtual, solicitacao.turmaAtual)}</td>
+                <td>{exibirDados(solicitacao.nome, solicitacao.ra, solicitacao.perfil, solicitacao.turma)}</td>
                 <td>{solicitacao.dtRegistro ? new Date(solicitacao.dtRegistro).toLocaleDateString("pt-BR") : "-"}</td>
                 <td><span className={`status-pill ${classeStatus}`}>{solicitacao.status}</span></td>
                 <td>{solicitacao.motivo || "-"}</td>
@@ -335,13 +335,13 @@ export default function UsuariosPagina() {
               <div className="form-grid">
                 <h3 className="solicitacao-dados-heading">Dados atuais</h3>
                 <div className="form-field"><label htmlFor="solicitacao-nome-atual">Nome</label><input id="solicitacao-nome-atual" value={solicitacaoEmAnalise.nomeAtual || "-"} readOnly /></div>
-                <div className="form-field"><label htmlFor="solicitacao-rgm-atual">RGM</label><input id="solicitacao-rgm-atual" value={solicitacaoEmAnalise.rgmAtual || "-"} readOnly /></div>
+                <div className="form-field"><label htmlFor="solicitacao-ra-atual">RA</label><input id="solicitacao-ra-atual" value={solicitacaoEmAnalise.raAtual || "-"} readOnly /></div>
                 <div className="form-field"><label htmlFor="solicitacao-perfil-atual">Perfil</label><input id="solicitacao-perfil-atual" value={solicitacaoEmAnalise.perfilAtual || "-"} readOnly /></div>
                 <div className="form-field"><label htmlFor="solicitacao-turma-atual">Turma</label><input id="solicitacao-turma-atual" value={solicitacaoEmAnalise.turmaAtual || "-"} readOnly /></div>
 
                 <h3 className="solicitacao-dados-heading">Dados solicitados</h3>
                 <div className="form-field"><label htmlFor="solicitacao-nome">Nome</label><input id="solicitacao-nome" value={solicitacaoEmAnalise.nome || "-"} readOnly /></div>
-                <div className="form-field"><label htmlFor="solicitacao-rgm">RGM</label><input id="solicitacao-rgm" value={solicitacaoEmAnalise.rgm || "-"} readOnly /></div>
+                <div className="form-field"><label htmlFor="solicitacao-ra">RA</label><input id="solicitacao-ra" value={solicitacaoEmAnalise.ra || "-"} readOnly /></div>
                 <div className="form-field"><label htmlFor="solicitacao-perfil">Perfil</label><input id="solicitacao-perfil" value={solicitacaoEmAnalise.perfil || "-"} readOnly /></div>
                 <div className="form-field"><label htmlFor="solicitacao-turma">Turma</label><input id="solicitacao-turma" value={solicitacaoEmAnalise.turma || "-"} readOnly /></div>
 

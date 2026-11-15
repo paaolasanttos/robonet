@@ -18,7 +18,7 @@ export default function MeusDadosPagina() {
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [formSenha, setFormSenha] = useState({ senhaAtual: "", novaSenha: "", confirmacao: "" });
-  const [formAlteracao, setFormAlteracao] = useState({ nome: "", rgm: "", perfil: "aluno", turma: "" });
+  const [formAlteracao, setFormAlteracao] = useState({ nome: "", ra: "", perfil: "aluno", turma: "" });
   const [aba, setAba] = useState("cadastro");
   const [mostrarSenhas, setMostrarSenhas] = useState(false);
   const [senhaExclusao, setSenhaExclusao] = useState("");
@@ -33,7 +33,7 @@ export default function MeusDadosPagina() {
         setDados(resultado);
         setFormAlteracao({
           nome: resultado.nome || "",
-          rgm: resultado.rgm || "",
+          ra: resultado.ra || "",
           perfil: String(resultado.perfil || "aluno").toLowerCase(),
           turma: (resultado.turmas || [])[0] || "",
         });
@@ -187,7 +187,7 @@ export default function MeusDadosPagina() {
               <div className="section-heading"><span className="eyebrow">Cadastro</span><h2>Dados cadastrais</h2></div>
               <dl className="meus-dados-lista">
                 <div><dt>Nome</dt><dd>{dados.nome}</dd></div>
-                {dados.rgm && <div><dt>RGM</dt><dd>{dados.rgm}</dd></div>}
+                {dados.ra && <div><dt>RA</dt><dd>{dados.ra}</dd></div>}
                 <div><dt>E-mail</dt><dd>{dados.email}</dd></div>
                 <div><dt>Perfil</dt><dd className="meus-dados-perfil">{dados.perfil}</dd></div>
                 <div><dt>{dados.turmas.length > 1 ? "Turmas" : "Turma"}</dt><dd>{dados.turmas.join(", ") || "-"}</dd></div>
@@ -203,8 +203,8 @@ export default function MeusDadosPagina() {
                   <input id="solicitacao-nome" name="nome" value={formAlteracao.nome} onChange={alterarDadosSolicitados} maxLength="2000" required disabled={saving} />
                 </div>
                 <div className="form-field">
-                  <label htmlFor="solicitacao-rgm">RGM</label>
-                  <input id="solicitacao-rgm" name="rgm" value={formAlteracao.rgm} onChange={alterarDadosSolicitados} maxLength="50" disabled={saving} />
+                  <label htmlFor="solicitacao-ra">RA</label>
+                  <input id="solicitacao-ra" name="ra" value={formAlteracao.ra} onChange={alterarDadosSolicitados} maxLength="50" disabled={saving} />
                 </div>
                 <div className="form-field">
                   <label htmlFor="solicitacao-perfil">Perfil</label>
@@ -240,7 +240,7 @@ export default function MeusDadosPagina() {
                         return (
                           <tr key={solicitacao.id}>
                             <td>{solicitacao.dtRegistro ? formatarData(solicitacao.dtRegistro.split("T")[0]) : "-"}</td>
-                            <td><div className="meus-dados-solicitacao-info"><strong>{solicitacao.nome}</strong><span>RGM: {solicitacao.rgm || "-"} · Perfil: {solicitacao.perfil || "-"} · Turma: {solicitacao.turma || "-"}</span></div></td>
+                            <td><div className="meus-dados-solicitacao-info"><strong>{solicitacao.nome}</strong><span>RA: {solicitacao.ra || "-"} · Perfil: {solicitacao.perfil || "-"} · Turma: {solicitacao.turma || "-"}</span></div></td>
                             <td><span className={`status-pill ${classeStatus}`}>{solicitacao.status || "Pendente de análise"}</span></td>
                             <td>{indeferida && <button type="button" className="button button-small button-light" onClick={() => setSolicitacaoIndeferida(solicitacao)}>Ver motivo</button>}</td>
                           </tr>
@@ -301,7 +301,7 @@ export default function MeusDadosPagina() {
                     <div>
                       <h3>O que será excluído</h3>
                       <ul>
-                        <li>Nome, RGM, e-mail e senha da conta</li>
+                        <li>Nome, RA, e-mail e senha da conta</li>
                         <li>Vínculos com turmas e equipes</li>
                         <li>Aulas concluídas e simulados realizados</li>
                       </ul>

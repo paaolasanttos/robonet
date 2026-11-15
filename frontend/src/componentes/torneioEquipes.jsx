@@ -62,7 +62,7 @@ export default function TorneioEquipes({ perfil }) {
     return alunos.filter((aluno) =>
       form.membros.includes(aluno.id)
       || aluno.nome.toLowerCase().includes(term)
-      || String(aluno.rgm || "").includes(term)
+      || String(aluno.ra || "").includes(term)
     );
   }, [alunos, buscaAluno, form.membros]);
 
@@ -190,21 +190,21 @@ export default function TorneioEquipes({ perfil }) {
 
               <div className="form-field equipe-busca">
                 <label htmlFor="equipe-busca-aluno">Pesquisar aluno</label>
-                <input id="equipe-busca-aluno" type="search" value={buscaAluno} onChange={(event) => setBuscaAluno(event.target.value)} placeholder="Nome ou RGM do aluno" disabled={saving || !form.turmaId} />
+                <input id="equipe-busca-aluno" type="search" value={buscaAluno} onChange={(event) => setBuscaAluno(event.target.value)} placeholder="Nome ou RA do aluno" disabled={saving || !form.turmaId} />
               </div>
 
               <fieldset className="equipe-alunos" disabled={saving}>
                 <legend>Integrantes ({form.membros.length}/{MAXIMO_MEMBROS})</legend>
                 {!form.turmaId ? <span className="turmas-vazio">Selecione a turma para ver os alunos.</span>
                   : alunos.length === 0 ? <span className="turmas-vazio">Nenhum aluno ativo nesta turma.</span>
-                  : alunosFiltrados.length === 0 ? <span className="turmas-vazio">Nenhum aluno encontrado com esse nome ou RGM.</span>
+                  : alunosFiltrados.length === 0 ? <span className="turmas-vazio">Nenhum aluno encontrado com esse nome ou RA.</span>
                   : alunosFiltrados.map((aluno) => {
                     const emOutraEquipe = aluno.equipeId && aluno.equipeId !== editingId;
                     const selecionado = form.membros.includes(aluno.id);
                     return (
                       <label key={aluno.id} className="checkbox-item">
                         <input type="checkbox" checked={selecionado} disabled={emOutraEquipe || (!selecionado && form.membros.length >= MAXIMO_MEMBROS)} onChange={() => toggleMembro(aluno.id)} />
-                        {aluno.nome}{aluno.rgm && <small> - RGM {aluno.rgm}</small>}{emOutraEquipe && <small> (já está na equipe {nomeEquipe(aluno.equipeId)})</small>}
+                        {aluno.nome}{aluno.ra && <small> - RA {aluno.ra}</small>}{emOutraEquipe && <small> (já está na equipe {nomeEquipe(aluno.equipeId)})</small>}
                       </label>
                     );
                   })}

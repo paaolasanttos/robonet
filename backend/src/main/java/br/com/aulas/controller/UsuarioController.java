@@ -108,14 +108,14 @@ public class UsuarioController {
         if (!perfil.equals("aluno") && !perfil.equals("professor") && !perfil.equals("admin")) {
             return ResponseEntity.badRequest().body(erro("Perfil inválido."));
         }
-        if (perfil.equals("aluno") && (dto.getRgm() == null || dto.getRgm().trim().isEmpty())) {
-            return ResponseEntity.badRequest().body(erro("RGM é obrigatório para aluno."));
+        if (perfil.equals("aluno") && (dto.getRa() == null || dto.getRa().trim().isEmpty())) {
+            return ResponseEntity.badRequest().body(erro("RA é obrigatório para aluno."));
         }
-        if (perfil.equals("aluno") && !dto.getRgm().trim().matches("\\d{11}")) {
-            return ResponseEntity.badRequest().body(erro("O RGM deve ter exatamente 11 números."));
+        if (perfil.equals("aluno") && !dto.getRa().trim().matches("\\d{11}")) {
+            return ResponseEntity.badRequest().body(erro("O RA deve ter exatamente 11 números."));
         }
-        if (perfil.equals("aluno") && repo.existsByRgm(dto.getRgm().trim())) {
-            return ResponseEntity.badRequest().body(erro("Já existe um aluno com esse RGM."));
+        if (perfil.equals("aluno") && repo.existsByRa(dto.getRa().trim())) {
+            return ResponseEntity.badRequest().body(erro("Já existe um aluno com esse RA."));
         }
 
 
@@ -131,9 +131,9 @@ public class UsuarioController {
         u.setPerfil(perfil);
         u.setAcessoMFV(acessoMFV);
         if (perfil.equals("aluno")) {
-            u.setRgm(dto.getRgm().trim());
+            u.setRa(dto.getRa().trim());
         } else {
-            u.setRgm(null);
+            u.setRa(null);
         }
         if (perfil.equals("aluno") && dto.getTurmaId() != null) {
             turmaService.validarTurma(dto.getTurmaId());
@@ -173,14 +173,14 @@ public class UsuarioController {
         if (!perfil.equals("aluno") && !perfil.equals("professor") && !perfil.equals("admin")) {
             return ResponseEntity.badRequest().body(erro("Perfil inválido."));
         }
-        if (perfil.equals("aluno") && (dto.getRgm() == null || dto.getRgm().trim().isEmpty())) {
-            return ResponseEntity.badRequest().body(erro("RGM é obrigatório para aluno."));
+        if (perfil.equals("aluno") && (dto.getRa() == null || dto.getRa().trim().isEmpty())) {
+            return ResponseEntity.badRequest().body(erro("RA é obrigatório para aluno."));
         }
-        if (perfil.equals("aluno") && !dto.getRgm().trim().matches("\\d{11}")) {
-            return ResponseEntity.badRequest().body(erro("O RGM deve ter exatamente 11 números."));
+        if (perfil.equals("aluno") && !dto.getRa().trim().matches("\\d{11}")) {
+            return ResponseEntity.badRequest().body(erro("O RA deve ter exatamente 11 números."));
         }
-        if (perfil.equals("aluno") && repo.existsByRgmAndIdNot(dto.getRgm().trim(), id)) {
-            return ResponseEntity.badRequest().body(erro("Já existe um aluno com esse RGM."));
+        if (perfil.equals("aluno") && repo.existsByRaAndIdNot(dto.getRa().trim(), id)) {
+            return ResponseEntity.badRequest().body(erro("Já existe um aluno com esse RA."));
         }
         Usuario usuario = encontrado.get();
         if (!usuario.getEmail().equalsIgnoreCase(email) && repo.existsByEmailIgnoreCaseAndAtivoTrue(email)) {
@@ -201,7 +201,7 @@ public class UsuarioController {
         if (acessoMFV != null) {
             usuario.setAcessoMFV(acessoMFV);
         }
-        usuario.setRgm(perfil.equals("aluno") ? dto.getRgm().trim() : null);
+        usuario.setRa(perfil.equals("aluno") ? dto.getRa().trim() : null);
         if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
             if (!SenhaPolitica.valida(dto.getSenha())) {
                 return ResponseEntity.badRequest().body(erro(SenhaPolitica.MENSAGEM));
@@ -241,7 +241,7 @@ public class UsuarioController {
         String perfilAnterior = u.getPerfil();
         u.setPerfil(novoPerfil);
         if (!novoPerfil.equals("aluno")) {
-            u.setRgm(null);
+            u.setRa(null);
         }
         repo.save(u);
         if (!novoPerfil.equals(perfilAnterior)) {

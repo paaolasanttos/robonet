@@ -98,7 +98,7 @@ public class ExclusaoContaService {
 
         usuario.setNome("Usuário removido");
         usuario.setEmail("removido-" + usuario.getId() + "@anonimizado.invalid");
-        usuario.setRgm(null);
+        usuario.setRa(null);
         usuario.setSenha(null);
         usuario.setAtivo(false);
         usuarioRepository.save(usuario);

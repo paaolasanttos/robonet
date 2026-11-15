@@ -5,7 +5,7 @@ import java.util.List;
 public class UsuarioDTO {
     private String nome;
     private String email;
-    private String rgm;
+    private String ra;
     private String perfil;
     private String acessoMFV;
     private String senha;
@@ -18,8 +18,8 @@ public class UsuarioDTO {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public String getRgm() { return rgm; }
-    public void setRgm(String rgm) { this.rgm = rgm; }
+    public String getRa() { return ra; }
+    public void setRa(String ra) { this.ra = ra; }
 
     public String getPerfil() { return perfil; }
     public void setPerfil(String perfil) { this.perfil = perfil; }

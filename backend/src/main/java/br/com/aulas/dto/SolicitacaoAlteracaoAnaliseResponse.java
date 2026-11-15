@@ -6,7 +6,7 @@ public record SolicitacaoAlteracaoAnaliseResponse(
         Long id,
         String email,
         String nome,
-        String rgm,
+        String ra,
         String perfil,
         String turma,
         String status,
@@ -14,7 +14,7 @@ public record SolicitacaoAlteracaoAnaliseResponse(
         LocalDateTime dtRegistro,
         LocalDateTime dtAnalise,
         String nomeAtual,
-        String rgmAtual,
+        String raAtual,
         String perfilAtual,
         String turmaAtual
 ) { }
