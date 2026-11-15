@@ -1,5 +1,6 @@
 package br.com.aulas.service;
 
+import br.com.aulas.dto.AcessoMFVRequest;
 import br.com.aulas.dto.MeusDadosExportResponse;
 import br.com.aulas.dto.MeusDadosResponse;
 import br.com.aulas.dto.SolicitacaoAlteracaoResponse;
@@ -31,11 +32,13 @@ public class MeusDadosService {
     private final DatabaseUserContext databaseUserContext;
     private final SolicitacaoExclusaoRepository solicitacaoExclusaoRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final GmailService gmailService;
 
     public MeusDadosService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
                             TurmaService turmaService, AuditoriaService auditoriaService,
                             DatabaseUserContext databaseUserContext,
-                            SolicitacaoExclusaoRepository solicitacaoExclusaoRepository, JdbcTemplate jdbcTemplate) {
+                            SolicitacaoExclusaoRepository solicitacaoExclusaoRepository, JdbcTemplate jdbcTemplate,
+                            GmailService gmailService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.turmaService = turmaService;
@@ -43,6 +46,7 @@ public class MeusDadosService {
         this.databaseUserContext = databaseUserContext;
         this.solicitacaoExclusaoRepository = solicitacaoExclusaoRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.gmailService = gmailService;
     }
 
     public MeusDadosResponse consultar(Usuario usuario) {
@@ -54,6 +58,7 @@ public class MeusDadosService {
                 usuario.getEmail(),
                 usuario.getPerfil(),
                 usuario.getRa(),
+                "S".equalsIgnoreCase(usuario.getAcessoMFV()) ? "S" : "N",
                 turmasDoUsuario(usuario),
                 exclusao == null ? null : exclusao.getDtSolicitacao().toLocalDate(),
                 exclusao == null ? null : exclusao.getDtLimite().toLocalDate(),
@@ -204,6 +209,25 @@ public class MeusDadosService {
         usuarioRepository.save(usuario);
         auditoriaService.registrar("CRIPTOGRAFIA", "SENHA_ALTERADA",
                 "Usuário " + usuario.getId() + " alterou a própria senha, salva com hash BCrypt", true);
+    }
+
+    @Transactional(noRollbackFor = IllegalArgumentException.class)
+    public void alterarAcessoMFV(Usuario usuario, AcessoMFVRequest dados) {
+        conferirSenha(usuario, dados.senhaAtual(), "ACESSO_MFV_ALTERACAO_FALHA");
+        String acessoMFV = dados.acessoMFV().trim().toUpperCase(Locale.ROOT);
+        if (acessoMFV.equals("S") && !gmailService.isEnabled()) {
+            throw new IllegalArgumentException("O envio de códigos por e-mail está indisponível no momento. Tente novamente mais tarde.");
+        }
+        if (acessoMFV.equalsIgnoreCase(usuario.getAcessoMFV())) {
+            return;
+        }
+
+        databaseUserContext.setCurrentUser();
+        usuario.setAcessoMFV(acessoMFV);
+        usuarioRepository.save(usuario);
+        auditoriaService.registrar("AUTENTICACAO", acessoMFV.equals("S") ? "ACESSO_MFV_ATIVADO" : "ACESSO_MFV_DESATIVADO",
+                "Usuário " + usuario.getId() + (acessoMFV.equals("S") ? " ativou" : " desativou")
+                        + " o código de verificação por e-mail no login", true);
     }
 
     private List<String> turmasDoUsuario(Usuario usuario) {

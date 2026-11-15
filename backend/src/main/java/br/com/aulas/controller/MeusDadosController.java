@@ -1,5 +1,6 @@
 package br.com.aulas.controller;
 
+import br.com.aulas.dto.AcessoMFVRequest;
 import br.com.aulas.dto.ExclusaoRequest;
 import br.com.aulas.dto.MeusDadosExportResponse;
 import br.com.aulas.dto.MeusDadosResponse;
@@ -44,6 +45,12 @@ public class MeusDadosController {
     @PutMapping("/senha")
     public ResponseEntity<Void> alterarSenha(Authentication authentication, @Valid @RequestBody SenhaRequest request) {
         service.alterarSenha(usuarioLogado(authentication), request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/acesso-mfv")
+    public ResponseEntity<Void> alterarAcessoMFV(Authentication authentication, @Valid @RequestBody AcessoMFVRequest request) {
+        service.alterarAcessoMFV(usuarioLogado(authentication), request);
         return ResponseEntity.noContent().build();
     }
 

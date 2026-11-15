@@ -22,6 +22,7 @@ export default function MeusDadosPagina() {
   const [aba, setAba] = useState("cadastro");
   const [mostrarSenhas, setMostrarSenhas] = useState(false);
   const [senhaExclusao, setSenhaExclusao] = useState("");
+  const [senhaMFV, setSenhaMFV] = useState("");
   const [exclusaoConfirmada, setExclusaoConfirmada] = useState(false);
   const [solicitacaoIndeferida, setSolicitacaoIndeferida] = useState(null);
 
@@ -97,6 +98,17 @@ export default function MeusDadosPagina() {
       await meusDadosApi.alterarSenha({ senhaAtual: formSenha.senhaAtual, novaSenha: formSenha.novaSenha });
       setFormSenha({ senhaAtual: "", novaSenha: "", confirmacao: "" });
       setFeedback("Senha alterada com sucesso.");
+    });
+  }
+
+  function alterarAcessoMFV(event) {
+    event.preventDefault();
+    const ativar = dados.acessoMFV !== "S";
+    executar(async () => {
+      await meusDadosApi.alterarAcessoMFV({ senhaAtual: senhaMFV, acessoMFV: ativar ? "S" : "N" });
+      setDados(await meusDadosApi.consultar());
+      setSenhaMFV("");
+      setFeedback(ativar ? "Verificação no login ativada." : "Verificação no login desativada.");
     });
   }
 
@@ -178,6 +190,7 @@ export default function MeusDadosPagina() {
               <button type="button" className={`aba ${aba === "cadastro" ? "aba-ativa" : ""}`} role="tab" id="aba-cadastro" aria-controls="painel-cadastro" aria-selected={aba === "cadastro"} onClick={() => setAba("cadastro")}>Dados Cadastrais</button>
               <button type="button" className={`aba ${aba === "alteracao" ? "aba-ativa" : ""}`} role="tab" id="aba-alteracao" aria-controls="painel-alteracao" aria-selected={aba === "alteracao"} onClick={() => setAba("alteracao")}>Solicitar Alteração</button>
               <button type="button" className={`aba ${aba === "senha" ? "aba-ativa" : ""}`} role="tab" id="aba-senha" aria-controls="painel-senha" aria-selected={aba === "senha"} onClick={() => setAba("senha")}>Alterar Senha</button>
+              <button type="button" className={`aba ${aba === "mfv" ? "aba-ativa" : ""}`} role="tab" id="aba-mfv" aria-controls="painel-mfv" aria-selected={aba === "mfv"} onClick={() => setAba("mfv")}>Verificação no Login</button>
               <button type="button" className={`aba ${aba === "copia" ? "aba-ativa" : ""}`} role="tab" id="aba-copia" aria-controls="painel-copia" aria-selected={aba === "copia"} onClick={() => setAba("copia")}>Cópia dos Dados</button>
               <button type="button" className={`aba ${aba === "exclusao" ? "aba-ativa" : ""}`} role="tab" id="aba-exclusao" aria-controls="painel-exclusao" aria-selected={aba === "exclusao"} onClick={() => setAba("exclusao")}>Excluir Conta</button>
               <button type="button" className={`aba ${aba === "termo" ? "aba-ativa" : ""}`} role="tab" id="aba-termo" aria-controls="painel-termo" aria-selected={aba === "termo"} onClick={() => setAba("termo")}>Termo de Uso e Privacidade</button>
@@ -191,6 +204,7 @@ export default function MeusDadosPagina() {
                 <div><dt>E-mail</dt><dd>{dados.email}</dd></div>
                 <div><dt>Perfil</dt><dd className="meus-dados-perfil">{dados.perfil}</dd></div>
                 <div><dt>{dados.turmas.length > 1 ? "Turmas" : "Turma"}</dt><dd>{dados.turmas.join(", ") || "-"}</dd></div>
+                <div><dt>Verificação no login</dt><dd>{dados.acessoMFV === "S" ? "Ativada" : "Desativada"}</dd></div>
               </dl>
             </section>}
 
@@ -278,9 +292,24 @@ export default function MeusDadosPagina() {
               </form>
             </section>}
 
+            {aba === "mfv" && <section className="content-card meus-dados-secao" role="tabpanel" id="painel-mfv" aria-labelledby="aba-mfv" tabIndex="0">
+              <div className="section-heading"><span className="eyebrow">Acesso</span><h2>Verificação no login</h2></div>
+              <p className="meus-dados-ajuda">Com a verificação ativada, depois de informar e-mail e senha você recebe um código de 6 dígitos no e-mail cadastrado para concluir o login. Isso protege sua conta mesmo que alguém descubra sua senha.</p>
+              <p className="meus-dados-ajuda">Situação atual: <span className={`status-pill ${dados.acessoMFV === "S" ? "status-active" : "status-inactive"}`}>{dados.acessoMFV === "S" ? "Ativada" : "Desativada"}</span></p>
+              <form className="meus-dados-form" onSubmit={alterarAcessoMFV}>
+                <div className="form-field">
+                  <label htmlFor="senha-mfv">Senha atual</label>
+                  <input id="senha-mfv" type="password" value={senhaMFV} onChange={(event) => setSenhaMFV(event.target.value)} autoComplete="current-password" required disabled={saving} />
+                </div>
+                <div className="user-form-actions">
+                  <button type="submit" className={`button ${dados.acessoMFV === "S" ? "button-secondary" : "button-primary"}`} disabled={saving}>{dados.acessoMFV === "S" ? "Desativar verificação" : "Ativar verificação"}</button>
+                </div>
+              </form>
+            </section>}
+
             {aba === "copia" && <section className="content-card meus-dados-secao" role="tabpanel" id="painel-copia" aria-labelledby="aba-copia" tabIndex="0">
               <div className="section-heading"><span className="eyebrow">LGPD</span><h2>Cópia dos meus dados</h2></div>
-              <p className="meus-dados-ajuda">Baixe um arquivo com seu cadastro, turmas, equipe, aulas concluídas, simulados realizados, aceites do termo e acessos. Você pode guardar ou compartilhar esse arquivo como preferir.</p>
+              <p className="meus-dados-ajuda">Baixe um arquivo com seu cadastro, turmas, equipe, aulas concluídas, simulados realizados com respostas e resultados, solicitações de alteração e de exclusão, aceites do termo, acessos e registros das suas ações. Você pode guardar ou compartilhar esse arquivo como preferir.</p>
               <div className="meus-dados-acoes">
                 <button type="button" className="button button-light" onClick={baixarDados} disabled={saving}>Baixar meus dados</button>
               </div>

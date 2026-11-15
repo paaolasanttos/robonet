@@ -44,6 +44,10 @@ public class GmailService {
         this.refreshToken = refreshToken;
     }
 
+    public boolean isEnabled() {
+        return enabled && !sender.isBlank() && !clientId.isBlank() && !clientSecret.isBlank() && !refreshToken.isBlank();
+    }
+
     public void sendLoginCode(String recipient, String code, long expirationSeconds) {
         if (!enabled) {
             throw new IllegalStateException("O envio de códigos por Gmail está desativado.");

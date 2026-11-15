@@ -151,6 +151,10 @@ export const meusDadosApi = {
     method: "PUT",
     body: JSON.stringify(dados),
   }),
+  alterarAcessoMFV: (dados) => request("/api/meus-dados/acesso-mfv", {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  }),
   exportar: () => request("/api/meus-dados/exportar"),
   solicitarExclusao: (dados) => request("/api/meus-dados/exclusao", {
     method: "POST",
