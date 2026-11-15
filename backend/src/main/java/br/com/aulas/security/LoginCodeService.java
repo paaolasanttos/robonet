@@ -3,6 +3,7 @@ package br.com.aulas.security;
 import br.com.aulas.model.LogCodigoVerificacao;
 import br.com.aulas.repository.LogCodigoVerificacaoRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -15,15 +16,17 @@ public class LoginCodeService {
     private static final int MAX_ATTEMPTS = 5;
     private final SecureRandom random = new SecureRandom();
     private final LogCodigoVerificacaoRepository logCodigoVerificacaoRepository;
+    private final PasswordEncoder passwordEncoder;
     private final Duration expiration;
     private final Duration cooldown;
 
     public LoginCodeService(
             LogCodigoVerificacaoRepository logCodigoVerificacaoRepository,
-            @Value("${security.jwt.secret}") String ignoredHashSecret,
+            PasswordEncoder passwordEncoder,
             @Value("${gmail.code-expiration-seconds}") long expirationSeconds,
             @Value("${gmail.resend-cooldown-seconds}") long cooldownSeconds) {
         this.logCodigoVerificacaoRepository = logCodigoVerificacaoRepository;
+        this.passwordEncoder = passwordEncoder;
         this.expiration = Duration.ofSeconds(expirationSeconds);
         this.cooldown = Duration.ofSeconds(cooldownSeconds);
     }
@@ -43,7 +46,7 @@ public class LoginCodeService {
         String code = String.format("%06d", random.nextInt(1_000_000));
         LogCodigoVerificacao codigo = new LogCodigoVerificacao();
         codigo.setEmail(normalizedEmail);
-        codigo.setCodigo(code);
+        codigo.setCodigo(passwordEncoder.encode(code));
         codigo.setTipo(purpose);
         codigo.setDtGeracao(LocalDateTime.now());
         logCodigoVerificacaoRepository.save(codigo);
@@ -69,12 +72,24 @@ public class LoginCodeService {
             return false;
         }
 
+        int tentativas = codigoVerificacao.getTentativas() == null ? 0 : codigoVerificacao.getTentativas();
+        if (tentativas >= MAX_ATTEMPTS) {
+            logCodigoVerificacaoRepository.deleteByEmailIgnoreCaseAndTipo(normalizedEmail, purpose);
+            return false;
+        }
+
         String codigoInformado = code == null ? "" : code.trim();
-        if (codigoVerificacao.getCodigo().equals(codigoInformado)) {
+        if (passwordEncoder.matches(codigoInformado, codigoVerificacao.getCodigo())) {
             logCodigoVerificacaoRepository.deleteByEmailIgnoreCaseAndTipo(normalizedEmail, purpose);
             return true;
         }
 
+        if (tentativas + 1 >= MAX_ATTEMPTS) {
+            logCodigoVerificacaoRepository.deleteByEmailIgnoreCaseAndTipo(normalizedEmail, purpose);
+        } else {
+            codigoVerificacao.setTentativas(tentativas + 1);
+            logCodigoVerificacaoRepository.save(codigoVerificacao);
+        }
         return false;
     }
 

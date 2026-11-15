@@ -45,9 +45,9 @@ public class AulaService {
     }
 
     @Transactional(readOnly = true)
-    public List<AulaUsuarioResponse> listarUsuariosAssociados(Integer idAula) {
+    public List<AulaUsuarioResponse> listarUsuariosAssociados(Integer idAula, String emailProfessor) {
         buscarEntidade(idAula);
-        return aulasAlunoRepository.findUsuariosAssociados(idAula.longValue()).stream()
+        return aulasAlunoRepository.findUsuariosAssociados(idAula.longValue(), emailProfessor).stream()
                 .map(usuario -> new AulaUsuarioResponse(
                         usuario.getId(),
                         usuario.getNome(),

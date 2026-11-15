@@ -25,10 +25,19 @@ public interface AulasAlunoRepository extends JpaRepository<AulasAluno, Long> {
               FROM aulasaluno aa
               JOIN usuarios u ON u.idusuario = aa.idusuario
              WHERE aa.idaula = :idAula
+               AND (CAST(:emailProfessor AS VARCHAR) IS NULL OR EXISTS (
+                    SELECT 1
+                      FROM usuariosturmas ua
+                      JOIN usuariosturmas up ON up.idturma = ua.idturma
+                      JOIN usuarios p ON p.idusuario = up.idusuario
+                     WHERE ua.idusuario = u.idusuario
+                       AND LOWER(p.email) = LOWER(CAST(:emailProfessor AS VARCHAR))
+                       AND p.status = 'Ativo'))
              GROUP BY u.idusuario, u.nome, u.email
              ORDER BY u.nome
             """, nativeQuery = true)
-    List<UsuarioAssociadoProjection> findUsuariosAssociados(@Param("idAula") Long idAula);
+    List<UsuarioAssociadoProjection> findUsuariosAssociados(@Param("idAula") Long idAula,
+                                                            @Param("emailProfessor") String emailProfessor);
 
     long countByIdUsuarioAndConcluidaIgnoreCase(Long idUsuario, String concluida);
 

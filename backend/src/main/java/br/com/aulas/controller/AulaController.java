@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,8 +36,10 @@ public class AulaController {
     }
 
     @GetMapping("/{id:\\d+}/usuarios")
-    public ResponseEntity<List<AulaUsuarioResponse>> listarUsuarios(@PathVariable Integer id) {
-        return ResponseEntity.ok(service.listarUsuariosAssociados(id));
+    public ResponseEntity<List<AulaUsuarioResponse>> listarUsuarios(@PathVariable Integer id, Authentication authentication) {
+        boolean professor = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_PROFESSOR".equals(authority.getAuthority()));
+        return ResponseEntity.ok(service.listarUsuariosAssociados(id, professor ? authentication.getName() : null));
     }
 
     @GetMapping("/temas")

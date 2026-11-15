@@ -15,11 +15,14 @@ public class LogCodigoVerificacao {
     @Column(name = "email", nullable = false, length = 2000)
     private String email;
 
-    @Column(name = "codigo", nullable = false, length = 20)
+    @Column(name = "codigo", nullable = false, length = 100)
     private String codigo;
 
     @Column(name = "tipo", nullable = false, length = 50)
     private String tipo;
+
+    @Column(name = "tentativas", nullable = false)
+    private Integer tentativas = 0;
 
     @Column(name = "dtgeracao", nullable = false)
     private LocalDateTime dtGeracao;
@@ -57,6 +60,14 @@ public class LogCodigoVerificacao {
 
     public void setTipo(String tipo) {
         this.tipo = tipo;
+    }
+
+    public Integer getTentativas() {
+        return tentativas;
+    }
+
+    public void setTentativas(Integer tentativas) {
+        this.tentativas = tentativas;
     }
 
     public LocalDateTime getDtGeracao() {

@@ -18,7 +18,7 @@ server:
 
 app:
   termo:
-    versao: ${TERMO_VERSAO:0.2}
+    versao: ${TERMO_VERSAO:0.3}
   exclusao:
     intervalo-ms: ${EXCLUSAO_INTERVALO_MS:3600000}
 

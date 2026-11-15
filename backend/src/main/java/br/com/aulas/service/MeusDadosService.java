@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -105,6 +106,48 @@ public class MeusDadosService {
                 (result, rowNumber) -> new MeusDadosExportResponse.SimuladoRealizado(
                         result.getString("titulo"), result.getTimestamp("dtrealizacao").toLocalDateTime()),
                 usuario.getId());
+        List<MeusDadosExportResponse.ResultadoSimulado> resultados = jdbcTemplate.query(
+                "SELECT s.titulo, r.tentativa, COUNT(*) FILTER (WHERE r.respostacorreta) AS acertos, COUNT(*) AS total, "
+                        + "MAX(r.dttentativa) AS dttentativa FROM simuladosrealizados r JOIN simulados s ON s.idsimulado = r.idsimulado "
+                        + "WHERE r.idusuario = ? GROUP BY s.titulo, r.idsimulado, r.tentativa ORDER BY MAX(r.dttentativa)",
+                (result, rowNumber) -> new MeusDadosExportResponse.ResultadoSimulado(
+                        result.getString("titulo"), result.getInt("tentativa"), result.getInt("acertos"),
+                        result.getInt("total"), dataHora(result.getTimestamp("dttentativa"))),
+                usuario.getId());
+        List<MeusDadosExportResponse.RespostaSimulado> respostas = jdbcTemplate.query(
+                "SELECT s.titulo, r.tentativa, p.enunciado, o.texto, r.respostacorreta, r.dttentativa "
+                        + "FROM simuladosrealizados r JOIN simulados s ON s.idsimulado = r.idsimulado "
+                        + "JOIN simuladosperguntas p ON p.idsimuladopergunta = r.idsimuladopergunta "
+                        + "JOIN simuladosopcoes o ON o.idsimuladoopcao = r.idsimuladoopcao "
+                        + "WHERE r.idusuario = ? ORDER BY r.dttentativa, r.idsimuladorealizado",
+                (result, rowNumber) -> new MeusDadosExportResponse.RespostaSimulado(
+                        result.getString("titulo"), result.getInt("tentativa"), result.getString("enunciado"),
+                        result.getString("texto"), result.getBoolean("respostacorreta"),
+                        dataHora(result.getTimestamp("dttentativa"))),
+                usuario.getId());
+        List<MeusDadosExportResponse.SolicitacaoAlteracao> alteracoes = jdbcTemplate.query(
+                "SELECT nome, email, rgm, perfil, turma, status, motivo, dtregistro, dtanalise FROM usuariossolicitacoes "
+                        + "WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?) ORDER BY dtregistro, idusuario",
+                (result, rowNumber) -> new MeusDadosExportResponse.SolicitacaoAlteracao(
+                        result.getString("nome"), result.getString("email"), result.getString("rgm"),
+                        result.getString("perfil"), result.getString("turma"),
+                        normalizarStatusSolicitacao(result.getString("status")), result.getString("motivo"),
+                        dataHora(result.getTimestamp("dtregistro")), dataHora(result.getTimestamp("dtanalise"))),
+                usuario.getEmail(), usuario.getEmail());
+        List<MeusDadosExportResponse.SolicitacaoExclusao> exclusoes = jdbcTemplate.query(
+                "SELECT status, ip, dtsolicitacao, dtlimite, dtconclusao FROM solicitacoesexclusao "
+                        + "WHERE idusuario = ? ORDER BY dtsolicitacao",
+                (result, rowNumber) -> new MeusDadosExportResponse.SolicitacaoExclusao(
+                        result.getString("status"), result.getString("ip"), dataHora(result.getTimestamp("dtsolicitacao")),
+                        dataHora(result.getTimestamp("dtlimite")), dataHora(result.getTimestamp("dtconclusao"))),
+                usuario.getId());
+        List<MeusDadosExportResponse.RegistroAuditoria> auditoria = jdbcTemplate.query(
+                "SELECT categoria, acao, descricao, ip, sucesso, dtregistro FROM logauditoria "
+                        + "WHERE LOWER(email) = LOWER(?) ORDER BY dtregistro",
+                (result, rowNumber) -> new MeusDadosExportResponse.RegistroAuditoria(
+                        result.getString("categoria"), result.getString("acao"), result.getString("descricao"),
+                        result.getString("ip"), result.getBoolean("sucesso"), dataHora(result.getTimestamp("dtregistro"))),
+                usuario.getEmail());
         List<MeusDadosExportResponse.AceiteTermo> aceites = jdbcTemplate.query(
                 "SELECT versao, ip, dtaceite FROM termosaceites WHERE idusuario = ? ORDER BY dtaceite",
                 (result, rowNumber) -> new MeusDadosExportResponse.AceiteTermo(
@@ -118,7 +161,14 @@ public class MeusDadosService {
         auditoriaService.registrar("LGPD", "DADOS_EXPORTADOS",
                 "Usuário " + usuario.getId() + " baixou uma cópia dos próprios dados", true);
         return new MeusDadosExportResponse(LocalDateTime.now(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil(),
-                usuario.getRgm(), turmasDoUsuario(usuario), equipe.isEmpty() ? null : equipe.get(0), aulas, simulados, aceites, acessos);
+                usuario.getRgm(), Boolean.TRUE.equals(usuario.getAtivo()) ? "Ativo" : "Inativo",
+                "S".equalsIgnoreCase(usuario.getAcessoMFV()) ? "Sim" : "Não", usuario.getCriadoEm(),
+                turmasDoUsuario(usuario), equipe.isEmpty() ? null : equipe.get(0), aulas, simulados, resultados, respostas,
+                alteracoes, exclusoes, aceites, acessos, auditoria);
+    }
+
+    private LocalDateTime dataHora(Timestamp timestamp) {
+        return timestamp == null ? null : timestamp.toLocalDateTime();
     }
 
     @Transactional

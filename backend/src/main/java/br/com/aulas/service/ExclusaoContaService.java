@@ -91,6 +91,9 @@ public class ExclusaoContaService {
         jdbcTemplate.update("DELETE FROM equipesmembros WHERE idusuario = ?", usuario.getId());
         jdbcTemplate.update("DELETE FROM aulasaluno WHERE idusuario = ?", usuario.getId());
         jdbcTemplate.update("DELETE FROM simuladosrealizacoes WHERE idusuario = ?", usuario.getId());
+        jdbcTemplate.update("DELETE FROM simuladosrealizados WHERE idusuario = ?", usuario.getId());
+        jdbcTemplate.update("DELETE FROM usuariossolicitacoes WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?)",
+                email, email);
         jdbcTemplate.update("DELETE FROM logcodigoverificacao WHERE LOWER(email) = LOWER(?)", email);
 
         usuario.setNome("Usuário removido");
