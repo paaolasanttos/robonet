@@ -1,0 +1,245 @@
+package br.com.aulas.service;
+
+import br.com.aulas.dto.AcessoMFVRequest;
+import br.com.aulas.dto.MeusDadosExportResponse;
+import br.com.aulas.dto.MeusDadosResponse;
+import br.com.aulas.dto.SolicitacaoAlteracaoResponse;
+import br.com.aulas.dto.SenhaRequest;
+import br.com.aulas.dto.SolicitacaoAlteracaoDadosRequest;
+import br.com.aulas.dto.TurmaResponse;
+import br.com.aulas.model.SolicitacaoExclusao;
+import br.com.aulas.model.Usuario;
+import br.com.aulas.repository.SolicitacaoExclusaoRepository;
+import br.com.aulas.repository.UsuarioRepository;
+import br.com.aulas.security.DatabaseUserContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+
+@Service
+public class MeusDadosService {
+
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final TurmaService turmaService;
+    private final AuditoriaService auditoriaService;
+    private final DatabaseUserContext databaseUserContext;
+    private final SolicitacaoExclusaoRepository solicitacaoExclusaoRepository;
+    private final JdbcTemplate jdbcTemplate;
+    private final GmailService gmailService;
+
+    public MeusDadosService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+                            TurmaService turmaService, AuditoriaService auditoriaService,
+                            DatabaseUserContext databaseUserContext,
+                            SolicitacaoExclusaoRepository solicitacaoExclusaoRepository, JdbcTemplate jdbcTemplate,
+                            GmailService gmailService) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.turmaService = turmaService;
+        this.auditoriaService = auditoriaService;
+        this.databaseUserContext = databaseUserContext;
+        this.solicitacaoExclusaoRepository = solicitacaoExclusaoRepository;
+        this.jdbcTemplate = jdbcTemplate;
+        this.gmailService = gmailService;
+    }
+
+    public MeusDadosResponse consultar(Usuario usuario) {
+        SolicitacaoExclusao exclusao = solicitacaoExclusaoRepository
+                .findByIdUsuarioAndStatus(usuario.getId(), ExclusaoContaService.PENDENTE).orElse(null);
+
+        return new MeusDadosResponse(
+                usuario.getNome(),
+                usuario.getEmail(),
+                usuario.getPerfil(),
+                usuario.getRa(),
+                "S".equalsIgnoreCase(usuario.getAcessoMFV()) ? "S" : "N",
+                turmasDoUsuario(usuario),
+                exclusao == null ? null : exclusao.getDtSolicitacao().toLocalDate(),
+                exclusao == null ? null : exclusao.getDtLimite().toLocalDate(),
+                turmaService.listar(),
+                solicitacoesAlteracao(usuario.getEmail())
+        );
+    }
+
+    private List<SolicitacaoAlteracaoResponse> solicitacoesAlteracao(String email) {
+        return jdbcTemplate.query(
+                "SELECT idusuario, nome, ra, perfil, turma, status, motivo, dtregistro "
+                        + "FROM usuariossolicitacoes WHERE LOWER(email) = LOWER(?) "
+                        + "ORDER BY dtregistro DESC, idusuario DESC",
+                (result, rowNumber) -> new SolicitacaoAlteracaoResponse(
+                        result.getLong("idusuario"),
+                        result.getString("nome"),
+                        result.getString("ra"),
+                        result.getString("perfil"),
+                        result.getString("turma"),
+                        normalizarStatusSolicitacao(result.getString("status")),
+                        result.getString("motivo"),
+                        result.getTimestamp("dtregistro") == null
+                                ? null : result.getTimestamp("dtregistro").toLocalDateTime()
+                ),
+                email
+        );
+    }
+
+    private String normalizarStatusSolicitacao(String status) {
+        if (status == null || status.isBlank()) return "Pendente de análise";
+        return switch (status.trim().toUpperCase(Locale.ROOT)) {
+            case "PENDENTE", "PENDENTE DE ANALISE", "PENDENTE DE ANÁLISE" -> "Pendente de análise";
+            case "DEFERIDO" -> "Deferido";
+            case "INDEFERIDO" -> "Indeferido";
+            default -> status;
+        };
+    }
+
+    public MeusDadosExportResponse exportar(Usuario usuario) {
+        List<String> equipe = jdbcTemplate.queryForList(
+                "SELECT e.nome FROM equipes e JOIN equipesmembros m ON m.idequipe = e.idequipe WHERE m.idusuario = ?",
+                String.class, usuario.getId());
+        List<String> aulas = jdbcTemplate.queryForList(
+                "SELECT a.titulo FROM aulasaluno aa JOIN aulas a ON a.idaula = aa.idaula "
+                        + "WHERE aa.idusuario = ? AND UPPER(aa.concluida) = 'S' ORDER BY a.titulo",
+                String.class, usuario.getId());
+        List<MeusDadosExportResponse.SimuladoRealizado> simulados = jdbcTemplate.query(
+                "SELECT s.titulo, r.dtrealizacao FROM simuladosrealizacoes r LEFT JOIN simulados s ON s.idsimulado = r.idsimulado "
+                        + "WHERE r.idusuario = ? ORDER BY r.dtrealizacao",
+                (result, rowNumber) -> new MeusDadosExportResponse.SimuladoRealizado(
+                        result.getString("titulo"), result.getTimestamp("dtrealizacao").toLocalDateTime()),
+                usuario.getId());
+        List<MeusDadosExportResponse.ResultadoSimulado> resultados = jdbcTemplate.query(
+                "SELECT s.titulo, r.tentativa, COUNT(*) FILTER (WHERE r.respostacorreta) AS acertos, COUNT(*) AS total, "
+                        + "MAX(r.dttentativa) AS dttentativa FROM simuladosrealizados r JOIN simulados s ON s.idsimulado = r.idsimulado "
+                        + "WHERE r.idusuario = ? GROUP BY s.titulo, r.idsimulado, r.tentativa ORDER BY MAX(r.dttentativa)",
+                (result, rowNumber) -> new MeusDadosExportResponse.ResultadoSimulado(
+                        result.getString("titulo"), result.getInt("tentativa"), result.getInt("acertos"),
+                        result.getInt("total"), dataHora(result.getTimestamp("dttentativa"))),
+                usuario.getId());
+        List<MeusDadosExportResponse.RespostaSimulado> respostas = jdbcTemplate.query(
+                "SELECT s.titulo, r.tentativa, p.enunciado, o.texto, r.respostacorreta, r.dttentativa "
+                        + "FROM simuladosrealizados r JOIN simulados s ON s.idsimulado = r.idsimulado "
+                        + "JOIN simuladosperguntas p ON p.idsimuladopergunta = r.idsimuladopergunta "
+                        + "JOIN simuladosopcoes o ON o.idsimuladoopcao = r.idsimuladoopcao "
+                        + "WHERE r.idusuario = ? ORDER BY r.dttentativa, r.idsimuladorealizado",
+                (result, rowNumber) -> new MeusDadosExportResponse.RespostaSimulado(
+                        result.getString("titulo"), result.getInt("tentativa"), result.getString("enunciado"),
+                        result.getString("texto"), result.getBoolean("respostacorreta"),
+                        dataHora(result.getTimestamp("dttentativa"))),
+                usuario.getId());
+        List<MeusDadosExportResponse.SolicitacaoAlteracao> alteracoes = jdbcTemplate.query(
+                "SELECT nome, email, ra, perfil, turma, status, motivo, dtregistro, dtanalise FROM usuariossolicitacoes "
+                        + "WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?) ORDER BY dtregistro, idusuario",
+                (result, rowNumber) -> new MeusDadosExportResponse.SolicitacaoAlteracao(
+                        result.getString("nome"), result.getString("email"), result.getString("ra"),
+                        result.getString("perfil"), result.getString("turma"),
+                        normalizarStatusSolicitacao(result.getString("status")), result.getString("motivo"),
+                        dataHora(result.getTimestamp("dtregistro")), dataHora(result.getTimestamp("dtanalise"))),
+                usuario.getEmail(), usuario.getEmail());
+        List<MeusDadosExportResponse.SolicitacaoExclusao> exclusoes = jdbcTemplate.query(
+                "SELECT status, ip, dtsolicitacao, dtlimite, dtconclusao FROM solicitacoesexclusao "
+                        + "WHERE idusuario = ? ORDER BY dtsolicitacao",
+                (result, rowNumber) -> new MeusDadosExportResponse.SolicitacaoExclusao(
+                        result.getString("status"), result.getString("ip"), dataHora(result.getTimestamp("dtsolicitacao")),
+                        dataHora(result.getTimestamp("dtlimite")), dataHora(result.getTimestamp("dtconclusao"))),
+                usuario.getId());
+        List<MeusDadosExportResponse.RegistroAuditoria> auditoria = jdbcTemplate.query(
+                "SELECT categoria, acao, descricao, ip, sucesso, dtregistro FROM logauditoria "
+                        + "WHERE LOWER(email) = LOWER(?) ORDER BY dtregistro",
+                (result, rowNumber) -> new MeusDadosExportResponse.RegistroAuditoria(
+                        result.getString("categoria"), result.getString("acao"), result.getString("descricao"),
+                        result.getString("ip"), result.getBoolean("sucesso"), dataHora(result.getTimestamp("dtregistro"))),
+                usuario.getEmail());
+        List<MeusDadosExportResponse.AceiteTermo> aceites = jdbcTemplate.query(
+                "SELECT versao, ip, dtaceite FROM termosaceites WHERE idusuario = ? ORDER BY dtaceite",
+                (result, rowNumber) -> new MeusDadosExportResponse.AceiteTermo(
+                        result.getString("versao"), result.getString("ip"), result.getTimestamp("dtaceite").toLocalDateTime()),
+                usuario.getId());
+        List<LocalDateTime> acessos = jdbcTemplate.query(
+                "SELECT dtacesso FROM logacessos WHERE LOWER(email) = LOWER(?) ORDER BY dtacesso",
+                (result, rowNumber) -> result.getTimestamp("dtacesso").toLocalDateTime(),
+                usuario.getEmail());
+
+        auditoriaService.registrar("LGPD", "DADOS_EXPORTADOS",
+                "Usuário " + usuario.getId() + " baixou uma cópia dos próprios dados", true);
+        return new MeusDadosExportResponse(LocalDateTime.now(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil(),
+                usuario.getRa(), Boolean.TRUE.equals(usuario.getAtivo()) ? "Ativo" : "Inativo",
+                "S".equalsIgnoreCase(usuario.getAcessoMFV()) ? "Sim" : "Não", usuario.getCriadoEm(),
+                turmasDoUsuario(usuario), equipe.isEmpty() ? null : equipe.get(0), aulas, simulados, resultados, respostas,
+                alteracoes, exclusoes, aceites, acessos, auditoria);
+    }
+
+    private LocalDateTime dataHora(Timestamp timestamp) {
+        return timestamp == null ? null : timestamp.toLocalDateTime();
+    }
+
+    @Transactional
+    public void solicitarAlteracao(Usuario usuario, SolicitacaoAlteracaoDadosRequest dados) {
+        String perfil = dados.perfil().trim().toLowerCase(Locale.ROOT);
+        if (!perfil.equals("aluno") && !perfil.equals("professor")) {
+            throw new IllegalArgumentException("O perfil deve ser aluno ou professor.");
+        }
+
+        jdbcTemplate.update(
+                "INSERT INTO usuariossolicitacoes (nome, email, ra, perfil, turma, dtregistro, usrregistro) "
+                        + "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
+                dados.nome().trim(),
+                usuario.getEmail(),
+                dados.ra() == null || dados.ra().isBlank() ? null : dados.ra().trim(),
+                perfil,
+                dados.turma() == null || dados.turma().isBlank() ? null : dados.turma().trim(),
+                usuario.getEmail()
+        );
+        auditoriaService.registrar("USUARIOS", "ALTERACAO_DADOS_SOLICITADA",
+                "Usuário " + usuario.getId() + " solicitou alteração dos dados cadastrais", true);
+    }
+
+    @Transactional(noRollbackFor = IllegalArgumentException.class)
+    public void alterarSenha(Usuario usuario, SenhaRequest dados) {
+        conferirSenha(usuario, dados.senhaAtual(), "SENHA_ALTERACAO_FALHA");
+        if (passwordEncoder.matches(dados.novaSenha(), usuario.getSenha())) {
+            throw new IllegalArgumentException("A nova senha deve ser diferente da senha atual.");
+        }
+
+        databaseUserContext.setCurrentUser();
+        usuario.setSenha(passwordEncoder.encode(dados.novaSenha()));
+        usuarioRepository.save(usuario);
+        auditoriaService.registrar("CRIPTOGRAFIA", "SENHA_ALTERADA",
+                "Usuário " + usuario.getId() + " alterou a própria senha, salva com hash BCrypt", true);
+    }
+
+    @Transactional(noRollbackFor = IllegalArgumentException.class)
+    public void alterarAcessoMFV(Usuario usuario, AcessoMFVRequest dados) {
+        conferirSenha(usuario, dados.senhaAtual(), "ACESSO_MFV_ALTERACAO_FALHA");
+        String acessoMFV = dados.acessoMFV().trim().toUpperCase(Locale.ROOT);
+        if (acessoMFV.equals("S") && !gmailService.isEnabled()) {
+            throw new IllegalArgumentException("O envio de códigos por e-mail está indisponível no momento. Tente novamente mais tarde.");
+        }
+        if (acessoMFV.equalsIgnoreCase(usuario.getAcessoMFV())) {
+            return;
+        }
+
+        databaseUserContext.setCurrentUser();
+        usuario.setAcessoMFV(acessoMFV);
+        usuarioRepository.save(usuario);
+        auditoriaService.registrar("AUTENTICACAO", acessoMFV.equals("S") ? "ACESSO_MFV_ATIVADO" : "ACESSO_MFV_DESATIVADO",
+                "Usuário " + usuario.getId() + (acessoMFV.equals("S") ? " ativou" : " desativou")
+                        + " o código de verificação por e-mail no login", true);
+    }
+
+    private List<String> turmasDoUsuario(Usuario usuario) {
+        return turmaService.listarDoUsuario(usuario.getEmail()).stream().map(TurmaResponse::nome).toList();
+    }
+
+    private void conferirSenha(Usuario usuario, String senha, String acaoFalha) {
+        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+            auditoriaService.registrar("USUARIOS", acaoFalha,
+                    "Usuário " + usuario.getId() + " informou a senha atual incorreta", false);
+            throw new IllegalArgumentException("A senha atual está incorreta.");
+        }
+    }
+
+}
