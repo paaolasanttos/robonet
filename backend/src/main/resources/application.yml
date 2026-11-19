@@ -1,34 +1,52 @@
 spring:
   application:
-    name: robonet-unificado
+    name: robonet-backend
   config:
     import: optional:file:./.env[.properties],optional:file:../.env[.properties]
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:development}
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:3}
+      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:1}
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:20000}
+
   jpa:
-    hibernate:
-      ddl-auto: validate
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     open-in-view: false
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
     properties:
       hibernate:
         format_sql: true
 
 server:
-  port: 4000
+  port: ${PORT:${SERVER_PORT:4000}}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
 
 app:
+  cors:
+    origins: ${APP_CORS_ORIGINS:http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:8081}
   termo:
-    versao: ${TERMO_VERSAO:0.3}
+    versao: ${APP_TERMO_VERSAO:0.3}
   exclusao:
-    intervalo-ms: ${EXCLUSAO_INTERVALO_MS:3600000}
+    intervalo-ms: ${APP_EXCLUSAO_INTERVALO_MS:3600000}
 
 security:
   jwt:
-    secret: ${JWT_SECRET}
-    expiration: ${JWT_EXPIRATION:3600000}
+    secret: ${SECURITY_JWT_SECRET}
+    expiration: ${SECURITY_JWT_EXPIRATION:3600000}
   admin:
-    email: ${ADMIN_EMAIL}
-    password: ${ADMIN_PASSWORD}
+    email: ${SECURITY_ADMIN_EMAIL}
+    password: ${SECURITY_ADMIN_PASSWORD}
 
 gmail:
   enabled: ${GMAIL_ENABLED:false}

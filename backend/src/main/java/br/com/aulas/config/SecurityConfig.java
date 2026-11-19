@@ -1,5 +1,6 @@
 package br.com.aulas.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import br.com.aulas.security.JwtAuthenticationFilter;
 import br.com.aulas.service.AuditoriaService;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -26,11 +29,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter, AuditoriaService auditoriaService) throws Exception {
+    SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtFilter,
+            AuditoriaService auditoriaService,
+            @Value("${app.cors.origins}") String corsOrigins) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOrigins(java.util.List.of("http://localhost:8080", "http://localhost:5173", "http://localhost:3000"));
+                    config.setAllowedOrigins(Arrays.stream(corsOrigins.split(","))
+                            .map(String::trim)
+                            .filter(origin -> !origin.isEmpty())
+                            .toList());
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
                     config.setAllowCredentials(false);
@@ -41,7 +51,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**", "/error").permitAll()
+                        .requestMatchers("/auth/**", "/error", "/health").permitAll()
                         .requestMatchers("/api/termo/**").authenticated()
                         .anyRequest().hasAuthority("TERMO_ACEITO"))
                 .exceptionHandling(exceptions -> exceptions

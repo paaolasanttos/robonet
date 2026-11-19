@@ -1,4 +1,17 @@
-const API_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+// URL do backend:
+// - local: VITE_API_URL do arquivo .env (padrão http://localhost:4000)
+// - Vercel: Settings -> Environment Variables -> VITE_API_URL = URL do Render
+//   (a variável entra no código no build, então é preciso fazer Redeploy após alterá-la)
+const API_URL = (
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:4000" : "")
+).trim().replace(/\/$/, "");
+
+if (!API_URL) {
+  console.error(
+    "[RoboNet] VITE_API_URL não foi definida no build. " +
+    "Configure-a na Vercel com a URL do backend no Render e faça um novo deploy."
+  );
+}
 
 async function parseResponse(response) {
   const contentType = response.headers.get("content-type") || "";
@@ -25,6 +38,10 @@ function getMsgErro(status, data) {
 }
 
 async function request(path, options = {}) {
+  if (!API_URL) {
+    throw new Error("O endereço do servidor não foi configurado (VITE_API_URL).");
+  }
+
   try {
     const session = JSON.parse(localStorage.getItem("robonet.session") || "null");
     const response = await fetch(`${API_URL}${path}`, {
