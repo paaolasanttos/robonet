@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**", "/error", "/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/termo/atual").permitAll()
                         .requestMatchers("/api/termo/**").authenticated()
                         .anyRequest().hasAuthority("TERMO_ACEITO"))
                 .exceptionHandling(exceptions -> exceptions
