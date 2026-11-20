@@ -44,7 +44,7 @@ A versão proposta da RoboNet contempla as seguintes funcionalidades:
 * 🔒 Proteção de dados pessoais
 * 🛡️ Práticas de segurança da informação
 * 🗑️ Mecanismos de retenção e exclusão de dados quando aplicáveis
-* 📅 Integração com Google Calendar
+* 📅 Atalho para adicionar torneios ao Google Agenda
 * 📧 Envio de mensagens e notificações por e-mail
 
 ---
@@ -85,7 +85,7 @@ A aplicação segue uma arquitetura baseada no padrão **MVC (Model-View-Control
        ▼         ▼                 ▼
 ┌───────────┐ ┌──────────────┐ ┌─────────────┐
 │ PostgreSQL│ │ Google       │ │   Serviço   │
-│           │ │ Calendar API │ │  de E-mail  │
+│           │ │ Google Agenda│ │  de E-mail  │
 └───────────┘ └──────────────┘ └─────────────┘
 ```
 
@@ -120,7 +120,7 @@ Responsável pelo armazenamento estruturado das informações da plataforma, inc
 
 ### Integrações
 
-* **Google Calendar API**
+* **Link para criação de eventos no Google Agenda**
 * **Serviço de e-mail**
 
 As integrações têm como objetivo auxiliar no gerenciamento de eventos e no envio de mensagens e notificações aos usuários.
@@ -288,7 +288,7 @@ As configurações de conexão com o banco de dados devem ser definidas nas conf
 
 ### Google Calendar
 
-A integração com o Google Calendar tem como finalidade auxiliar no gerenciamento de eventos e compromissos relacionados aos torneios.
+Na agenda de “Minha Equipe”, o aluno pode abrir um formulário pré-preenchido no Google Agenda para cada torneio futuro. O aluno confirma e salva o evento na própria conta Google; a RoboNet não acessa essa conta nem salva o evento automaticamente.
 
 ### E-mail
 

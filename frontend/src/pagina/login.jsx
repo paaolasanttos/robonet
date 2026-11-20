@@ -97,6 +97,7 @@ export default function LoginPagina() {
         {!codeRequested && 
           <div className="login-options" aria-label="Opções de acesso">
             <Link to="/recuperar-senha">Esqueci minha senha</Link>
+            <Link to="/solicitar-cadastro">Não sou cadastrado</Link>
             <Link to="/politicas">Políticas de uso</Link>
           </div>
         }

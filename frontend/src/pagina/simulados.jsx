@@ -126,14 +126,14 @@ export default function SimuladosPagina() {
             <div className="empty-state"><h2>Nenhum simulado cadastrado.</h2>{!search && <button className="button button-secondary" onClick={() => abrirFormulario()}>Cadastrar primeiro simulado</button>}</div>
           ) : (
             <div className="table-container">
-              <table>
+              <table className="tabela-responsiva">
                 <thead><tr><th>Título</th><th>Tema</th><th>Perguntas</th><th className="actions-column">Ações</th></tr></thead>
                 <tbody>{filtrados.map((simulado) => (
                   <tr key={simulado.id}>
-                    <td><strong>{simulado.titulo}</strong></td>
-                    <td>{simulado.tema}</td>
-                    <td>{simulado.perguntas.length}</td>
-                    <td><div className="row-actions">
+                    <td data-label="Título"><strong>{simulado.titulo}</strong></td>
+                    <td data-label="Tema">{simulado.tema}</td>
+                    <td data-label="Perguntas">{simulado.perguntas.length}</td>
+                    <td data-label="Ações"><div className="row-actions">
                       <button className="button button-small button-light" onClick={() => abrirFormulario(simulado)}>Editar</button>
                       <button className="button button-small button-danger" onClick={() => setSelectedSimulado(simulado)}>Excluir</button>
                     </div></td>

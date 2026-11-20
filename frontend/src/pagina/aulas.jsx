@@ -201,7 +201,7 @@ export default function AulasPagina() {
             </div>
           ) : (
             <div className="table-container">
-              <table>
+              <table className="tabela-responsiva">
                 <thead>
                   <tr>
                     <th>Título</th>
@@ -212,13 +212,13 @@ export default function AulasPagina() {
                 <tbody>
                   {filteredAulas.map((aula) => (
                     <tr key={aula.id}>
-                      <td>
+                      <td data-label="Título">
                         <div className="title-cell">
                           <strong>{aula.titulo}</strong>
                         </div>
                       </td>
-                      <td>{aula.tema || "—"}</td>
-                      <td>
+                      <td data-label="Tema">{aula.tema || "—"}</td>
+                      <td data-label="Ações">
                         <div className="row-actions">
                           <button className="button button-small button-light" onClick={() => openView(aula)}>
                             Visualizar

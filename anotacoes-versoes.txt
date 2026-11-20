@@ -1,0 +1,19 @@
+--17/11/2026 Paola
+1. Importado o DB no Supabase.
+2. Importado o frontend no Versel.
+3. Importado o backend no Render.
+4. Validado o deploy do sistema.
+5. Adequada as variáveis de ambiente para funcionar no deploy.
+
+--19/11/2026 Bruno
+1. Ocultado o e-mail nas telas. Para visualizar a informação, o usuario deverá clicar no botão e com isso o log será armazenado.
+2. Adequações visuais na tela de Solicitações de Exclusão.
+3. Adequação no acesso do Administrador que ora não apresentava o menu da auditoria.
+4. Adequação no acesso do Administrador para ter a opção de cadastro do termo de uso e privacidade.
+5. Disponibilizado job para aprovar os pedidos de exclusão a partir de 14 dias sem análise.
+6. Validada responsividade do sistema no mobile
+7. Disponibilizada opção de "Não sou Cadastrado".
+
+--19/11/2026 Paola
+1. Reestruturada as pastas do "database" e as tabelas de uso.
+2. Disponibilizada a API do Google Calender para o usuario cadastrar o evento na sua agenda pessoal. O sistema não armazerá os dados pessoais do usuario.
