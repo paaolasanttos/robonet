@@ -1,4 +1,17 @@
-const API_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+// URL do backend:
+// - local: VITE_API_URL do arquivo .env (padrão http://localhost:4000)
+// - Vercel: Settings -> Environment Variables -> VITE_API_URL = URL do Render
+//   (a variável entra no código no build, então é preciso fazer Redeploy após alterá-la)
+const API_URL = (
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:4000" : "")
+).trim().replace(/\/$/, "");
+
+if (!API_URL) {
+  console.error(
+    "[RoboNet] VITE_API_URL não foi definida no build. " +
+    "Configure-a na Vercel com a URL do backend no Render e faça um novo deploy."
+  );
+}
 
 async function parseResponse(response) {
   const contentType = response.headers.get("content-type") || "";
@@ -12,7 +25,7 @@ async function parseResponse(response) {
 
 function getMsgErro(status, data) {
   if (!status) {
-    return "Não foi possível conectar ao servidor. Verifique se o backend está disponível.";
+    return "Sistema em reinicialização. Aguarde um momento.";
   }
 
   if (status === 400) return data?.message || "Os dados enviados são inválidos.";
@@ -25,6 +38,10 @@ function getMsgErro(status, data) {
 }
 
 async function request(path, options = {}) {
+  if (!API_URL) {
+    throw new Error("O endereço do servidor não foi configurado (VITE_API_URL).");
+  }
+
   try {
     const session = JSON.parse(localStorage.getItem("robonet.session") || "null");
     const response = await fetch(`${API_URL}${path}`, {
@@ -89,7 +106,21 @@ export const simuladosApi = {
 
 export const usuariosApi = {
   listar: () => request("/api/usuarios"),
+  verEmail: (id) => request(`/api/usuarios/${id}/email`),
   listarSolicitacoes: () => request("/api/usuarios/solicitacoes"),
+  detalharSolicitacao: (id) => request(`/api/usuarios/solicitacoes/${id}`),
+  listarCadastros: () => request("/api/usuarios/cadastros"),
+  detalharCadastro: (id) => request(`/api/usuarios/cadastros/${id}`),
+  aprovarCadastro: (id, turmaId) => request(`/api/usuarios/cadastros/${id}/aprovar`, {
+    method: "POST",
+    body: JSON.stringify({ turmaId }),
+  }),
+  recusarCadastro: (id, motivo) => request(`/api/usuarios/cadastros/${id}/recusar`, {
+    method: "POST",
+    body: JSON.stringify({ motivo }),
+  }),
+  listarExclusoes: () => request("/api/usuarios/exclusoes"),
+  aprovarExclusao: (id) => request(`/api/usuarios/exclusoes/${id}/aprovar`, { method: "POST" }),
   deferirSolicitacao: (id) => request(`/api/usuarios/solicitacoes/${id}/deferir`, {
     method: "POST",
   }),
@@ -133,10 +164,19 @@ export const authApi = {
     method: "POST",
     body: JSON.stringify(dados),
   }),
+  solicitarCadastro: (dados) => request("/auth/solicitar-cadastro", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  }),
   sair: () => request("/auth/logout", { method: "POST" }),
 };
 
 export const termoApi = {
+  atual: () => request("/api/termo/atual"),
+  publicar: (dados) => request("/api/termo/publicar", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  }),
   aceitar: () => request("/api/termo/aceitar", { method: "POST" }),
   recusar: () => request("/api/termo/recusar", { method: "POST" }),
 };
@@ -187,6 +227,7 @@ export const dashboardApi = {
 
 export const auditoriaApi = {
   listar: () => request("/api/auditoria"),
+  listarAlteracoes: () => request("/api/auditoria/alteracoes"),
 };
 
 export const turmasApi = {
@@ -194,6 +235,10 @@ export const turmasApi = {
   minhas: () => request("/api/turmas/minhas"),
   criar: (turma) => request("/api/turmas", {
     method: "POST",
+    body: JSON.stringify(turma),
+  }),
+  atualizar: (id, turma) => request(`/api/turmas/${id}`, {
+    method: "PUT",
     body: JSON.stringify(turma),
   }),
   excluir: (id) => request(`/api/turmas/${id}`, { method: "DELETE" }),

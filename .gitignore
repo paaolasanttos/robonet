@@ -1,4 +1,7 @@
 backend/target/
 node_modules/
-.env
 frontend/dist/
+.env
+.env.local
+.env.*.local
+.vercel

@@ -34,6 +34,9 @@ public class SolicitacaoExclusao {
     @Column(name = "dtconclusao")
     private LocalDateTime dtConclusao;
 
+    @Column(name = "usranalise")
+    private String usrAnalise;
+
     public Long getId() {
         return id;
     }
@@ -92,5 +95,13 @@ public class SolicitacaoExclusao {
 
     public void setDtConclusao(LocalDateTime dtConclusao) {
         this.dtConclusao = dtConclusao;
+    }
+
+    public String getUsrAnalise() {
+        return usrAnalise;
+    }
+
+    public void setUsrAnalise(String usrAnalise) {
+        this.usrAnalise = usrAnalise;
     }
 }

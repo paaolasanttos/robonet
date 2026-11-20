@@ -188,33 +188,95 @@ RoboNet/
 
 ## 🚀 Como executar o projeto
 
-### Pré-requisitos
+### Arquitetura de deploy
+
+| Camada | Serviço | Pasta |
+|---|---|---|
+| Front-end (React + Vite) | **Vercel** | `frontend/` |
+| Back-end (Spring Boot) | **Render** (Docker, plano Free) | `backend/` |
+| Banco de dados (PostgreSQL) | **Supabase** (Session pooler) | scripts em `database/` |
+
+### Variáveis de ambiente
+
+As variáveis seguem o padrão do Spring Boot: o nome da propriedade em maiúsculas, com `.` e `-` trocados por `_`
+(ex.: `spring.datasource.url` → `SPRING_DATASOURCE_URL`). A lista completa está em `.env.example`.
+
+| Variável | Onde | Descrição |
+|---|---|---|
+| `SPRING_PROFILES_ACTIVE` | Render | `production` (local: `development`) |
+| `SPRING_DATASOURCE_URL` | Render | `jdbc:postgresql://aws-0-us-east-2.pooler.supabase.com:5432/postgres?sslmode=require` |
+| `SPRING_DATASOURCE_USERNAME` | Render | usuário do pooler (`postgres.<id-do-projeto>`) |
+| `SPRING_DATASOURCE_PASSWORD` | Render | senha do banco no Supabase |
+| `APP_CORS_ORIGINS` | Render | URL do front na Vercel, sem barra no final |
+| `SECURITY_JWT_SECRET` | Render | chave longa e aleatória |
+| `SECURITY_ADMIN_EMAIL` / `SECURITY_ADMIN_PASSWORD` | Render | administrador criado na inicialização |
+| `GMAIL_*` | Render | envio de e-mail (opcional, `GMAIL_ENABLED=false` desliga) |
+| `VITE_API_URL` | Vercel | URL do back-end no Render |
+
+> `PORT` é definida automaticamente pelo Render. Nunca versione o arquivo `.env`.
+
+### 1. Banco de dados — Supabase
+
+1. No Supabase, clique em **Connect** e copie os dados do **Session pooler** (porta 5432).
+   Não use a *Direct connection*: ela usa IPv6, e o Render não se conecta por IPv6.
+2. Crie o schema executando os scripts da pasta `database` em ordem numérica no **SQL Editor**.
+   O back-end usa `ddl-auto: validate`, então as tabelas precisam existir antes de ele subir.
+
+### 2. Back-end — Render
+
+**Opção A (Blueprint):** no Render, **New → Blueprint**, escolha este repositório. O arquivo `render.yaml`
+cria o serviço `robonet-api` e pede os valores das variáveis.
+
+**Opção B (manual):** **New → Web Service**, com:
+
+- **Root Directory:** `backend`
+- **Language:** Docker
+- **Region:** Ohio (mesma região do pooler do Supabase)
+- **Instance Type:** Free
+- **Health Check Path:** `/health`
+- **Environment Variables:** as da tabela acima
+
+Ao terminar, teste `https://<seu-servico>.onrender.com/health`. A resposta deve ser `{"status":"UP"}`.
+
+> No plano gratuito, o serviço desliga após 15 minutos sem uso, e o primeiro acesso seguinte pode levar até 1 minuto.
+> Um monitor gratuito (ex.: UptimeRobot) chamando `/health` a cada 10 minutos evita isso.
+
+### 3. Front-end — Vercel
+
+1. **Add New → Project**, escolha este repositório.
+2. **Root Directory:** `frontend` (o framework Vite é detectado pelo `vercel.json`).
+3. **Environment Variables:** `VITE_API_URL` = URL do Render (ex.: `https://robonet-api.onrender.com`).
+4. Deploy. Sempre que mudar `VITE_API_URL`, faça **Redeploy**, porque ela é aplicada no build.
+5. Copie a URL da Vercel e coloque em `APP_CORS_ORIGINS` no Render.
+
+### Execução local
+
+```bash
+cp .env.example .env     # preencha senha do banco, JWT e admin
+docker compose up --build
+```
+
+Front-end em `http://localhost:8080` e back-end em `http://localhost:4000`.
+
+Sem Docker: `cd backend && mvn spring-boot:run` e `cd frontend && npm install && npm run dev`.
+
+---
+
+## 📝 Alterações recentes
+
+- Adicionada opção para controlar o acesso por MFV.
+- Criada a tabela de solicitações de alteração dos dados pelo usuario o qual ficará sob analise do administrador aceitar ou não.
+- Criada opção para o Administrador analisar as solicitações de alteração dos dados dos usuários.
+- Alterada a application properties para application profile.
+- Ajustada a configuração das variáveis de ambiente.
+- Remodelada a visualização do "Meus Dados", "Aulas", "Simulados" para uma melhor experiência de usuário.
+- Desenvolvido o Dashboard
 
 ---
 
 ## 🗄️ Banco de dados
 
 O projeto utiliza **PostgreSQL** para persistência dos dados.
-
-As principais entidades previstas incluem:
-
-```text
-Usuários
-   │
-   ├── Perfis e Permissões
-   │
-   └── Auditoria
-
-Equipes
-   │
-   └── Participantes
-
-Torneios
-   │
-   ├── Partidas
-   │
-   └── Resultados
-```
 
 As configurações de conexão com o banco de dados devem ser definidas nas configurações do back-end e **não devem conter credenciais diretamente no código-fonte ou no repositório**.
 

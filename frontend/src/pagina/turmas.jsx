@@ -13,6 +13,7 @@ export default function TurmasPagina() {
   const [professores, setProfessores] = useState([]);
   const [alunos, setAlunos] = useState([]);
   const [buscaAluno, setBuscaAluno] = useState("");
+  const [editandoId, setEditandoId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -50,16 +51,25 @@ export default function TurmasPagina() {
     [usuarios]
   );
 
+  const alunosOrdenados = useMemo(() => {
+    const grupo = (aluno) => (!aluno.idTurma ? 0 : aluno.idTurma === editandoId ? 1 : 2);
+    return usuarios
+      .filter((usuario) => usuario.perfil === "aluno")
+      .sort((a, b) => grupo(a) - grupo(b) || a.nome.localeCompare(b.nome));
+  }, [usuarios, editandoId]);
+
   const alunosFiltrados = useMemo(() => {
     const term = buscaAluno.trim().toLowerCase();
-    const ativos = usuarios.filter((usuario) => usuario.perfil === "aluno").sort((a, b) => a.nome.localeCompare(b.nome));
-    if (!term) return ativos;
-    return ativos.filter((aluno) =>
+    if (!term) return alunosOrdenados;
+    return alunosOrdenados.filter((aluno) =>
       alunos.includes(aluno.id)
       || aluno.nome.toLowerCase().includes(term)
       || String(aluno.ra || "").includes(term)
     );
-  }, [usuarios, buscaAluno, alunos]);
+  }, [alunosOrdenados, buscaAluno, alunos]);
+
+  const semTurma = alunosFiltrados.filter((aluno) => !aluno.idTurma);
+  const comTurma = alunosFiltrados.filter((aluno) => aluno.idTurma);
 
   function alternar(lista, setLista, id) {
     setLista(lista.includes(id) ? lista.filter((item) => item !== id) : [...lista, id]);
@@ -69,16 +79,42 @@ export default function TurmasPagina() {
     return turmas.find((turma) => turma.id === id)?.nome;
   }
 
+  function professoresDaTurma(id) {
+    return professoresAtivos.filter((professor) => professor.turmas?.includes(id));
+  }
+
+  function totalAlunos(id) {
+    return usuarios.filter((usuario) => usuario.perfil === "aluno" && usuario.idTurma === id).length;
+  }
+
   useEffect(() => {
     if (!feedback) return undefined;
     const timer = setTimeout(() => setFeedback(""), 4000);
     return () => clearTimeout(timer);
   }, [feedback]);
 
-  async function cadastrar(event) {
+  function limparFormulario() {
+    setEditandoId(null);
+    setNome("");
+    setProfessores([]);
+    setAlunos([]);
+    setBuscaAluno("");
+  }
+
+  function editar(turma) {
+    setError("");
+    setEditandoId(turma.id);
+    setNome(turma.nome);
+    setProfessores(professoresDaTurma(turma.id).map((professor) => professor.id));
+    setAlunos(usuarios.filter((usuario) => usuario.perfil === "aluno" && usuario.idTurma === turma.id).map((aluno) => aluno.id));
+    setBuscaAluno("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function salvar(event) {
     event.preventDefault();
-    const nomeTurma = nome.trim();
-    if (!nomeTurma) {
+    const nomeInformado = nome.trim();
+    if (!nomeInformado) {
       setError("Informe o nome da turma.");
       return;
     }
@@ -86,16 +122,19 @@ export default function TurmasPagina() {
     setSaving(true);
     setError("");
     try {
-      const turma = await turmasApi.criar({ nome: nomeTurma, professores, alunos });
-      setTurmas((atuais) => [...atuais, turma].sort((a, b) => a.nome.localeCompare(b.nome)));
-      setNome("");
-      setProfessores([]);
-      setAlunos([]);
-      setBuscaAluno("");
+      if (editandoId) {
+        const turma = await turmasApi.atualizar(editandoId, { nome: nomeInformado, professores, alunos });
+        setTurmas((atuais) => atuais.map((item) => item.id === turma.id ? turma : item).sort((a, b) => a.nome.localeCompare(b.nome)));
+        setFeedback("Turma atualizada com sucesso.");
+      } else {
+        const turma = await turmasApi.criar({ nome: nomeInformado, professores, alunos });
+        setTurmas((atuais) => [...atuais, turma].sort((a, b) => a.nome.localeCompare(b.nome)));
+        setFeedback("Turma cadastrada com sucesso.");
+      }
+      limparFormulario();
       carregarUsuarios();
-      setFeedback("Turma cadastrada com sucesso.");
     } catch (err) {
-      setError(err.message || "Não foi possível cadastrar a turma.");
+      setError(err.message || "Não foi possível salvar a turma.");
     } finally {
       setSaving(false);
     }
@@ -107,11 +146,27 @@ export default function TurmasPagina() {
     try {
       await turmasApi.excluir(turma.id);
       setTurmas((atuais) => atuais.filter((item) => item.id !== turma.id));
+      if (editandoId === turma.id) limparFormulario();
+      carregarUsuarios();
       setFeedback("Turma excluída com sucesso.");
     } catch (err) {
       setError(err.message || "Não foi possível excluir a turma.");
     }
   }
+
+  function itemAluno(aluno) {
+    return (
+      <label key={aluno.id} className="checkbox-item lista-alunos-item">
+        <input type="checkbox" checked={alunos.includes(aluno.id)} onChange={() => alternar(alunos, setAlunos, aluno.id)} />
+        <span>{aluno.nome}{aluno.ra && <small> - RA {aluno.ra}</small>}{aluno.idTurma && <small className="lista-alunos-turma"> (turma atual: {nomeTurma(aluno.idTurma) || "-"})</small>}</span>
+      </label>
+    );
+  }
+
+  const transferidos = alunos.some((id) => {
+    const turmaAtual = usuarios.find((usuario) => usuario.id === id)?.idTurma;
+    return turmaAtual && turmaAtual !== editandoId;
+  });
 
   return (
     <main className="app-shell">
@@ -143,8 +198,8 @@ export default function TurmasPagina() {
         {error && <Alert type="error" message={error} onClose={() => setError("")} />}
 
         <section className="content-card user-create-card">
-          <div className="section-heading"><span className="eyebrow">Cadastro</span><h2>Nova turma</h2></div>
-          <form className="equipe-form" onSubmit={cadastrar}>
+          <div className="section-heading"><span className="eyebrow">{editandoId ? "Edição" : "Cadastro"}</span><h2>{editandoId ? `Editar turma ${nomeTurma(editandoId) || ""}` : "Nova turma"}</h2></div>
+          <form className="equipe-form" onSubmit={salvar}>
             <div className="form-field">
               <label htmlFor="nova-turma">Nome da turma</label>
               <input id="nova-turma" value={nome} onChange={(event) => setNome(event.target.value)} placeholder="Ex.: Robótica 1º semestre" maxLength={120} disabled={saving} required />
@@ -166,20 +221,25 @@ export default function TurmasPagina() {
               <input id="turma-busca-aluno" type="search" value={buscaAluno} onChange={(event) => setBuscaAluno(event.target.value)} placeholder="Nome ou RA do aluno" disabled={saving} />
             </div>
 
-            <fieldset className="user-form-turmas" disabled={saving}>
-              <legend>Alunos ({alunos.length})</legend>
-              {alunosFiltrados.length === 0 ? <span className="turmas-vazio">{buscaAluno.trim() ? "Nenhum aluno encontrado com esse nome ou RA." : "Nenhum aluno ativo cadastrado."}</span>
-                : alunosFiltrados.map((aluno) => (
-                  <label key={aluno.id} className="checkbox-item">
-                    <input type="checkbox" checked={alunos.includes(aluno.id)} onChange={() => alternar(alunos, setAlunos, aluno.id)} />
-                    {aluno.nome}{aluno.ra && <small> - RA {aluno.ra}</small>}{aluno.idTurma && <small> (turma atual: {nomeTurma(aluno.idTurma) || "-"})</small>}
-                  </label>
-                ))}
+            <fieldset className="lista-alunos" disabled={saving}>
+              <legend>Alunos selecionados ({alunos.length})</legend>
+              <div className="lista-alunos-rolagem" tabIndex="0" aria-label="Lista de alunos">
+                {alunosFiltrados.length === 0 ? <span className="turmas-vazio">{buscaAluno.trim() ? "Nenhum aluno encontrado com esse nome ou RA." : "Nenhum aluno ativo cadastrado."}</span> : (
+                  <>
+                    {semTurma.length > 0 && <p className="lista-alunos-grupo">Sem turma ({semTurma.length})</p>}
+                    {semTurma.map(itemAluno)}
+                    {comTurma.length > 0 && <p className="lista-alunos-grupo">Já estão em uma turma ({comTurma.length})</p>}
+                    {comTurma.map(itemAluno)}
+                  </>
+                )}
+              </div>
             </fieldset>
-            {alunos.some((id) => usuarios.find((usuario) => usuario.id === id)?.idTurma) && <p className="turmas-vazio turma-aviso">Alunos que já têm turma serão transferidos para a nova turma.</p>}
+            {transferidos && <p className="turmas-vazio turma-aviso">Alunos que já têm outra turma serão transferidos para esta turma.</p>}
+            {editandoId && <p className="turmas-vazio">Alunos desmarcados sairão da turma. Alunos que fazem parte de uma equipe precisam ser retirados da equipe antes.</p>}
 
             <div className="user-form-actions">
-              <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Salvando..." : "Cadastrar turma"}</button>
+              <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Salvando..." : editandoId ? "Salvar alterações" : "Cadastrar turma"}</button>
+              {editandoId && <button className="button button-light" type="button" onClick={limparFormulario} disabled={saving}>Cancelar edição</button>}
             </div>
           </form>
         </section>
@@ -193,12 +253,17 @@ export default function TurmasPagina() {
             <div className="empty-state"><h2>Nenhuma turma cadastrada.</h2><p>Use o formulário acima para criar a primeira turma.</p></div>
           ) : (
             <div className="table-container">
-              <table>
-                <thead><tr><th>Nome da turma</th><th className="actions-column">Ações</th></tr></thead>
+              <table className="tabela-responsiva">
+                <thead><tr><th>Nome da turma</th><th>Professores</th><th>Alunos</th><th className="actions-column">Ações</th></tr></thead>
                 <tbody>{turmas.map((turma) => (
                   <tr key={turma.id}>
-                    <td><strong>{turma.nome}</strong></td>
-                    <td><div className="row-actions"><button className="button button-small button-danger" onClick={() => excluir(turma)}>Excluir</button></div></td>
+                    <td data-label="Turma"><strong>{turma.nome}</strong></td>
+                    <td data-label="Professores">{professoresDaTurma(turma.id).map((professor) => professor.nome).join(", ") || "-"}</td>
+                    <td data-label="Alunos">{totalAlunos(turma.id)}</td>
+                    <td data-label="Ações"><div className="row-actions">
+                      <button className="button button-small button-light" onClick={() => editar(turma)} disabled={saving}>Editar</button>
+                      <button className="button button-small button-danger" onClick={() => excluir(turma)} disabled={saving}>Excluir</button>
+                    </div></td>
                   </tr>
                 ))}</tbody>
               </table>

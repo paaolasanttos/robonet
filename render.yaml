@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: robonet-api
+    runtime: docker
+    plan: free
+    region: ohio
+    branch: main
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+
+      - key: APP_CORS_ORIGINS
+        sync: false
+
+      - key: SECURITY_JWT_SECRET
+        generateValue: true
+      - key: SECURITY_JWT_EXPIRATION
+        value: "3600000"
+      - key: SECURITY_ADMIN_EMAIL
+        sync: false
+      - key: SECURITY_ADMIN_PASSWORD
+        sync: false
+
+      - key: APP_EXCLUSAO_INTERVALO_MS
+        value: "3600000"
+
+      - key: GMAIL_ENABLED
+        value: "false"
+      - key: GMAIL_SENDER
+        sync: false
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
+        sync: false

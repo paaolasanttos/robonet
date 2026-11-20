@@ -54,6 +54,49 @@ public class TurmaService {
         return turma;
     }
 
+    @Transactional
+    public TurmaResponse atualizar(Long idTurma, TurmaRequest dados) {
+        validarTurma(idTurma);
+        List<Long> professores = idsUnicos(dados.professores());
+        List<Long> alunos = idsUnicos(dados.alunos());
+        professores.forEach(idProfessor -> validarUsuarioAtivo(idProfessor, "professor"));
+
+        List<Long> alunosAtuais = jdbcTemplate.queryForList(
+                "SELECT ut.idusuario FROM usuariosturmas ut JOIN usuarios u ON u.idusuario = ut.idusuario "
+                        + "WHERE ut.idturma = ? AND LOWER(u.perfil) = 'aluno'",
+                Long.class, idTurma);
+        List<Long> removidos = alunosAtuais.stream().filter(id -> !alunos.contains(id)).toList();
+        List<Long> incluidos = alunos.stream().filter(id -> !alunosAtuais.contains(id)).toList();
+        removidos.forEach(idAluno -> validarAlunoSemEquipe(nomeUsuario(idAluno), idAluno));
+        incluidos.forEach(idAluno -> validarAlunoSemEquipe(validarUsuarioAtivo(idAluno, "aluno"), idAluno));
+
+        TurmaResponse turma = jdbcTemplate.queryForObject(
+                "UPDATE turmas SET nome = ? WHERE idturma = ? RETURNING idturma, nome",
+                (result, rowNumber) -> new TurmaResponse(result.getLong("idturma"), result.getString("nome")),
+                dados.nome().trim(), idTurma
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM usuariosturmas ut USING usuarios u WHERE u.idusuario = ut.idusuario "
+                        + "AND ut.idturma = ? AND LOWER(u.perfil) = 'professor'",
+                idTurma);
+        professores.forEach(idProfessor ->
+                jdbcTemplate.update("INSERT INTO usuariosturmas (idusuario, idturma) VALUES (?, ?)", idProfessor, idTurma));
+        removidos.forEach(idAluno ->
+                jdbcTemplate.update("DELETE FROM usuariosturmas WHERE idusuario = ? AND idturma = ?", idAluno, idTurma));
+        incluidos.forEach(idAluno -> salvarTurmasUsuario(idAluno, List.of(idTurma)));
+
+        auditoriaService.registrar("TURMAS", "TURMA_ALTERADA", "Turma " + idTurma + " - " + turma.nome()
+                + " com " + professores.size() + " professor(es) e " + alunos.size() + " aluno(s); "
+                + incluidos.size() + " incluído(s) e " + removidos.size() + " removido(s)", true);
+        return turma;
+    }
+
+    private String nomeUsuario(Long idUsuario) {
+        return jdbcTemplate.queryForList("SELECT nome FROM usuarios WHERE idusuario = ?", String.class, idUsuario)
+                .stream().findFirst().orElse("selecionado");
+    }
+
     private List<Long> idsUnicos(List<Long> ids) {
         return ids == null ? List.of() : ids.stream().filter(Objects::nonNull).distinct().toList();
     }

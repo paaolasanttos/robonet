@@ -232,19 +232,19 @@ export default function TorneioEquipes({ perfil }) {
           <div className="empty-state"><h2>Nenhuma equipe encontrada.</h2><p>{search ? "Tente alterar os termos da pesquisa." : podeEditar ? "Cadastre a primeira equipe acima." : "Ainda não há equipes cadastradas."}</p></div>
         ) : (
           <div className="table-container">
-            <table>
+            <table className="tabela-responsiva">
               <thead>
                 <tr><th>Equipe</th><th>Turma</th><th>Integrantes</th><th>Situação</th>{podeEditar && <th className="actions-column">Ações</th>}</tr>
               </thead>
               <tbody>
                 {filteredEquipes.map((equipe) => (
                   <tr key={equipe.id}>
-                    <td><strong>{equipe.nome}</strong></td>
-                    <td>{equipe.turma || "-"}</td>
-                    <td className="description-cell">{equipe.membros.map((membro) => membro.nome).join(", ")}</td>
-                    <td><span className={`status-pill ${equipe.emTorneio ? "status-andamento" : "status-active"}`}>{equipe.emTorneio ? "Inscrita em torneio" : "Disponível"}</span></td>
+                    <td data-label="Equipe"><strong>{equipe.nome}</strong></td>
+                    <td data-label="Turma">{equipe.turma || "-"}</td>
+                    <td data-label="Integrantes" className="description-cell">{equipe.membros.map((membro) => membro.nome).join(", ")}</td>
+                    <td data-label="Situação"><span className={`status-pill ${equipe.emTorneio ? "status-andamento" : "status-active"}`}>{equipe.emTorneio ? "Inscrita em torneio" : "Disponível"}</span></td>
                     {podeEditar && (
-                      <td>
+                      <td data-label="Ações">
                         <div className="row-actions">
                           <button className="button button-small button-light" onClick={() => startEditing(equipe)}>Editar</button>
                           {!equipe.emTorneio && <button className="button button-small button-danger" onClick={() => handleDelete(equipe)}>Excluir</button>}
