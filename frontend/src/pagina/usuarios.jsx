@@ -38,16 +38,6 @@ function proximaVersao(versao) {
   return partes.join(".");
 }
 
-function formatarData(valor) {
-  return valor ? new Date(valor).toLocaleDateString("pt-BR") : "-";
-}
-
-function proximaVersao(versao) {
-  const partes = (versao || "0.0").split(".").map((parte) => Number(parte) || 0);
-  partes[partes.length - 1] += 1;
-  return partes.join(".");
-}
-
 export default function UsuariosPagina() {
   const { session, logout } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
