@@ -123,7 +123,7 @@ export default function AuditoriaPagina() {
     setPaginaAcoes(1);
     setPaginaAlteracoes(1);
   }
-
+  
   return (
     <main className="app-shell">
       <nav className="navbar" aria-label="Navegação principal">
