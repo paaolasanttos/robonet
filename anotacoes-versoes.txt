@@ -17,3 +17,12 @@
 --19/11/2026 Paola
 1. Reestruturada as pastas do "database" e as tabelas de uso.
 2. Disponibilizada a API do Google Calender para o usuario cadastrar o evento na sua agenda pessoal. O sistema não armazerá os dados pessoais do usuario.
+
+--20/11/2026 Paola
+1. Adicionada imagem de background na tela de login.
+2. Conferido os schemas das tabelas utlizadas no sistema.
+3. Melhorada a apresentação da tela de login e não sou cadastrado.
+4. Melhorada a apresentação da tela de auditoria e tratada a apresentação do e-mail.
+5. Melhorada a apresentação da tela de usuários.
+6. Criada a pasta docs para armazenar informações de diagramas e demais conteudos uteis do projeto.
+7. Melhorada a apresentação da tela de simulados já efetuados.

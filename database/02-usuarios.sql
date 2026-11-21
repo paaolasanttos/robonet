@@ -38,6 +38,23 @@ CREATE TABLE solicitacoesexclusao(
 	DtSolicitacao         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	DtLimite              TIMESTAMP NOT NULL,
 	DtConclusao           TIMESTAMP,
+	UsrAnalise            VARCHAR(255),
 	CONSTRAINT fk_solicitacoesexclusao_idusuario FOREIGN KEY (IdUsuario) REFERENCES usuarios (IdUsuario)
 );
 CREATE UNIQUE INDEX ux_solicitacoesexclusao_pendente ON solicitacoesexclusao (IdUsuario) WHERE Status = 'Pendente';
+
+CREATE TABLE solicitacoescadastro(
+    IdSolicitacaoCadastro BIGSERIAL PRIMARY KEY,
+    Nome                  VARCHAR(50) NOT NULL,
+    Email                 VARCHAR(255) NOT NULL,
+    RA                    VARCHAR(11),
+    Perfil                VARCHAR(20) NOT NULL,
+    Senha                 VARCHAR(100),
+    Status                VARCHAR(20) NOT NULL DEFAULT 'Pendente',
+    Motivo                VARCHAR(2000),
+    Ip                    VARCHAR(100),
+    DtSolicitacao         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DtAnalise             TIMESTAMP,
+    UsrAnalise            VARCHAR(255)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_solicitacoescadastro_pendente ON solicitacoescadastro (LOWER(Email)) WHERE Status = 'Pendente';

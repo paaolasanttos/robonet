@@ -79,7 +79,7 @@ public class UsuarioController {
         Set<Long> aceitaram = termoService.usuariosQueAceitaramVersaoAtual();
         return usuarios.stream()
                 .map(usuario -> new UsuarioListaResponse(usuario.getId(), usuario.getNome(),
-                        DadoSensivel.mascararEmail(usuario.getEmail()), usuario.getRa(), usuario.getPerfil(),
+                        DadoSensivel.mascararEmailComPrefixo(usuario.getEmail()), usuario.getRa(), usuario.getPerfil(),
                         usuario.getAtivo(), usuario.getAcessoMFV(), usuario.getCriadoEm(), usuario.getIdTurma(),
                         usuario.getTurmas(),
                         "admin".equals(usuario.getPerfil()) ? null : aceitaram.contains(usuario.getId())))

@@ -24,3 +24,17 @@ CREATE TABLE logauditoria(
     DtRegistro     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX ix_logauditoria_dtregistro ON logauditoria (DtRegistro DESC);
+
+CREATE TABLE logalteracoes(
+    IdLogAlteracao BIGSERIAL PRIMARY KEY,
+    Tabela         VARCHAR(100) NOT NULL,
+    IdRegistro     BIGINT,
+    Operacao       VARCHAR(10) NOT NULL,
+    Campo          VARCHAR(100) NOT NULL,
+    ValorAnterior  TEXT,
+    ValorNovo      TEXT,
+    Usuario        VARCHAR(255),
+    DtAlteracao    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS ix_logalteracoes_registro ON logalteracoes (Tabela, IdRegistro);
+CREATE INDEX IF NOT EXISTS ix_logalteracoes_dtalteracao ON logalteracoes (DtAlteracao DESC);
