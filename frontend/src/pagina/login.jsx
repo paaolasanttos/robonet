@@ -51,7 +51,7 @@ export default function LoginPagina() {
   }
 
   return (
-    <main className="login-shell">
+    <main className="login-shell login-page">
       <section className="login-panel">
         <div className="login-brand">
           <span className="brand-mark">R</span>
@@ -96,8 +96,9 @@ export default function LoginPagina() {
         </form>
         {!codeRequested && 
           <div className="login-options" aria-label="Opções de acesso">
-            <Link to="/recuperar-senha">Esqueci minha senha</Link>
-            <Link to="/politicas">Políticas de uso</Link>
+            <Link className="button button-primary login-option-button" to="/recuperar-senha">Esqueci minha senha</Link>
+            <Link className="button button-primary login-option-button" to="/solicitar-cadastro">Não sou cadastrado</Link>
+            <Link className="button button-primary login-option-button" to="/politicas">Políticas de uso</Link>
           </div>
         }
       </section>

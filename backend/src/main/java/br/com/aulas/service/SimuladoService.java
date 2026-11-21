@@ -141,8 +141,13 @@ public class SimuladoService {
             List<SimuladoRealizadoResponse.PerguntaResponse> detalhes = itens.stream()
                     .map(item -> {
                         SimuladoPergunta pergunta = perguntas.get(item.getIdSimuladoPergunta());
+                        List<SimuladoRealizadoResponse.OpcaoResponse> opcoes = pergunta.getOpcoes().stream()
+                                .map(opcao -> new SimuladoRealizadoResponse.OpcaoResponse(
+                                        opcao.getId(), opcao.getTexto(), opcao.isCorreta(),
+                                        opcao.getId().equals(item.getIdSimuladoOpcao())))
+                                .toList();
                         return new SimuladoRealizadoResponse.PerguntaResponse(
-                                pergunta.getId(), pergunta.getEnunciado(), item.isRespostaCorreta());
+                                pergunta.getId(), pergunta.getEnunciado(), item.isRespostaCorreta(), opcoes);
                     })
                     .toList();
             int acertos = (int) itens.stream().filter(SimuladoRealizado::isRespostaCorreta).count();

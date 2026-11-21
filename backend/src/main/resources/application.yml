@@ -35,8 +35,6 @@ server:
 app:
   cors:
     origins: ${APP_CORS_ORIGINS:http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:8081}
-  termo:
-    versao: ${APP_TERMO_VERSAO:0.3}
   exclusao:
     intervalo-ms: ${APP_EXCLUSAO_INTERVALO_MS:3600000}
 

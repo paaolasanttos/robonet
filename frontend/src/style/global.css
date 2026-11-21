@@ -222,6 +222,17 @@ h2 {
   width: min(560px, 100%);
 }
 
+.usuarios-toolbar-filtros {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.usuarios-status-filter {
+  width: min(180px, 100%);
+}
+
 .search-wrapper label,
 .form-field label {
   display: block;
@@ -265,6 +276,16 @@ h2 {
   color: #697386;
   font-size: 0.9rem;
   white-space: nowrap;
+}
+
+.auditoria-paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 18px;
+  color: #697386;
+  font-size: 0.9rem;
 }
 
 .table-container {
@@ -686,7 +707,13 @@ tbody tr:hover {
   min-height: 100vh;
   place-items: center;
   padding: 24px;
-  background: radial-gradient(circle at top right, #eef0ff 0, #f4f6f9 42%, #e9eef5 100%);
+  background-color: #e9eef5;
+  background-image:
+    linear-gradient(rgba(244, 246, 249, 0.18), rgba(233, 238, 245, 0.18)),
+    url("../../img/imglogin.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .login-panel {
@@ -696,6 +723,72 @@ tbody tr:hover {
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 20px 55px rgba(30, 41, 59, .1);
+}
+
+.login-page .login-panel {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: linear-gradient(145deg, #287ac0, #175b9e);
+  box-shadow: 0 24px 60px rgba(11, 48, 88, 0.35);
+}
+
+.login-page .login-brand strong,
+.login-page .login-heading h1,
+.login-page .form-field label {
+  color: #fff;
+}
+
+.login-page .brand-mark {
+  background: #fff;
+  color: #175b9e;
+}
+
+.login-page .eyebrow {
+  color: #d7eaff;
+}
+
+.login-page .login-heading p {
+  color: #e4f0ff;
+}
+
+.login-page .button-primary {
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: #fff;
+  color: #175b9e;
+  box-shadow: 0 8px 18px rgba(8, 39, 73, 0.2);
+}
+
+.login-page .button-primary:hover:not(:disabled) {
+  background: #f0f7ff;
+}
+
+.login-page .button-secondary {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: #fff;
+  color: #175b9e;
+  box-shadow: 0 8px 18px rgba(8, 39, 73, 0.2);
+}
+
+.login-page .button-secondary:hover:not(:disabled) {
+  background: #f0f7ff;
+}
+
+.login-page .checkbox-item,
+.login-page .senha-requisitos {
+  color: #e4f0ff;
+}
+
+.login-page .checkbox-item a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.login-page .senha-requisito-ok {
+  color: #a7f3b7;
+}
+
+.login-page .senha-requisito-ok .senha-requisito-marca {
+  border-color: #a7f3b7;
+  background: #21733b;
 }
 
 .login-brand { 
@@ -831,13 +924,17 @@ tbody tr:hover {
 
 .login-options { 
   display: grid; 
-  gap: 8px; 
+  gap: 10px;
   margin-top: 22px; 
-  padding: 12px 14px; 
-  border: 1px solid #dfe3ff; 
-  border-radius: 10px; 
-  background: #f7f8ff; 
   font-size: .86rem; 
+}
+
+.login-options .login-option-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-decoration: none;
 }
 
 .login-link, .login-options a { 
@@ -1197,26 +1294,66 @@ tbody tr:hover {
   align-items: stretch;
 }
 
-.student-simulado-tentativa {
-  font-size: 0.88rem;
+.student-simulado-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
 }
 
-.student-simulado-perguntas {
+.student-simulado-review-question {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+}
+
+.student-simulado-review-question h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.student-simulado-review-options {
+  display: grid;
+  gap: 8px;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 
-.student-simulado-perguntas li {
-  display: grid;
-  gap: 5px;
+.student-simulado-review-options li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   padding: 10px 12px;
   border: 1px solid #e4e8ef;
   border-radius: 9px;
   color: #344054;
   line-height: 1.45;
+}
+
+.student-simulado-review-options .student-simulado-review-correct {
+  border-color: #b8dfc4;
+  background: #effaf2;
+}
+
+.student-simulado-review-options .student-simulado-review-selected:not(.student-simulado-review-correct) {
+  border-color: #e5b7b7;
+  background: #fff5f5;
+}
+
+.student-simulado-review-label {
+  flex: 0 0 auto;
+  color: #21733b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.student-simulado-review-selected:not(.student-simulado-review-correct) .student-simulado-review-label {
+  color: #a33a3a;
 }
 
 .student-simulado-correta {
@@ -1403,6 +1540,11 @@ tbody tr:hover {
 
 .auditoria-data { 
   white-space: nowrap; 
+}
+
+.auditoria-paginacao .button:disabled {
+ cursor: not-allowed;
+ opacity: 0.55;
 }
 
 .abas {
@@ -2268,5 +2410,369 @@ tbody tr:hover {
   th,
   td {
     padding: 13px;
+  }
+}
+
+.dado-sensivel-celula {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dado-sensivel {
+  filter: blur(4px);
+  user-select: none;
+}
+
+.termo-admin-acoes {
+  margin-bottom: 16px;
+}
+
+.termo-editor {
+  display: grid;
+  gap: 16px;
+}
+
+.termo-editor h3 {
+  margin: 0;
+}
+
+.termo-editor textarea {
+  min-height: 320px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .86rem;
+  line-height: 1.5;
+}
+
+.termo-editor code {
+  border-radius: 4px;
+  padding: 1px 5px;
+  background: #eef1ff;
+  color: #3847c6;
+}
+
+.termo-confirmacao {
+  align-items: flex-start;
+}
+
+.termo-confirmacao input {
+  margin-top: 4px;
+}
+
+.usuarios-toolbar-acoes {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+@media (max-width: 800px) {
+  .usuarios-toolbar-filtros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-wrapper,
+  .usuarios-status-filter {
+    width: 100%;
+  }
+}
+
+.solicitudes-toolbar {
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.solicitudes-toolbar .form-field {
+  width: min(280px, 100%);
+}
+
+.termo-versoes-heading {
+  padding-bottom: 12px;
+}
+
+.termo-versoes-toolbar {
+  align-items: flex-end;
+}
+
+.termo-versoes-toolbar .button {
+  flex: 0 0 auto;
+}
+
+.termo-versao-atual {
+  padding: 0 22px;
+}
+
+.termo-preview-toggle {
+  justify-self: start;
+}
+
+.termo-modal {
+  width: min(900px, 100%);
+}
+
+.termo-modal > .termo-box {
+  margin: 24px;
+}
+
+.user-edit-modal .user-modal-form {
+  display: block;
+}
+
+.user-edit-modal .form-grid {
+  align-items: end;
+}
+
+.user-edit-modal .form-grid > .form-field-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .usuarios-toolbar-acoes {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .termo-versoes-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .termo-versoes-toolbar .button {
+    width: 100%;
+  }
+
+  .termo-modal > .termo-box {
+    margin: 18px;
+  }
+}
+
+.lista-alunos {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid #e4e8ef;
+  border-radius: 10px;
+  padding: 8px 6px 6px;
+}
+
+.lista-alunos legend {
+  padding: 0 6px;
+  color: #475467;
+  font-size: .84rem;
+  font-weight: 700;
+}
+
+.lista-alunos-rolagem {
+  display: flex;
+  flex-direction: column;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 0 8px;
+}
+
+.lista-alunos-grupo {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 0 6px;
+  background: #fff;
+  color: #5b67d8;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.lista-alunos-item {
+  align-items: flex-start;
+  padding: 8px 4px;
+  border-bottom: 1px solid #f0f2f6;
+}
+
+.lista-alunos-item input {
+  margin-top: 3px;
+}
+
+.lista-alunos-turma {
+  color: #b54708;
+}
+
+.equipe-subtitulo {
+  margin: 18px 22px 10px;
+  color: #475467;
+  font-size: .9rem;
+}
+
+.equipe-integrantes-grid,
+.equipe-torneios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0 22px 22px;
+  list-style: none;
+}
+
+.equipe-torneios-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  padding-top: 18px;
+}
+
+.equipe-integrante-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8f9fc;
+}
+
+.equipe-integrante-card strong {
+  overflow-wrap: anywhere;
+}
+
+.equipe-integrante-inicial {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: #eef0ff;
+  color: #4b56c7;
+  font-weight: 850;
+}
+
+.equipe-torneio-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #e4e8ef;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.equipe-torneio-card p {
+  margin: 0;
+  color: #475467;
+  font-size: .9rem;
+}
+
+.equipe-torneio-card p span {
+  color: #8791a3;
+  font-weight: 700;
+}
+
+.equipe-torneio-card .button {
+  align-self: flex-start;
+  margin-top: 6px;
+  text-decoration: none;
+}
+
+.equipe-torneio-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.equipe-torneio-realizado {
+  margin-top: 6px;
+  color: #8791a3;
+}
+
+@media (max-width: 960px) {
+  .navbar {
+    flex-wrap: wrap;
+    gap: 0 16px;
+    padding-top: 12px;
+  }
+
+  .navbar-menu {
+    order: 3;
+    width: 100%;
+    min-height: 48px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .navbar-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .abas {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .aba {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 720px) {
+  .tabela-responsiva thead {
+    display: none;
+  }
+
+  .tabela-responsiva,
+  .tabela-responsiva tbody,
+  .tabela-responsiva tr,
+  .tabela-responsiva td {
+    display: block;
+    width: 100%;
+  }
+
+  .tabela-responsiva tr {
+    padding: 10px 14px;
+    border-bottom: 1px solid #edf0f4;
+  }
+
+  .tabela-responsiva td {
+    display: grid;
+    grid-template-columns: minmax(96px, 38%) 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .tabela-responsiva td::before {
+    content: attr(data-label);
+    color: #697386;
+    font-size: .74rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .tabela-responsiva .row-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .tabela-responsiva .auditoria-data {
+    white-space: normal;
+  }
+
+  .equipe-integrantes-grid,
+  .equipe-torneios-grid {
+    grid-template-columns: 1fr;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .equipe-subtitulo {
+    margin-left: 16px;
   }
 }

@@ -38,6 +38,11 @@ public class TurmaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(turmaService.cadastrar(request));
     }
 
+    @PutMapping("/{id:\\d+}")
+    public ResponseEntity<TurmaResponse> atualizar(@PathVariable Long id, @Valid @RequestBody TurmaRequest request) {
+        return ResponseEntity.ok(turmaService.atualizar(id, request));
+    }
+
     @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         turmaService.excluir(id);

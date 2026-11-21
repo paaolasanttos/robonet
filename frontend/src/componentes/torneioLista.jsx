@@ -71,19 +71,19 @@ export default function TorneioLista({ perfil, onAbrir }) {
           </div>
         ) : (
           <div className="table-container">
-            <table>
+            <table className="tabela-responsiva">
               <thead>
                 <tr><th>Torneio</th><th>Data</th><th>Local</th><th>Equipes</th><th>Status</th><th className="actions-column">Ações</th></tr>
               </thead>
               <tbody>
                 {filteredTorneios.map((torneio) => (
                   <tr key={torneio.id}>
-                    <td><div className="title-cell"><strong>{torneio.nome}</strong><span>Responsável: {torneio.professor}</span></div></td>
-                    <td className="auditoria-data">{periodoTorneio(torneio)}</td>
-                    <td>{torneio.local || "-"}</td>
-                    <td>{torneio.totalEquipes}</td>
-                    <td><span className={`status-pill ${statusTorneio[torneio.status]?.className || ""}`}>{statusTorneio[torneio.status]?.label || torneio.status}</span></td>
-                    <td><div className="row-actions"><button className="button button-small button-light" onClick={() => onAbrir(torneio.id)}>{torneio.podeGerenciar ? "Gerenciar" : perfil === "professor" ? "Abrir" : "Visualizar"}</button></div></td>
+                    <td data-label="Torneio"><div className="title-cell"><strong>{torneio.nome}</strong><span>Responsável: {torneio.professor}</span></div></td>
+                    <td data-label="Data" className="auditoria-data">{periodoTorneio(torneio)}</td>
+                    <td data-label="Local">{torneio.local || "-"}</td>
+                    <td data-label="Equipes">{torneio.totalEquipes}</td>
+                    <td data-label="Status"><span className={`status-pill ${statusTorneio[torneio.status]?.className || ""}`}>{statusTorneio[torneio.status]?.label || torneio.status}</span></td>
+                    <td data-label="Ações"><div className="row-actions"><button className="button button-small button-light" onClick={() => onAbrir(torneio.id)}>{torneio.podeGerenciar ? "Gerenciar" : perfil === "professor" ? "Abrir" : "Visualizar"}</button></div></td>
                   </tr>
                 ))}
               </tbody>

@@ -7,7 +7,7 @@ import SenhaRequisitos from "../componentes/senhaRequisitos";
 import { MENSAGEM_SENHA, senhaValida } from "../componentes/senhaRegras";
 import { formatarData } from "../componentes/torneioFormato";
 import { meusDadosApi } from "../servicos/api";
-import TermoConteudo, { TERMO_DATA, TERMO_VERSAO } from "../componentes/termoConteudo";
+import TermoConteudo, { formatarDataTermo, useTermoAtual } from "../componentes/termoConteudo";
 
 export default function MeusDadosPagina() {
   const { session, logout } = useAuth();
@@ -25,6 +25,7 @@ export default function MeusDadosPagina() {
   const [senhaMFV, setSenhaMFV] = useState("");
   const [exclusaoConfirmada, setExclusaoConfirmada] = useState(false);
   const [solicitacaoIndeferida, setSolicitacaoIndeferida] = useState(null);
+  const { termo, erro: erroTermo } = useTermoAtual();
 
   useEffect(() => {
     if (perfil === "admin") return;
@@ -245,7 +246,7 @@ export default function MeusDadosPagina() {
                   <p className="meus-dados-ajuda">Você ainda não realizou solicitações de alteração.</p>
                 ) : (
                   <div className="table-container">
-                    <table>
+                    <table className="tabela-responsiva">
                       <thead><tr><th>Data</th><th>Dados solicitados</th><th>Status</th><th>Detalhes</th></tr></thead>
                       <tbody>{dados.solicitacoesAlteracao.map((solicitacao) => {
                         const statusNormalizado = String(solicitacao.status || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -253,10 +254,10 @@ export default function MeusDadosPagina() {
                         const classeStatus = statusNormalizado === "deferido" ? "status-active" : indeferida ? "status-inactive" : "status-pending";
                         return (
                           <tr key={solicitacao.id}>
-                            <td>{solicitacao.dtRegistro ? formatarData(solicitacao.dtRegistro.split("T")[0]) : "-"}</td>
-                            <td><div className="meus-dados-solicitacao-info"><strong>{solicitacao.nome}</strong><span>RA: {solicitacao.ra || "-"} · Perfil: {solicitacao.perfil || "-"} · Turma: {solicitacao.turma || "-"}</span></div></td>
-                            <td><span className={`status-pill ${classeStatus}`}>{solicitacao.status || "Pendente de análise"}</span></td>
-                            <td>{indeferida && <button type="button" className="button button-small button-light" onClick={() => setSolicitacaoIndeferida(solicitacao)}>Ver motivo</button>}</td>
+                            <td data-label="Data">{solicitacao.dtRegistro ? formatarData(solicitacao.dtRegistro.split("T")[0]) : "-"}</td>
+                            <td data-label="Dados solicitados"><div className="meus-dados-solicitacao-info"><strong>{solicitacao.nome}</strong><span>RA: {solicitacao.ra || "-"} · Perfil: {solicitacao.perfil || "-"} · Turma: {solicitacao.turma || "-"}</span></div></td>
+                            <td data-label="Status"><span className={`status-pill ${classeStatus}`}>{solicitacao.status || "Pendente de análise"}</span></td>
+                            <td data-label="Detalhes">{indeferida && <button type="button" className="button button-small button-light" onClick={() => setSolicitacaoIndeferida(solicitacao)}>Ver motivo</button>}</td>
                           </tr>
                         );
                       })}</tbody>
@@ -319,7 +320,7 @@ export default function MeusDadosPagina() {
               <div className="section-heading"><span className="eyebrow">LGPD</span><h2>Excluir minha conta</h2></div>
               {dados.exclusaoAte ? (
                 <>
-                  <p className="meus-dados-ajuda">Exclusão solicitada em <strong>{formatarData(dados.exclusaoSolicitadaEm)}</strong>. Seus dados serão excluídos até <strong>{formatarData(dados.exclusaoAte)}</strong>. Até lá, você continua com acesso e pode cancelar o pedido.</p>
+                  <p className="meus-dados-ajuda">Exclusão solicitada em <strong>{formatarData(dados.exclusaoSolicitadaEm)}</strong>. Data limite de análise: <strong>{formatarData(dados.exclusaoAte)}</strong>. O administrador pode aprovar o pedido antes dessa data e, se não houver análise até lá, a exclusão será aprovada automaticamente, conforme a LGPD. Até a conclusão, você continua com acesso e pode cancelar o pedido.</p>
                   <div className="meus-dados-acoes">
                     <button type="button" className="button button-secondary" onClick={cancelarExclusao} disabled={saving}>Cancelar solicitação</button>
                   </div>
@@ -333,6 +334,7 @@ export default function MeusDadosPagina() {
                         <li>Nome, RA, e-mail e senha da conta</li>
                         <li>Vínculos com turmas e equipes</li>
                         <li>Aulas concluídas e simulados realizados</li>
+                        <li>Solicitações de alteração e de cadastro e o histórico de alterações dos seus dados</li>
                       </ul>
                     </div>
                     <div>
@@ -351,7 +353,7 @@ export default function MeusDadosPagina() {
                     </div>
                     <label className="checkbox-item">
                       <input type="checkbox" checked={exclusaoConfirmada} onChange={(event) => setExclusaoConfirmada(event.target.checked)} disabled={saving} />
-                      Entendo que, após o prazo de até 15 dias, a conta não poderá ser recuperada.
+                      Entendo que, após a aprovação do administrador ou a data limite de análise de 14 dias, a conta não poderá ser recuperada.
                     </label>
                     <div className="user-form-actions">
                       <button type="submit" className="button button-danger" disabled={saving || !exclusaoConfirmada}>Solicitar exclusão</button>
@@ -363,8 +365,8 @@ export default function MeusDadosPagina() {
             
             {aba === "termo" && <section className="content-card meus-dados-secao" role="tabpanel" id="painel-termo" aria-labelledby="aba-termo" tabIndex="0">
               <div className="section-heading"><span className="eyebrow">Termo</span><h2>Termo de uso e Privacidade</h2></div>
-              <p className="meus-dados-ajuda">Versão {TERMO_VERSAO} • {TERMO_DATA}</p>
-              <div className="termo-box meus-dados-termo-box" aria-label="Conteúdo do termo de uso e aviso de privacidade"><TermoConteudo /></div>
+              {termo && <p className="meus-dados-ajuda">Versão {termo.versao} • {formatarDataTermo(termo.dtVersao)}</p>}
+              <div className="termo-box meus-dados-termo-box" aria-label="Conteúdo do termo de uso e aviso de privacidade"><TermoConteudo termo={termo} erro={erroTermo} /></div>
             </section>}            
           </>
         )}

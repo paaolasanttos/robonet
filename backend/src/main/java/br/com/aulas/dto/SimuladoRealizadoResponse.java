@@ -14,5 +14,6 @@ public record SimuladoRealizadoResponse(
         double percentual,
         List<PerguntaResponse> perguntas
 ) {
-    public record PerguntaResponse(Integer id, String enunciado, boolean correta) { }
+    public record PerguntaResponse(Integer id, String enunciado, boolean correta, List<OpcaoResponse> opcoes) { }
+    public record OpcaoResponse(Integer id, String texto, boolean correta, boolean selecionada) { }
 }
