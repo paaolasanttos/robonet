@@ -123,21 +123,7 @@ export default function AuditoriaPagina() {
     setPaginaAcoes(1);
     setPaginaAlteracoes(1);
   }
-
-  const tabelas = useMemo(() => [...new Set(alteracoes.map((item) => item.tabela))].sort(), [alteracoes]);
-
-  const filteredAlteracoes = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return alteracoes.filter((item) => {
-      if (tabela && item.tabela !== tabela) return false;
-      if (!term) return true;
-      return [item.tabela, item.campo, item.valorAnterior, item.valorNovo, item.usuario, item.idRegistro]
-        .filter((valor) => valor != null).join(" ").toLowerCase().includes(term);
-    });
-  }, [alteracoes, search, tabela]);
-
-  const total = aba === "acoes" ? filteredLogs.length : filteredAlteracoes.length;
-
+  
   return (
     <main className="app-shell">
       <nav className="navbar" aria-label="Navegação principal">
