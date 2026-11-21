@@ -38,6 +38,16 @@ function proximaVersao(versao) {
   return partes.join(".");
 }
 
+function formatarData(valor) {
+  return valor ? new Date(valor).toLocaleDateString("pt-BR") : "-";
+}
+
+function proximaVersao(versao) {
+  const partes = (versao || "0.0").split(".").map((parte) => Number(parte) || 0);
+  partes[partes.length - 1] += 1;
+  return partes.join(".");
+}
+
 export default function UsuariosPagina() {
   const { session, logout } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
@@ -96,6 +106,7 @@ export default function UsuariosPagina() {
     try {
       const data = await usuariosApi.listar();
       setUsuarios(Array.isArray(data) ? data : []);
+      setEmailsVisiveis({});
     } catch (err) {
       setError(err.message || "Não foi possível carregar os usuários.");
     } finally {
@@ -595,6 +606,26 @@ export default function UsuariosPagina() {
             })}</tbody></table></div>
             <Paginacao pagina={paginaExclusoes} total={filteredExclusoes.length} aoMudar={setPaginaExclusoes} />
             </>
+          )}
+        </section>}
+
+        {aba === "exclusoes" && <section className="content-card" role="tabpanel" id="painel-exclusoes" aria-labelledby="aba-exclusoes" tabIndex="0">
+          <div className="section-heading"><span className="eyebrow">LGPD</span><h2>Pedidos de exclusão de conta</h2></div>
+          <p className="meus-dados-ajuda">Aprove os pedidos até a data limite de análise. Pedidos sem análise até essa data são aprovados automaticamente pelo sistema, conforme a LGPD.</p>
+          {loadingExclusoes ? <Loading text="Carregando pedidos..." /> : exclusoes.length === 0 ? (
+            <div className="empty-state"><h2>Nenhum pedido de exclusão.</h2><p>Quando um usuário pedir a exclusão da conta em Meus dados, o pedido aparecerá aqui.</p></div>
+          ) : (
+            <div className="table-container"><table className="tabela-responsiva"><thead><tr><th>Usuário</th><th>Solicitado em</th><th>Data limite de análise</th><th>Status</th><th>Aprovado por</th><th className="actions-column">Ações</th></tr></thead><tbody>{exclusoes.map((exclusao) => {
+              const pendente = exclusao.status === "Pendente";
+              return <tr key={exclusao.id}>
+                <td data-label="Usuário">{exclusao.email}</td>
+                <td data-label="Solicitado em">{formatarData(exclusao.dtSolicitacao)}</td>
+                <td data-label="Data limite">{formatarData(exclusao.dtLimite)}</td>
+                <td data-label="Status"><span className={`status-pill ${pendente ? "status-pending" : "status-inactive"}`}>{pendente ? "Pendente" : "Concluída"}</span></td>
+                <td data-label="Aprovado por">{exclusao.usrAnalise || "-"}</td>
+                <td data-label="Ações"><div className="row-actions">{pendente && <button type="button" className="button button-small button-danger" onClick={() => aprovarExclusao(exclusao)} disabled={analisandoId === `exclusao-${exclusao.id}`}>{analisandoId === `exclusao-${exclusao.id}` ? "Aprovando..." : "Aprovar"}</button>}</div></td>
+              </tr>;
+            })}</tbody></table></div>
           )}
         </section>}
 

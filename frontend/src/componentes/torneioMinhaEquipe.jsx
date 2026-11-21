@@ -4,6 +4,36 @@ import Loading from "./aulaModalCarregando";
 import { equipesApi } from "../servicos/api";
 import { aindaVaiAcontecer, formatarData, linkGoogleAgenda } from "../servicos/googleAgenda";
 
+function hoje() {
+  const data = new Date();
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+}
+
+function formatarData(data) {
+  return data ? new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR") : "-";
+}
+
+function aindaVaiAcontecer(torneio) {
+  return torneio.status !== "Finalizado" && torneio.dtInicio >= hoje();
+}
+
+function diaSeguinte(data) {
+  const proximo = new Date(`${data}T00:00:00`);
+  proximo.setDate(proximo.getDate() + 1);
+  return `${proximo.getFullYear()}${String(proximo.getMonth() + 1).padStart(2, "0")}${String(proximo.getDate()).padStart(2, "0")}`;
+}
+
+function linkGoogleAgenda(torneio, equipe) {
+  const parametros = new URLSearchParams({
+    action: "TEMPLATE",
+    text: `Torneio ${torneio.nome}`,
+    dates: `${torneio.dtInicio.replaceAll("-", "")}/${diaSeguinte(torneio.dtFim || torneio.dtInicio)}`,
+    details: `Torneio de robótica da equipe ${equipe.nome} (${equipe.turma}) - Robonet`,
+  });
+  if (torneio.local) parametros.set("location", torneio.local);
+  return `https://calendar.google.com/calendar/render?${parametros.toString()}`;
+}
+
 export default function TorneioMinhaEquipe() {
   const [equipe, setEquipe] = useState(null);
   const [loading, setLoading] = useState(true);
