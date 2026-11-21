@@ -96,7 +96,6 @@ export default function UsuariosPagina() {
     try {
       const data = await usuariosApi.listar();
       setUsuarios(Array.isArray(data) ? data : []);
-      setEmailsVisiveis({});
     } catch (err) {
       setError(err.message || "Não foi possível carregar os usuários.");
     } finally {
@@ -505,11 +504,11 @@ export default function UsuariosPagina() {
           <p className="meus-dados-ajuda">O e-mail exibe apenas os cinco primeiros caracteres; a visualização dos dados completos é registrada na auditoria.</p>
           {loading ? <Loading text="Carregando usuários..." /> : filteredUsuarios.length === 0 ? <div className="empty-state"><h2>Nenhum usuário encontrado.</h2><p>{search || statusUsuario ? "Tente alterar os filtros." : "Cadastre o primeiro usuário acima."}</p></div> : (
             <>
-            <div className="table-container"><table className="tabela-responsiva"><thead><tr><th>Nome</th><th>E-mail</th><th>RA</th><th>Turma</th><th>Perfil</th><th>Acesso MFV</th><th>Termo aceito</th><th>Status</th><th className="actions-column">Ações</th></tr></thead><tbody>{usuariosPaginados.map((usuario) => {
+            <div className="table-container"><table className="tabela-responsiva tabela-usuarios"><thead><tr><th>Nome</th><th>E-mail</th><th>RA</th><th>Turma</th><th>Perfil</th><th>Acesso MFV</th><th>Termo aceito</th><th>Status</th><th className="actions-column">Ações</th></tr></thead><tbody>{usuariosPaginados.map((usuario) => {
               const isAdministrator = usuario.perfil?.toLowerCase() === "admin";
               return <tr key={usuario.id}>
                 <td data-label="Nome"><strong>{usuario.nome}</strong></td>
-                <td data-label="E-mail"><span>{usuario.email}</span></td>
+                <td data-label="E-mail"><span className="email-mascarado">{usuario.email}</span></td>
                 <td data-label="RA">{usuario.ra || "-"}</td>
                 <td data-label="Turma">{turmasDoUsuario(usuario)}</td>
                 <td data-label="Perfil">{perfis.find((perfil) => perfil.value === usuario.perfil)?.label || usuario.perfil}</td>
