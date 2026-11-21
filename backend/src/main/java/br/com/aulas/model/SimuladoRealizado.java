@@ -54,6 +54,7 @@ public class SimuladoRealizado {
 
     public Integer getIdSimulado() { return idSimulado; }
     public Integer getIdSimuladoPergunta() { return idSimuladoPergunta; }
+    public Integer getIdSimuladoOpcao() { return idSimuladoOpcao; }
     public boolean isRespostaCorreta() { return respostaCorreta; }
     public LocalDateTime getDataTentativa() { return dataTentativa; }
     public Integer getTentativa() { return tentativa; }

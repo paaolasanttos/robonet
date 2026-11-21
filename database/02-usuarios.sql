@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS Usuarios;
-
-CREATE TABLE Usuarios(
+CREATE TABLE usuarios(
 	IdUsuario    BIGSERIAL PRIMARY KEY,
 	Nome         VARCHAR(2000) NOT NULL,
 	email        VARCHAR(2000) NOT NULL,
@@ -14,11 +12,9 @@ CREATE TABLE Usuarios(
 	DtAlteracao  TIMESTAMP,
 	UsrAlteracao VARCHAR(2000)	
 );
-CREATE UNIQUE INDEX ux_usuarios_email ON Usuarios (LOWER(TRIM(email))) WHERE Status = 'Ativo';
+CREATE UNIQUE INDEX ux_usuarios_email ON usuarios (LOWER(TRIM(email))) WHERE Status = 'Ativo';
 
-DROP TABLE IF EXISTS UsuariosSolicitacoes;
-
-CREATE TABLE UsuariosSolicitacoes(
+CREATE TABLE usuariossolicitacoes(
 	IdUsuario    BIGSERIAL PRIMARY KEY,
 	Nome         VARCHAR(2000) NOT NULL,
 	email        VARCHAR(2000) NOT NULL,
@@ -33,9 +29,7 @@ CREATE TABLE UsuariosSolicitacoes(
 	UsrAnalise   VARCHAR(2000)	
 );
 
-DROP TABLE IF EXISTS SolicitacoesExclusao;
-
-CREATE TABLE SolicitacoesExclusao(
+CREATE TABLE solicitacoesexclusao(
 	IdSolicitacaoExclusao BIGSERIAL PRIMARY KEY,
 	IdUsuario             BIGINT NOT NULL,
 	Email                 VARCHAR(2000) NOT NULL,
@@ -44,6 +38,23 @@ CREATE TABLE SolicitacoesExclusao(
 	DtSolicitacao         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	DtLimite              TIMESTAMP NOT NULL,
 	DtConclusao           TIMESTAMP,
-	CONSTRAINT fk_solicitacoesexclusao_idusuario FOREIGN KEY (IdUsuario) REFERENCES Usuarios (IdUsuario)
+	UsrAnalise            VARCHAR(255),
+	CONSTRAINT fk_solicitacoesexclusao_idusuario FOREIGN KEY (IdUsuario) REFERENCES usuarios (IdUsuario)
 );
-CREATE UNIQUE INDEX ux_solicitacoesexclusao_pendente ON SolicitacoesExclusao (IdUsuario) WHERE Status = 'Pendente';
+CREATE UNIQUE INDEX ux_solicitacoesexclusao_pendente ON solicitacoesexclusao (IdUsuario) WHERE Status = 'Pendente';
+
+CREATE TABLE solicitacoescadastro(
+    IdSolicitacaoCadastro BIGSERIAL PRIMARY KEY,
+    Nome                  VARCHAR(50) NOT NULL,
+    Email                 VARCHAR(255) NOT NULL,
+    RA                    VARCHAR(11),
+    Perfil                VARCHAR(20) NOT NULL,
+    Senha                 VARCHAR(100),
+    Status                VARCHAR(20) NOT NULL DEFAULT 'Pendente',
+    Motivo                VARCHAR(2000),
+    Ip                    VARCHAR(100),
+    DtSolicitacao         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DtAnalise             TIMESTAMP,
+    UsrAnalise            VARCHAR(255)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_solicitacoescadastro_pendente ON solicitacoescadastro (LOWER(Email)) WHERE Status = 'Pendente';

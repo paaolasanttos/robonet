@@ -62,7 +62,7 @@ export default function SolicitarCadastroPagina() {
   }
 
   return (
-    <main className="login-shell">
+    <main className="login-shell login-page">
       <section className="login-panel">
         <div className="login-brand">
           <span className="brand-mark">R</span>
@@ -72,7 +72,7 @@ export default function SolicitarCadastroPagina() {
         </div>
         <div className="login-heading">
           <h1>Solicitar cadastro</h1>
-          <p>Preencha seus dados. O administrador vai analisar o pedido e, se aprovado, você entra com o e-mail e a senha escolhidos aqui.</p>
+          <p>Preencha seus dados. O administrador irá analisar o seu pedido e, se aprovado, você receberá um e-mail e poderá efetuar o login com o e-mail e senha informados.</p>
         </div>
         {message && <div className="login-success" role="status">{message}</div>}
         {error && <div className="login-error" role="alert">{error}</div>}

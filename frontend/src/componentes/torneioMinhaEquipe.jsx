@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Alert from "./aulaModalAlert";
 import Loading from "./aulaModalCarregando";
 import { equipesApi } from "../servicos/api";
+import { aindaVaiAcontecer, formatarData, linkGoogleAgenda } from "../servicos/googleAgenda";
 
 function hoje() {
   const data = new Date();
@@ -102,7 +103,7 @@ export default function TorneioMinhaEquipe() {
                     <p><span>Data:</span> {formatarData(torneio.dtInicio)}{torneio.dtFim && torneio.dtFim !== torneio.dtInicio ? ` a ${formatarData(torneio.dtFim)}` : ""}</p>
                     <p><span>Local:</span> {torneio.local || "A definir"}</p>
                     {futuro ? (
-                      <a className="button button-small button-primary" href={linkGoogleAgenda(torneio, equipe)} target="_blank" rel="noopener noreferrer">Adicionar ao Google Agenda</a>
+                      <a className="button button-small button-primary" href={linkGoogleAgenda(torneio, equipe)} target="_blank" rel="noopener noreferrer">Google Agenda</a>
                     ) : (
                       <small className="equipe-torneio-realizado">{torneio.status === "Finalizado" ? "Torneio realizado" : "Torneio já iniciado"}</small>
                     )}

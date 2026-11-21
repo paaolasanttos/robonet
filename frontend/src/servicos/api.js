@@ -173,6 +173,7 @@ export const authApi = {
 
 export const termoApi = {
   atual: () => request("/api/termo/atual"),
+  versoes: () => request("/api/termo/versoes"),
   publicar: (dados) => request("/api/termo/publicar", {
     method: "POST",
     body: JSON.stringify(dados),

@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,6 +32,12 @@ public class TermoController {
     @GetMapping("/atual")
     public ResponseEntity<TermoAtualResponse> atual() {
         return ResponseEntity.ok(termoService.atual());
+    }
+
+    @GetMapping("/versoes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<TermoAtualResponse>> versoes() {
+        return ResponseEntity.ok(termoService.versoes());
     }
 
     @PostMapping("/publicar")

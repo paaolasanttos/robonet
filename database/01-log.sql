@@ -1,14 +1,10 @@
-DROP TABLE IF EXISTS LogAcessos;
-DROP TABLE IF EXISTS LogCodigoVerificacao;
-DROP TABLE IF EXISTS LogAuditoria;
-
-CREATE TABLE LogAcessos(
+CREATE TABLE logacessos(
     IdLogAcesso BIGSERIAL PRIMARY KEY,
     Email       VARCHAR(2000) NOT NULL,
     DtAcesso    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE LogCodigoVerificacao(
+CREATE TABLE logcodigoverificacao(
     IdLogCodigoVerificacao BIGSERIAL PRIMARY KEY,
     Email                  VARCHAR(2000) NOT NULL,
     Codigo                 VARCHAR(100) NOT NULL,
@@ -17,7 +13,7 @@ CREATE TABLE LogCodigoVerificacao(
     DtGeracao              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE LogAuditoria(
+CREATE TABLE logauditoria(
     IdLogAuditoria BIGSERIAL PRIMARY KEY,
     Email          VARCHAR(2000),
     Categoria      VARCHAR(50) NOT NULL,
@@ -27,4 +23,18 @@ CREATE TABLE LogAuditoria(
     Sucesso        BOOLEAN NOT NULL DEFAULT TRUE,
     DtRegistro     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX ix_logauditoria_dtregistro ON LogAuditoria (DtRegistro DESC);
+CREATE INDEX ix_logauditoria_dtregistro ON logauditoria (DtRegistro DESC);
+
+CREATE TABLE logalteracoes(
+    IdLogAlteracao BIGSERIAL PRIMARY KEY,
+    Tabela         VARCHAR(100) NOT NULL,
+    IdRegistro     BIGINT,
+    Operacao       VARCHAR(10) NOT NULL,
+    Campo          VARCHAR(100) NOT NULL,
+    ValorAnterior  TEXT,
+    ValorNovo      TEXT,
+    Usuario        VARCHAR(255),
+    DtAlteracao    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS ix_logalteracoes_registro ON logalteracoes (Tabela, IdRegistro);
+CREATE INDEX IF NOT EXISTS ix_logalteracoes_dtalteracao ON logalteracoes (DtAlteracao DESC);

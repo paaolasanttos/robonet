@@ -20,4 +20,13 @@ public final class DadoSensivel {
         String inicioDominio = dominio.isEmpty() ? "" : dominio.substring(0, 1);
         return valor.charAt(0) + "*****@" + inicioDominio + "*****" + sufixo;
     }
+
+    public static String mascararEmailComPrefixo(String email) {
+        if (email == null || email.isBlank()) {
+            return email;
+        }
+        String valor = email.trim();
+        int caracteresVisiveis = Math.min(5, valor.length());
+        return valor.substring(0, caracteresVisiveis) + "*".repeat(valor.length() - caracteresVisiveis);
+    }
 }

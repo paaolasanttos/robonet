@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -41,6 +42,13 @@ public class TermoService {
     public TermoAtualResponse atual() {
         TermoVersao termo = termoVigente();
         return new TermoAtualResponse(termo.getVersao(), termo.getDtVersao(), termo.getConteudo());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TermoAtualResponse> versoes() {
+        return termoVersaoRepository.findAllByOrderByIdDesc().stream()
+                .map(termo -> new TermoAtualResponse(termo.getVersao(), termo.getDtVersao(), termo.getConteudo()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
