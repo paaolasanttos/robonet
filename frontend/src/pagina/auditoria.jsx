@@ -53,6 +53,33 @@ function Paginacao({ pagina, total, aoMudar }) {
   );
 }
 
+function valorOuTraco(valor) {
+  return valor == null || valor === "" ? "-" : valor;
+}
+
+function mascararEmail(email) {
+  if (!email) return "-";
+  return `${email.slice(0, 5)}${"*".repeat(Math.max(0, email.length - 5))}`;
+}
+
+function Paginacao({ pagina, total, aoMudar }) {
+  const totalPaginas = Math.max(1, Math.ceil(total / registrosPorPagina));
+
+  if (total === 0) return null;
+
+  return (
+    <div className="auditoria-paginacao" aria-label="Paginação dos registros">
+      <button type="button" className="button button-secondary button-small" onClick={() => aoMudar(pagina - 1)} disabled={pagina <= 1}>
+        Anterior
+      </button>
+      <span>Página {pagina} de {totalPaginas}</span>
+      <button type="button" className="button button-secondary button-small" onClick={() => aoMudar(pagina + 1)} disabled={pagina >= totalPaginas}>
+        Próxima
+      </button>
+    </div>
+  );
+}
+
 export default function AuditoriaPagina() {
   const [aba, setAba] = useState("acoes");
   const [logs, setLogs] = useState([]);
