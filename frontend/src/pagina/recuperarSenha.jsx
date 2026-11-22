@@ -52,7 +52,12 @@ export default function RecuperarSenhaPagina() {
           <h1>{codeRequested ? "Defina sua senha" : "Recupere seu acesso"}</h1>
           <p>{codeRequested ? "Use o código enviado para criar uma nova senha." : "Enviaremos um código para o e-mail informado."}</p>
         </div>
-        {message && <div className="login-success" role="status">{message}</div>}
+        {message && (
+          <div className="login-success" role="status">
+            <span className="login-success-icon" aria-hidden="true">✓</span>
+            <span>{message}</span>
+          </div>
+        )}
         {error && <div className="login-error" role="alert">{error}</div>}
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-field">
