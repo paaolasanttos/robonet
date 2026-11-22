@@ -1050,9 +1050,33 @@ tbody tr:hover {
 }
 
 .login-success { 
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   margin-top: 18px; 
-  padding: 12px 14px;
-  border: 1px solid #b8dfc4; 
+  padding: 14px 16px;
+  border: 1px solid #a7e0bc;
+  border-radius: 12px;
+  background: #ecfdf3;
+  color: #17633b;
+  font-size: .95rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.login-success-icon {
+  display: inline-flex;
+  flex: 0 0 22px;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #c9f2d8;
+  color: #17633b;
+  font-size: .8rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .login-form .button { 

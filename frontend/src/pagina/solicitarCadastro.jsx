@@ -74,7 +74,12 @@ export default function SolicitarCadastroPagina() {
           <h1>Solicitar cadastro</h1>
           <p>Preencha seus dados. O administrador irá analisar o seu pedido e, se aprovado, você receberá um e-mail e poderá efetuar o login com o e-mail e senha informados.</p>
         </div>
-        {message && <div className="login-success" role="status">{message}</div>}
+        {message && (
+          <div className="login-success" role="status">
+            <span className="login-success-icon" aria-hidden="true">✓</span>
+            <span>{message}</span>
+          </div>
+        )}
         {error && <div className="login-error" role="alert">{error}</div>}
         {!enviado && (
           <form onSubmit={handleSubmit} className="login-form">
