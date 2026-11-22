@@ -48,12 +48,12 @@ public class SolicitacaoAlteracaoService {
     }
 
     private static final String SELECT_SQL =
-            "SELECT s.idusuario, s.email, s.nome, s.ra, s.perfil, s.turma, s.status, s.motivo, "
+            "SELECT s.idsolicitacaoalteracao AS idusuario, s.email, s.nome, s.ra, s.perfil, s.turma, s.status, s.motivo, "
                     + "s.dtregistro, s.dtanalise, u.nome AS nomeatual, u.ra AS raatual, "
                     + "u.perfil AS perfilatual, COALESCE((SELECT string_agg(t.nome, ', ' ORDER BY t.nome) "
                     + "FROM usuariosturmas ut JOIN turmas t ON t.idturma = ut.idturma "
                     + "WHERE ut.idusuario = u.idusuario), '-') AS turmaatual "
-                    + "FROM usuariossolicitacoes s LEFT JOIN usuarios u "
+                    + "FROM solicitacoesalteracoes s LEFT JOIN usuarios u "
                     + "ON LOWER(TRIM(u.email)) = LOWER(TRIM(s.email)) AND u.status = 'Ativo' ";
 
     @Transactional(readOnly = true)
@@ -61,7 +61,7 @@ public class SolicitacaoAlteracaoService {
         return jdbcTemplate.query(
                 SELECT_SQL
                         + "ORDER BY CASE WHEN " + STATUS_PENDENTE_SELECT_SQL + " THEN 0 ELSE 1 END, "
-                        + "s.dtregistro DESC, s.idusuario DESC",
+                        + "s.dtregistro DESC, s.idsolicitacaoalteracao DESC",
                 (result, rowNumber) -> resumo(result)
         );
     }
@@ -69,7 +69,7 @@ public class SolicitacaoAlteracaoService {
     @Transactional
     public SolicitacaoAlteracaoAnaliseResponse detalhar(Long id) {
         List<SolicitacaoAlteracaoAnaliseResponse> encontradas = jdbcTemplate.query(
-                SELECT_SQL + "WHERE s.idusuario = ?",
+                SELECT_SQL + "WHERE s.idsolicitacaoalteracao = ?",
                 (result, rowNumber) -> response(result),
                 id
         );
@@ -104,8 +104,8 @@ public class SolicitacaoAlteracaoService {
         aplicarAlteracoes(solicitacao, usuario);
         databaseUserContext.setCurrentUser();
         int atualizados = jdbcTemplate.update(
-                "UPDATE usuariossolicitacoes SET status = ?, motivo = NULL, dtanalise = CURRENT_TIMESTAMP, "
-                        + "usranalise = ? WHERE idusuario = ? AND " + STATUS_PENDENTE_SQL,
+                "UPDATE solicitacoesalteracoes SET status = ?, motivo = NULL, dtanalise = CURRENT_TIMESTAMP, "
+                        + "usranalise = ? WHERE idsolicitacaoalteracao = ? AND " + STATUS_PENDENTE_SQL,
                 DEFERIDO, emailAnalista, id
         );
         if (atualizados == 0) {
@@ -127,8 +127,8 @@ public class SolicitacaoAlteracaoService {
 
         Solicitacao solicitacao = buscarPendenteParaAtualizacao(id);
         int atualizados = jdbcTemplate.update(
-                "UPDATE usuariossolicitacoes SET status = ?, motivo = ?, dtanalise = CURRENT_TIMESTAMP, "
-                        + "usranalise = ? WHERE idusuario = ? AND " + STATUS_PENDENTE_SQL,
+                "UPDATE solicitacoesalteracoes SET status = ?, motivo = ?, dtanalise = CURRENT_TIMESTAMP, "
+                        + "usranalise = ? WHERE idsolicitacaoalteracao = ? AND " + STATUS_PENDENTE_SQL,
                 INDEFERIDO, motivoValidado, emailAnalista, id
         );
         if (atualizados == 0) {
@@ -194,8 +194,8 @@ public class SolicitacaoAlteracaoService {
 
     private Solicitacao buscarPendenteParaAtualizacao(Long id) {
         List<Solicitacao> solicitacoes = jdbcTemplate.query(
-                "SELECT idusuario, email, nome, ra, perfil, turma, status FROM usuariossolicitacoes "
-                        + "WHERE idusuario = ? FOR UPDATE",
+                "SELECT idsolicitacaoalteracao AS idusuario, email, nome, ra, perfil, turma, status "
+                        + "FROM solicitacoesalteracoes WHERE idsolicitacaoalteracao = ? FOR UPDATE",
                 (result, rowNumber) -> new Solicitacao(
                         result.getLong("idusuario"), result.getString("email"), result.getString("nome"),
                         result.getString("ra"), result.getString("perfil"), result.getString("turma"),

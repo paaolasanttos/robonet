@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import Alert from "../componentes/aulaModalAlert";
 import { useAuth } from "../context/AuthContext";
 import { dashboardApi } from "../servicos/api";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 const formatarNumero = (valor) => Number(valor || 0).toLocaleString("pt-BR");
 
@@ -30,7 +31,7 @@ function LinhaResultado({ label, valor, total, className }) {
 }
 
 export default function HomePagina() {
-  const { session, logout } = useAuth();
+  const { session } = useAuth();
   const perfil = String(session?.usuario?.perfil || "").toLowerCase();
   const [resumo, setResumo] = useState(null);
   const [loadingResumo, setLoadingResumo] = useState(true);
@@ -62,34 +63,7 @@ export default function HomePagina() {
   };
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial">
-          <span className="brand-mark">R</span>
-          <span>
-            <strong>ROBONET</strong>
-            <small>Dashboard</small>
-          </span>
-        </a>
-
-        <div className="navbar-menu">
-          <Link className="navbar-link navbar-link-active" to="/home" aria-current="page">Dashboard</Link>
-          {perfil === "aluno" ? <Link className="navbar-link" to="/aulas-aluno">Aulas</Link> : <Link className="navbar-link" to="/aulas">Aulas</Link>}
-          {perfil === "aluno" ? <Link className="navbar-link" to="/simulados-aluno">Simulados</Link> : <Link className="navbar-link" to="/simulados">Simulados</Link>}
-          <Link className="navbar-link" to="/torneios">Torneios</Link>
-          {perfil !== "aluno" && <Link className="navbar-link" to="/usuarios">Usuários</Link>}
-          {perfil === "admin" && <Link className="navbar-link" to="/turmas">Turmas</Link>}
-          {perfil !== "aluno" && <Link className="navbar-link" to="/auditoria">Auditoria</Link>}
-          {perfil !== "admin" && <Link className="navbar-link" to="/meus-dados">Meus dados</Link>}
-        </div>
-
-        <div className="navbar-user">
-          <div className="user-copy">
-            <strong>{session?.usuario?.nome || "Usuário"}</strong>
-            <span>{session?.usuario?.perfil || "perfil"}</span>
-          </div>
-          <button className="logout-button" onClick={logout}>Sair</button>
-        </div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <header className="page-header">
@@ -151,6 +125,7 @@ export default function HomePagina() {
         </section>
 
       </section>
+      <RodapePadrao />
     </main>
   );
 }

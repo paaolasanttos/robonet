@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Alert from "../componentes/aulaModalAlert";
 import Loading from "../componentes/aulaModalCarregando";
@@ -8,9 +8,11 @@ import { MENSAGEM_SENHA, senhaValida } from "../componentes/senhaRegras";
 import { formatarData } from "../componentes/torneioFormato";
 import { meusDadosApi } from "../servicos/api";
 import TermoConteudo, { formatarDataTermo, useTermoAtual } from "../componentes/termoConteudo";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 export default function MeusDadosPagina() {
-  const { session, logout } = useAuth();
+  const { session } = useAuth();
   const perfil = String(session?.usuario?.perfil || "").toLowerCase();
   const [dados, setDados] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -148,30 +150,7 @@ export default function MeusDadosPagina() {
 
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial">
-          <span className="brand-mark">R</span>
-          <span>
-            <strong>ROBONET</strong>
-          </span>
-        </a>
-
-        <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Dashboard</Link>
-          {perfil === "aluno" ? <Link className="navbar-link" to="/aulas-aluno">Aulas</Link> : <Link className="navbar-link" to="/aulas">Aulas</Link>}
-          {perfil === "aluno" ? <Link className="navbar-link" to="/simulados-aluno">Simulados</Link> : <Link className="navbar-link" to="/simulados">Simulados</Link>}
-          <Link className="navbar-link" to="/torneios">Torneios</Link>
-          <Link className="navbar-link navbar-link-active" to="/meus-dados" aria-current="page">Meus dados</Link>
-        </div>
-
-        <div className="navbar-user">
-          <div className="user-copy">
-            <strong>{session.usuario.nome}</strong>
-            <span>{session.usuario.perfil}</span>
-          </div>
-          <button className="logout-button" onClick={logout}>Sair</button>
-        </div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <header className="page-header">
@@ -189,11 +168,11 @@ export default function MeusDadosPagina() {
           <>
             <div className="abas meus-dados-abas" role="tablist" aria-label="Opções de meus dados">
               <button type="button" className={`aba ${aba === "cadastro" ? "aba-ativa" : ""}`} role="tab" id="aba-cadastro" aria-controls="painel-cadastro" aria-selected={aba === "cadastro"} onClick={() => setAba("cadastro")}>Dados Cadastrais</button>
-              <button type="button" className={`aba ${aba === "alteracao" ? "aba-ativa" : ""}`} role="tab" id="aba-alteracao" aria-controls="painel-alteracao" aria-selected={aba === "alteracao"} onClick={() => setAba("alteracao")}>Solicitar Alteração</button>
               <button type="button" className={`aba ${aba === "senha" ? "aba-ativa" : ""}`} role="tab" id="aba-senha" aria-controls="painel-senha" aria-selected={aba === "senha"} onClick={() => setAba("senha")}>Alterar Senha</button>
               <button type="button" className={`aba ${aba === "mfv" ? "aba-ativa" : ""}`} role="tab" id="aba-mfv" aria-controls="painel-mfv" aria-selected={aba === "mfv"} onClick={() => setAba("mfv")}>Verificação no Login</button>
               <button type="button" className={`aba ${aba === "copia" ? "aba-ativa" : ""}`} role="tab" id="aba-copia" aria-controls="painel-copia" aria-selected={aba === "copia"} onClick={() => setAba("copia")}>Cópia dos Dados</button>
-              <button type="button" className={`aba ${aba === "exclusao" ? "aba-ativa" : ""}`} role="tab" id="aba-exclusao" aria-controls="painel-exclusao" aria-selected={aba === "exclusao"} onClick={() => setAba("exclusao")}>Excluir Conta</button>
+              <button type="button" className={`aba ${aba === "alteracao" ? "aba-ativa" : ""}`} role="tab" id="aba-alteracao" aria-controls="painel-alteracao" aria-selected={aba === "alteracao"} onClick={() => setAba("alteracao")}>Solicitar Alteração</button>
+              <button type="button" className={`aba ${aba === "exclusao" ? "aba-ativa" : ""}`} role="tab" id="aba-exclusao" aria-controls="painel-exclusao" aria-selected={aba === "exclusao"} onClick={() => setAba("exclusao")}>Solicitar Exclusão</button>
               <button type="button" className={`aba ${aba === "termo" ? "aba-ativa" : ""}`} role="tab" id="aba-termo" aria-controls="painel-termo" aria-selected={aba === "termo"} onClick={() => setAba("termo")}>Termo de Uso e Privacidade</button>
             </div>
 
@@ -387,6 +366,7 @@ export default function MeusDadosPagina() {
           </section>
         </div>
       )}
+      <RodapePadrao />
     </main>
   );
 }

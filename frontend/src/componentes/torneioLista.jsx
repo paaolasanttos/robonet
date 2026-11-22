@@ -4,6 +4,7 @@ import Loading from "./aulaModalCarregando";
 import TorneioFormModal from "./torneioModalIncluir";
 import { periodoTorneio, statusTorneio } from "./torneioFormato";
 import { torneiosApi } from "../servicos/api";
+import Paginacao, { REGISTROS_POR_PAGINA } from "./paginacao";
 
 export default function TorneioLista({ perfil, onAbrir }) {
   const [torneios, setTorneios] = useState([]);
@@ -11,6 +12,7 @@ export default function TorneioLista({ perfil, onAbrir }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [pagina, setPagina] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
 
   async function loadTorneios() {
@@ -35,6 +37,12 @@ export default function TorneioLista({ perfil, onAbrir }) {
         .filter(Boolean).join(" ").toLowerCase().includes(term)
     );
   }, [torneios, search]);
+  const totalPaginas = Math.max(1, Math.ceil(filteredTorneios.length / REGISTROS_POR_PAGINA));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const torneiosDaPagina = filteredTorneios.slice(
+    (paginaAtual - 1) * REGISTROS_POR_PAGINA,
+    paginaAtual * REGISTROS_POR_PAGINA
+  );
 
   async function handleCreate(dados) {
     setSaving(true);
@@ -58,7 +66,7 @@ export default function TorneioLista({ perfil, onAbrir }) {
         <div className="toolbar">
           <div className="search-wrapper">
             <label htmlFor="search-torneios">Pesquisar torneios</label>
-            <input id="search-torneios" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, local ou professor..." />
+            <input id="search-torneios" type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPagina(1); }} placeholder="Nome, local ou professor..." />
           </div>
           <span className="result-count">{filteredTorneios.length} {filteredTorneios.length === 1 ? "torneio" : "torneios"}</span>
           {perfil !== "aluno" && <button className="button button-primary" onClick={() => setFormOpen(true)}>+ Novo torneio</button>}
@@ -76,7 +84,7 @@ export default function TorneioLista({ perfil, onAbrir }) {
                 <tr><th>Torneio</th><th>Data</th><th>Local</th><th>Equipes</th><th>Status</th><th className="actions-column">Ações</th></tr>
               </thead>
               <tbody>
-                {filteredTorneios.map((torneio) => (
+                {torneiosDaPagina.map((torneio) => (
                   <tr key={torneio.id}>
                     <td data-label="Torneio"><div className="title-cell"><strong>{torneio.nome}</strong><span>Responsável: {torneio.professor}</span></div></td>
                     <td data-label="Data" className="auditoria-data">{periodoTorneio(torneio)}</td>
@@ -90,6 +98,7 @@ export default function TorneioLista({ perfil, onAbrir }) {
             </table>
           </div>
         )}
+        {!loading && filteredTorneios.length > 0 && <Paginacao pagina={paginaAtual} total={filteredTorneios.length} aoMudar={setPagina} />}
       </section>
 
       {formOpen && <TorneioFormModal loading={saving} onClose={() => !saving && setFormOpen(false)} onSubmit={handleCreate} />}

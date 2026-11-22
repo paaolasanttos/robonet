@@ -106,4 +106,36 @@ class AuthControllerTest {
         verify(gmailService).sendLoginCode(usuario.getEmail(), "123456", loginCodeService.expirationSeconds());
         verify(jwtService, never()).generate(anyString(), anyString(), org.mockito.ArgumentMatchers.anyBoolean());
     }
+
+    @Test
+    void passwordRecoverySendsPurposeSpecificCode() {
+        UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        JwtService jwtService = mock(JwtService.class);
+        LoginCodeService loginCodeService = mock(LoginCodeService.class);
+        GmailService gmailService = mock(GmailService.class);
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+        AuditoriaService auditoriaService = mock(AuditoriaService.class);
+        TermoService termoService = mock(TermoService.class);
+
+        Usuario usuario = new Usuario();
+        usuario.setEmail("user@umc.br");
+        usuario.setAtivo(true);
+        when(usuarioRepository.findByEmailIgnoreCaseAndAtivoTrue(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(loginCodeService.issue(usuario.getEmail(), "password")).thenReturn("123456");
+
+        AuthController controller = new AuthController(
+                usuarioRepository, passwordEncoder, jwtService, loginCodeService, gmailService,
+                jdbcTemplate, auditoriaService, termoService, "admin@umc.br"
+        );
+        RequestCodeRequest request = new RequestCodeRequest();
+        request.setEmail(usuario.getEmail());
+
+        ResponseEntity<?> response = controller.requestPasswordCode(request);
+
+        assertEquals(200, response.getStatusCode().value());
+        verify(gmailService).sendPasswordResetCode(
+                usuario.getEmail(), "123456", loginCodeService.expirationSeconds());
+        verify(gmailService, never()).sendLoginCode(anyString(), anyString(), org.mockito.ArgumentMatchers.anyLong());
+    }
 }

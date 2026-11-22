@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import Alert from "../componentes/aulaModalAlert";
 import { simuladosAlunoApi } from "../servicos/api";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 export default function SimuladosAlunoPagina() {
-  const { session, logout } = useAuth();
   const [simulados, setSimulados] = useState([]);
   const [realizados, setRealizados] = useState([]);
   const [aba, setAba] = useState("abertos");
@@ -100,17 +99,7 @@ export default function SimuladosAlunoPagina() {
 
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial"><span className="brand-mark">R</span><span><strong>ROBONET</strong><small>Aluno</small></span></a>
-        <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Dashboard</Link>
-          <Link className="navbar-link" to="/aulas-aluno">Aulas</Link>
-          <Link className="navbar-link navbar-link-active" to="/simulados-aluno" aria-current="page">Simulados</Link>
-          <Link className="navbar-link" to="/torneios">Torneios</Link>
-          <Link className="navbar-link" to="/meus-dados">Meus dados</Link>
-        </div>
-        <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <div className="content-card student-aulas-panel">
@@ -282,6 +271,7 @@ export default function SimuladosAlunoPagina() {
           </section>
         </div>
       )}
+      <RodapePadrao />
     </main>
   );
 }

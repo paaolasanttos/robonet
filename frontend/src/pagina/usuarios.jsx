@@ -4,8 +4,9 @@ import Loading from "../componentes/aulaModalCarregando";
 import SenhaRequisitos from "../componentes/senhaRequisitos";
 import { MENSAGEM_SENHA, senhaValida } from "../componentes/senhaRegras";
 import { termoApi, turmasApi, usuariosApi } from "../servicos/api";
-import { useAuth } from "../context/AuthContext";
 import TermoConteudo, { formatarDataTermo, useTermoAtual } from "../componentes/termoConteudo";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 const perfis = [
   { value: "aluno", label: "Aluno" },
@@ -39,7 +40,6 @@ function proximaVersao(versao) {
 }
 
 export default function UsuariosPagina() {
-  const { session, logout } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [cadastros, setCadastros] = useState([]);
@@ -461,24 +461,7 @@ export default function UsuariosPagina() {
 
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial">
-          <span className="brand-mark">R</span>
-          <span>
-            <strong>ROBONET</strong>
-          </span>
-        </a>
-        <div className="navbar-menu">
-          <a className="navbar-link" href="/home">Dashboard</a>
-          <a className="navbar-link" href="/aulas">Aulas</a>
-          <a className="navbar-link" href="/simulados">Simulados</a>
-          <a className="navbar-link" href="/torneios">Torneios</a>
-          <a className="navbar-link" href="/turmas">Turmas</a>
-          <a className="navbar-link navbar-link-active" href="/usuarios" aria-current="page">Usuários</a>
-          <a className="navbar-link" href="/auditoria">Auditoria</a>
-        </div>
-        <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <header className="page-header"><div><span className="eyebrow">ROBONET</span><h1>Administração de usuários</h1><p>Controle os perfis e o acesso à plataforma.</p></div></header>
@@ -817,6 +800,7 @@ export default function UsuariosPagina() {
           </section>
         </div>
       )}
+      <RodapePadrao />
     </main>
   );
 }

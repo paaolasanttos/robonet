@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import Alert from "../componentes/aulaModalAlert";
 import Loading from "../componentes/aulaModalCarregando";
 import { auditoriaApi } from "../servicos/api";
-import { useAuth } from "../context/AuthContext";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 const categorias = [
   { value: "", label: "Todas as categorias" },
@@ -53,7 +54,6 @@ function Paginacao({ pagina, total, aoMudar }) {
 }
 
 export default function AuditoriaPagina() {
-  const { session, logout } = useAuth();
   const [aba, setAba] = useState("acoes");
   const [logs, setLogs] = useState([]);
   const [alteracoes, setAlteracoes] = useState([]);
@@ -123,27 +123,9 @@ export default function AuditoriaPagina() {
     setPaginaAcoes(1);
     setPaginaAlteracoes(1);
   }
-  
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial">
-          <span className="brand-mark">R</span>
-          <span>
-            <strong>ROBONET</strong>
-          </span>
-        </a>
-        <div className="navbar-menu">
-          <a className="navbar-link" href="/home">Dashboard</a>
-          <a className="navbar-link" href="/aulas">Aulas</a>
-          <a className="navbar-link" href="/simulados">Simulados</a>
-          <a className="navbar-link" href="/torneios">Torneios</a>
-          <a className="navbar-link" href="/turmas">Turmas</a>
-          <a className="navbar-link" href="/usuarios">Usuários</a>
-          <a className="navbar-link navbar-link-active" href="/auditoria" aria-current="page">Auditoria</a>
-        </div>
-        <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <header className="page-header"><div><span className="eyebrow">ROBONET</span><h1>Logs de auditoria</h1><p>Rastreabilidade dos acessos, das operações e das alterações de dados realizadas no sistema.</p></div><button className="button button-secondary" onClick={loadLogs} disabled={loading}>Atualizar</button></header>
@@ -225,6 +207,7 @@ export default function AuditoriaPagina() {
           </div>
         </div>
       )}
+      <RodapePadrao />
     </main>
   );
 }

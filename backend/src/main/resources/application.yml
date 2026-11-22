@@ -52,5 +52,6 @@ gmail:
   client-id: ${GMAIL_CLIENT_ID:}
   client-secret: ${GMAIL_CLIENT_SECRET:}
   refresh-token: ${GMAIL_REFRESH_TOKEN:}
+  redirect-uri: ${GMAIL_REDIRECT_URI:http://localhost:4000/auth/gmail/oauth/callback}
   code-expiration-seconds: ${GMAIL_CODE_EXPIRATION_SECONDS:600}
   resend-cooldown-seconds: ${GMAIL_RESEND_COOLDOWN_SECONDS:60}

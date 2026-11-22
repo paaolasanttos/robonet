@@ -124,7 +124,7 @@ public class ExclusaoContaService {
 
         jdbcTemplate.queryForObject("SELECT set_config('app.usuario', ?, true)", String.class, analista);
         List<Long> alteracoes = jdbcTemplate.queryForList(
-                "SELECT idusuario FROM usuariossolicitacoes WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?)",
+                "SELECT idsolicitacaoalteracao FROM solicitacoesalteracoes WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?)",
                 Long.class, email, email);
         List<Long> cadastros = jdbcTemplate.queryForList(
                 "SELECT idsolicitacaocadastro FROM solicitacoescadastro WHERE LOWER(email) = LOWER(?)",
@@ -135,7 +135,7 @@ public class ExclusaoContaService {
         jdbcTemplate.update("DELETE FROM aulasaluno WHERE idusuario = ?", usuario.getId());
         jdbcTemplate.update("DELETE FROM simuladosrealizacoes WHERE idusuario = ?", usuario.getId());
         jdbcTemplate.update("DELETE FROM simuladosrealizados WHERE idusuario = ?", usuario.getId());
-        jdbcTemplate.update("DELETE FROM usuariossolicitacoes WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?)",
+        jdbcTemplate.update("DELETE FROM solicitacoesalteracoes WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?)",
                 email, email);
         jdbcTemplate.update("DELETE FROM logcodigoverificacao WHERE LOWER(email) = LOWER(?)", email);
 
@@ -147,7 +147,7 @@ public class ExclusaoContaService {
         usuarioRepository.saveAndFlush(usuario);
 
         apagarHistoricoAlteracoes("usuarios", List.of(usuario.getId()));
-        apagarHistoricoAlteracoes("usuariossolicitacoes", alteracoes);
+        apagarHistoricoAlteracoes("solicitacoesalteracoes", alteracoes);
         apagarHistoricoAlteracoes("solicitacoescadastro", cadastros);
 
         solicitacao.setEmail(email);

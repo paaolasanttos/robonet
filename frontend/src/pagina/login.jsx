@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../servicos/api";
 
@@ -12,7 +12,6 @@ function destinoAposLogin(usuario) {
 export default function LoginPagina() {
   const { session, login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
@@ -33,7 +32,7 @@ export default function LoginPagina() {
         if (data?.token) {
           login(data);
           const destino = destinoAposLogin(data?.usuario);
-          navigate(location.state?.from || destino, { replace: true });
+          navigate(destino, { replace: true });
           return;
         }
         setCodeRequested(true);
@@ -42,7 +41,7 @@ export default function LoginPagina() {
       const data = await authApi.verificarCodigo({ email, codigo });
       login(data);
       const destino = destinoAposLogin(data?.usuario);
-      navigate(location.state?.from || destino, { replace: true });
+      navigate(destino, { replace: true });
     } catch (err) {
       setError(err.message || "Não foi possível entrar.");
     } finally {

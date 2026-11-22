@@ -226,6 +226,10 @@ export const dashboardApi = {
   resumo: () => request("/api/dashboard"),
 };
 
+export const menuApi = {
+  listar: () => request("/api/menu"),
+};
+
 export const auditoriaApi = {
   listar: () => request("/api/auditoria"),
   listarAlteracoes: () => request("/api/auditoria/alteracoes"),
