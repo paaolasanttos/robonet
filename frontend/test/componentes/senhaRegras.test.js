@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MENSAGEM_SENHA, senhaValida } from "./senhaRegras.js";
+import { MENSAGEM_SENHA, senhaValida } from "../../src/componentes/senhaRegras.js";
 
 test("senhaValida aceita senha que atende todos os requisitos", () => {
   assert.equal(senhaValida("Senha@123"), true);

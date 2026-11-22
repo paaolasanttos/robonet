@@ -40,7 +40,7 @@ export default function RecuperarSenhaPagina() {
   }
 
   return (
-    <main className="login-shell">
+    <main className="login-shell login-page">
       <section className="login-panel">
         <div className="login-brand">
           <span className="brand-mark">R</span>
