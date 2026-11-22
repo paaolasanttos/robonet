@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import TorneioLista from "../componentes/torneioLista";
 import TorneioDetalhe from "../componentes/torneioDetalhe";
 import TorneioEquipes from "../componentes/torneioEquipes";
 import TorneioMinhaEquipe from "../componentes/torneioMinhaEquipe";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 export default function TorneiosPagina() {
-  const { session, logout } = useAuth();
+  const { session } = useAuth();
   const perfil = String(session?.usuario?.perfil || "").toLowerCase();
   const [aba, setAba] = useState("torneios");
   const [torneioId, setTorneioId] = useState(null);
@@ -19,33 +20,7 @@ export default function TorneiosPagina() {
 
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial">
-          <span className="brand-mark">R</span>
-          <span>
-            <strong>ROBONET</strong>
-          </span>
-        </a>
-
-        <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Dashboard</Link>
-          {perfil === "aluno" ? <Link className="navbar-link" to="/aulas-aluno">Aulas</Link> : <Link className="navbar-link" to="/aulas">Aulas</Link>}
-          {perfil === "aluno" ? <Link className="navbar-link" to="/simulados-aluno">Simulados</Link> : <Link className="navbar-link" to="/simulados">Simulados</Link>}
-          <Link className="navbar-link navbar-link-active" to="/torneios" aria-current="page">Torneios</Link>
-          {perfil === "admin" && <Link className="navbar-link" to="/turmas">Turmas</Link>}
-          {perfil === "admin" && <Link className="navbar-link" to="/usuarios">Usuários</Link>}
-          {perfil === "admin" && <Link className="navbar-link" to="/auditoria">Auditoria</Link>}
-          {perfil !== "admin" && <Link className="navbar-link" to="/meus-dados">Meus dados</Link>}
-        </div>
-
-        <div className="navbar-user">
-          <div className="user-copy">
-            <strong>{session.usuario.nome}</strong>
-            <span>{session.usuario.perfil}</span>
-          </div>
-          <button className="logout-button" onClick={logout}>Sair</button>
-        </div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <header className="page-header">
@@ -69,6 +44,7 @@ export default function TorneiosPagina() {
           <TorneioLista perfil={perfil} onAbrir={setTorneioId} />
         )}
       </section>
+      <RodapePadrao />
     </main>
   );
 }

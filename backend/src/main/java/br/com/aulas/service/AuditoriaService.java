@@ -13,6 +13,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -38,7 +39,7 @@ public class AuditoriaService {
             log.setDescricao(descricao);
             log.setIp(ipRequisicao());
             log.setSucesso(sucesso);
-            log.setDtRegistro(LocalDateTime.now());
+            log.setDtRegistro(LocalDateTime.now(ZoneOffset.UTC));
             logAuditoriaRepository.save(log);
         } catch (RuntimeException exception) {
             logger.error("Não foi possível gravar o log de auditoria da ação {}.", acao, exception);

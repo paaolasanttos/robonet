@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import Alert from "../componentes/aulaModalAlert";
 import ConfirmModal from "../componentes/aulaModalConfirmar";
 import Loading from "../componentes/aulaModalCarregando";
+import Paginacao, { REGISTROS_POR_PAGINA } from "../componentes/paginacao";
 import SimuladoModalForm from "../componentes/simuladoModalForm";
 import { aulasApi, simuladosApi } from "../servicos/api";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 export default function SimuladosPagina() {
-  const { session, logout } = useAuth();
   const [simulados, setSimulados] = useState([]);
   const [temas, setTemas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +16,7 @@ export default function SimuladosPagina() {
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [search, setSearch] = useState("");
+  const [pagina, setPagina] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [editingSimulado, setEditingSimulado] = useState(null);
   const [selectedSimulado, setSelectedSimulado] = useState(null);
@@ -45,6 +46,12 @@ export default function SimuladosPagina() {
     const termo = search.trim().toLowerCase();
     return termo ? simulados.filter((item) => `${item.titulo} ${item.tema}`.toLowerCase().includes(termo)) : simulados;
   }, [simulados, search]);
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / REGISTROS_POR_PAGINA));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const simuladosDaPagina = filtrados.slice(
+    (paginaAtual - 1) * REGISTROS_POR_PAGINA,
+    paginaAtual * REGISTROS_POR_PAGINA
+  );
 
   function abrirFormulario(simulado = null) {
     setEditingSimulado(simulado);
@@ -92,20 +99,7 @@ export default function SimuladosPagina() {
 
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial"><span className="brand-mark">R</span><span><strong>ROBONET</strong></span></a>
-        <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Dashboard</Link>
-          <Link className="navbar-link" to="/aulas">Aulas</Link>
-          <Link className="navbar-link navbar-link-active" to="/simulados" aria-current="page">Simulados</Link>
-          <Link className="navbar-link" to="/torneios">Torneios</Link>
-          {session.usuario.perfil === "admin" && <Link className="navbar-link" to="/turmas">Turmas</Link>}
-          {session.usuario.perfil === "admin" && <Link className="navbar-link" to="/usuarios">Usuários</Link>}
-          {session.usuario.perfil === "admin" && <Link className="navbar-link" to="/auditoria">Auditoria</Link>}
-          {session.usuario.perfil !== "admin" && <Link className="navbar-link" to="/meus-dados">Meus dados</Link>}
-        </div>
-        <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <header className="page-header">
@@ -118,7 +112,7 @@ export default function SimuladosPagina() {
           <div className="toolbar">
             <div className="search-wrapper">
               <label htmlFor="search-simulados">Pesquisar simulados</label>
-              <input id="search-simulados" type="search" placeholder="Digite título ou tema..." value={search} onChange={(event) => setSearch(event.target.value)} />
+              <input id="search-simulados" type="search" placeholder="Digite título ou tema..." value={search} onChange={(event) => { setSearch(event.target.value); setPagina(1); }} />
             </div>
             <span className="result-count">{filtrados.length} {filtrados.length === 1 ? "simulado" : "simulados"}</span>
           </div>
@@ -126,14 +120,14 @@ export default function SimuladosPagina() {
             <div className="empty-state"><h2>Nenhum simulado cadastrado.</h2>{!search && <button className="button button-secondary" onClick={() => abrirFormulario()}>Cadastrar primeiro simulado</button>}</div>
           ) : (
             <div className="table-container">
-              <table>
+              <table className="tabela-responsiva">
                 <thead><tr><th>Título</th><th>Tema</th><th>Perguntas</th><th className="actions-column">Ações</th></tr></thead>
-                <tbody>{filtrados.map((simulado) => (
+                <tbody>{simuladosDaPagina.map((simulado) => (
                   <tr key={simulado.id}>
-                    <td><strong>{simulado.titulo}</strong></td>
-                    <td>{simulado.tema}</td>
-                    <td>{simulado.perguntas.length}</td>
-                    <td><div className="row-actions">
+                    <td data-label="Título"><strong>{simulado.titulo}</strong></td>
+                    <td data-label="Tema">{simulado.tema}</td>
+                    <td data-label="Perguntas">{simulado.perguntas.length}</td>
+                    <td data-label="Ações"><div className="row-actions">
                       <button className="button button-small button-light" onClick={() => abrirFormulario(simulado)}>Editar</button>
                       <button className="button button-small button-danger" onClick={() => setSelectedSimulado(simulado)}>Excluir</button>
                     </div></td>
@@ -142,10 +136,12 @@ export default function SimuladosPagina() {
               </table>
             </div>
           )}
+          {!loading && filtrados.length > 0 && <Paginacao pagina={paginaAtual} total={filtrados.length} aoMudar={setPagina} />}
         </section>
       </section>
       {formOpen && <SimuladoModalForm simulado={editingSimulado} temas={temas} loading={actionLoading} error={error} onClearError={() => setError("")} onClose={() => !actionLoading && setFormOpen(false)} onSubmit={salvar} />}
       {selectedSimulado && <ConfirmModal title="Excluir simulado" message="Deseja realmente excluir este simulado e suas perguntas?" loading={actionLoading} onCancel={() => !actionLoading && setSelectedSimulado(null)} onConfirm={excluir} />}
+      <RodapePadrao />
     </main>
   );
 }

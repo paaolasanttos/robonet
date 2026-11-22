@@ -1,14 +1,18 @@
 package br.com.aulas.controller;
 
 import br.com.aulas.dto.AuthResponse;
+import br.com.aulas.dto.TermoAtualResponse;
+import br.com.aulas.dto.TermoPublicarRequest;
 import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.UsuarioRepository;
 import br.com.aulas.security.JwtService;
 import br.com.aulas.service.TermoService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,6 +27,23 @@ public class TermoController {
         this.termoService = termoService;
         this.usuarioRepository = usuarioRepository;
         this.jwtService = jwtService;
+    }
+
+    @GetMapping("/atual")
+    public ResponseEntity<TermoAtualResponse> atual() {
+        return ResponseEntity.ok(termoService.atual());
+    }
+
+    @GetMapping("/versoes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<TermoAtualResponse>> versoes() {
+        return ResponseEntity.ok(termoService.versoes());
+    }
+
+    @PostMapping("/publicar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TermoAtualResponse> publicar(@RequestBody TermoPublicarRequest request) {
+        return ResponseEntity.ok(termoService.publicar(request.versao(), request.conteudo()));
     }
 
     @PostMapping("/aceitar")

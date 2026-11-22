@@ -131,7 +131,7 @@ public class AuthController {
 
         try {
             String code = loginCodeService.issue(usuario.getEmail(), "password");
-            gmailService.sendLoginCode(usuario.getEmail(), code, loginCodeService.expirationSeconds());
+            gmailService.sendPasswordResetCode(usuario.getEmail(), code, loginCodeService.expirationSeconds());
             auditoriaService.registrar(usuario.getEmail(), "AUTENTICACAO", "CODIGO_SENHA_ENVIADO",
                     "Código de recuperação de senha enviado por e-mail", true);
             return ResponseEntity.ok(new CodeSentResponse("Se o e-mail estiver cadastrado, um código será enviado."));

@@ -5,16 +5,18 @@ import AulaViewModal from "../componentes/aulaModalVisualizar";
 import ConfirmModal from "../componentes/aulaModalConfirmar";
 import Alert from "../componentes/aulaModalAlert";
 import Loading from "../componentes/aulaModalCarregando";
-import { useAuth } from "../context/AuthContext";
+import Paginacao, { REGISTROS_POR_PAGINA } from "../componentes/paginacao";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 export default function AulasPagina() {
-  const { session, logout } = useAuth();
   const [aulas, setAulas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [search, setSearch] = useState("");
+  const [pagina, setPagina] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -57,6 +59,12 @@ export default function AulasPagina() {
         .includes(term)
     );
   }, [aulas, search]);
+  const totalPaginas = Math.max(1, Math.ceil(filteredAulas.length / REGISTROS_POR_PAGINA));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const aulasDaPagina = filteredAulas.slice(
+    (paginaAtual - 1) * REGISTROS_POR_PAGINA,
+    paginaAtual * REGISTROS_POR_PAGINA
+  );
 
   function openCreate() {
     setEditingAula(null);
@@ -130,33 +138,7 @@ export default function AulasPagina() {
 
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial">
-          <span className="brand-mark">R</span>
-          <span>
-            <strong>ROBONET</strong>
-          </span>
-        </a>
-
-        <div className="navbar-menu">
-          <a className="navbar-link" href="/home">Dashboard</a>
-          <a className="navbar-link navbar-link-active" href="/aulas" aria-current="page">Aulas</a>
-          <a className="navbar-link" href="/simulados">Simulados</a>
-          <a className="navbar-link" href="/torneios">Torneios</a>
-          {session.usuario.perfil === "admin" && <a className="navbar-link" href="/turmas">Turmas</a>}
-          {session.usuario.perfil === "admin" && <a className="navbar-link" href="/usuarios">Usuários</a>}
-          {session.usuario.perfil === "admin" && <a className="navbar-link" href="/auditoria">Auditoria</a>}
-          {session.usuario.perfil !== "admin" && <a className="navbar-link" href="/meus-dados">Meus dados</a>}
-        </div>
-
-        <div className="navbar-user">
-          <div className="user-copy">
-            <strong>{session.usuario.nome}</strong>
-            <span>{session.usuario.perfil}</span>
-          </div>
-          <button className="logout-button" onClick={logout}>Sair</button>
-        </div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <header className="page-header">
@@ -181,7 +163,7 @@ export default function AulasPagina() {
                 type="search"
                 placeholder="Digite título, tema, descrição..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => { setSearch(event.target.value); setPagina(1); }}
               />
             </div>
             <span className="result-count">
@@ -201,7 +183,7 @@ export default function AulasPagina() {
             </div>
           ) : (
             <div className="table-container">
-              <table>
+              <table className="tabela-responsiva">
                 <thead>
                   <tr>
                     <th>Título</th>
@@ -210,15 +192,15 @@ export default function AulasPagina() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAulas.map((aula) => (
+                  {aulasDaPagina.map((aula) => (
                     <tr key={aula.id}>
-                      <td>
+                      <td data-label="Título">
                         <div className="title-cell">
                           <strong>{aula.titulo}</strong>
                         </div>
                       </td>
-                      <td>{aula.tema || "—"}</td>
-                      <td>
+                      <td data-label="Tema">{aula.tema || "—"}</td>
+                      <td data-label="Ações">
                         <div className="row-actions">
                           <button className="button button-small button-light" onClick={() => openView(aula)}>
                             Visualizar
@@ -237,6 +219,7 @@ export default function AulasPagina() {
               </table>
             </div>
           )}
+          {!loading && filteredAulas.length > 0 && <Paginacao pagina={paginaAtual} total={filteredAulas.length} aoMudar={setPagina} />}
         </section>
       </section>
 
@@ -262,6 +245,7 @@ export default function AulasPagina() {
           onConfirm={handleDelete}
         />
       )}
+      <RodapePadrao />
     </main>
   );
 }

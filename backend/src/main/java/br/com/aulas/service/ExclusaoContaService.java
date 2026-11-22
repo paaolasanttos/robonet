@@ -1,10 +1,12 @@
 package br.com.aulas.service;
 
+import br.com.aulas.dto.ExclusaoAnaliseResponse;
 import br.com.aulas.exception.RegistroNaoEncontradoException;
 import br.com.aulas.model.SolicitacaoExclusao;
 import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.SolicitacaoExclusaoRepository;
 import br.com.aulas.repository.UsuarioRepository;
+import br.com.aulas.security.DadoSensivel;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,10 +18,11 @@ import java.util.List;
 @Service
 public class ExclusaoContaService {
 
-    public static final int PRAZO_DIAS = 15;
+    public static final int PRAZO_DIAS = 14;
     public static final String PENDENTE = "Pendente";
     public static final String CONCLUIDA = "Concluida";
     public static final String CANCELADA = "Cancelada";
+    public static final String SISTEMA = "Sistema LGPD";
 
     private final SolicitacaoExclusaoRepository solicitacaoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -59,7 +62,7 @@ public class ExclusaoContaService {
         solicitacaoRepository.save(solicitacao);
 
         auditoriaService.registrar("LGPD", "EXCLUSAO_SOLICITADA",
-                "Usuário " + usuario.getId() + " solicitou a exclusão da conta, prazo até " + solicitacao.getDtLimite().toLocalDate(), true);
+                "Usuário " + usuario.getId() + " solicitou a exclusão da conta, data limite de análise " + solicitacao.getDtLimite().toLocalDate(), true);
     }
 
     @Transactional
@@ -80,19 +83,59 @@ public class ExclusaoContaService {
         return solicitacaoRepository.findByStatusAndDtLimiteLessThanEqual(PENDENTE, LocalDateTime.now());
     }
 
+    @Transactional(readOnly = true)
+    public List<ExclusaoAnaliseResponse> listarParaAnalise() {
+        return jdbcTemplate.query(
+                "SELECT idsolicitacaoexclusao, idusuario, email, status, dtsolicitacao, dtlimite, dtconclusao, usranalise "
+                        + "FROM solicitacoesexclusao WHERE status <> ? "
+                        + "ORDER BY CASE WHEN status = ? THEN 0 ELSE 1 END, dtlimite, idsolicitacaoexclusao DESC",
+                (result, rowNumber) -> new ExclusaoAnaliseResponse(
+                        result.getLong("idsolicitacaoexclusao"),
+                        result.getLong("idusuario"),
+                        DadoSensivel.mascararEmail(result.getString("email")),
+                        result.getString("status"),
+                        result.getTimestamp("dtsolicitacao").toLocalDateTime(),
+                        result.getTimestamp("dtlimite").toLocalDateTime(),
+                        result.getTimestamp("dtconclusao") == null ? null : result.getTimestamp("dtconclusao").toLocalDateTime(),
+                        result.getString("usranalise")),
+                CANCELADA, PENDENTE
+        );
+    }
+
+    @Transactional
+    public void aprovar(Long id, String emailAnalista) {
+        SolicitacaoExclusao solicitacao = solicitacaoRepository.findById(id)
+                .orElseThrow(() -> new RegistroNaoEncontradoException("Solicitação de exclusão não encontrada."));
+        if (!PENDENTE.equals(solicitacao.getStatus())) {
+            throw new IllegalArgumentException("Esta solicitação de exclusão já foi analisada.");
+        }
+        concluir(solicitacao, emailAnalista);
+    }
+
     @Transactional
     public void concluir(SolicitacaoExclusao solicitacao) {
+        concluir(solicitacao, SISTEMA);
+    }
+
+    private void concluir(SolicitacaoExclusao solicitacao, String analista) {
         Usuario usuario = usuarioRepository.findById(solicitacao.getIdUsuario())
                 .orElseThrow(() -> new RegistroNaoEncontradoException("Usuário não encontrado."));
         String email = usuario.getEmail();
 
-        jdbcTemplate.queryForObject("SELECT set_config('app.usuario', ?, true)", String.class, "Sistema LGPD");
+        jdbcTemplate.queryForObject("SELECT set_config('app.usuario', ?, true)", String.class, analista);
+        List<Long> alteracoes = jdbcTemplate.queryForList(
+                "SELECT idsolicitacaoalteracao FROM solicitacoesalteracoes WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?)",
+                Long.class, email, email);
+        List<Long> cadastros = jdbcTemplate.queryForList(
+                "SELECT idsolicitacaocadastro FROM solicitacoescadastro WHERE LOWER(email) = LOWER(?)",
+                Long.class, email);
+        jdbcTemplate.update("DELETE FROM solicitacoescadastro WHERE LOWER(email) = LOWER(?)", email);
         jdbcTemplate.update("DELETE FROM usuariosturmas WHERE idusuario = ?", usuario.getId());
         jdbcTemplate.update("DELETE FROM equipesmembros WHERE idusuario = ?", usuario.getId());
         jdbcTemplate.update("DELETE FROM aulasaluno WHERE idusuario = ?", usuario.getId());
         jdbcTemplate.update("DELETE FROM simuladosrealizacoes WHERE idusuario = ?", usuario.getId());
         jdbcTemplate.update("DELETE FROM simuladosrealizados WHERE idusuario = ?", usuario.getId());
-        jdbcTemplate.update("DELETE FROM usuariossolicitacoes WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?)",
+        jdbcTemplate.update("DELETE FROM solicitacoesalteracoes WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?)",
                 email, email);
         jdbcTemplate.update("DELETE FROM logcodigoverificacao WHERE LOWER(email) = LOWER(?)", email);
 
@@ -101,14 +144,25 @@ public class ExclusaoContaService {
         usuario.setRa(null);
         usuario.setSenha(null);
         usuario.setAtivo(false);
-        usuarioRepository.save(usuario);
+        usuarioRepository.saveAndFlush(usuario);
+
+        apagarHistoricoAlteracoes("usuarios", List.of(usuario.getId()));
+        apagarHistoricoAlteracoes("solicitacoesalteracoes", alteracoes);
+        apagarHistoricoAlteracoes("solicitacoescadastro", cadastros);
 
         solicitacao.setEmail(email);
         solicitacao.setStatus(CONCLUIDA);
         solicitacao.setDtConclusao(LocalDateTime.now());
+        solicitacao.setUsrAnalise(analista);
         solicitacaoRepository.save(solicitacao);
 
         auditoriaService.registrar(email, "LGPD", "CONTA_ANONIMIZADA",
-                "Usuário " + usuario.getId() + " anonimizado; mantidos registros de auditoria, acessos, aceites do termo e a solicitação", true);
+                "Usuário " + usuario.getId() + " anonimizado (aprovado por " + analista + "); mantidos registros de auditoria, acessos, aceites do termo e a solicitação", true);
+    }
+
+    private void apagarHistoricoAlteracoes(String tabela, List<Long> ids) {
+        for (Long id : ids) {
+            jdbcTemplate.update("DELETE FROM logalteracoes WHERE tabela = ? AND idregistro = ?", tabela, id);
+        }
     }
 }

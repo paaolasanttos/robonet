@@ -6,6 +6,7 @@ import br.com.aulas.exception.RegistroNaoEncontradoException;
 import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.EquipeMembroRepository;
 import br.com.aulas.repository.UsuarioRepository;
+import br.com.aulas.security.DadoSensivel;
 import br.com.aulas.security.DatabaseUserContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -46,19 +47,50 @@ public class SolicitacaoAlteracaoService {
         this.auditoriaService = auditoriaService;
     }
 
+    private static final String SELECT_SQL =
+            "SELECT s.idsolicitacaoalteracao AS idusuario, s.email, s.nome, s.ra, s.perfil, s.turma, s.status, s.motivo, "
+                    + "s.dtregistro, s.dtanalise, u.nome AS nomeatual, u.ra AS raatual, "
+                    + "u.perfil AS perfilatual, COALESCE((SELECT string_agg(t.nome, ', ' ORDER BY t.nome) "
+                    + "FROM usuariosturmas ut JOIN turmas t ON t.idturma = ut.idturma "
+                    + "WHERE ut.idusuario = u.idusuario), '-') AS turmaatual "
+                    + "FROM solicitacoesalteracoes s LEFT JOIN usuarios u "
+                    + "ON LOWER(TRIM(u.email)) = LOWER(TRIM(s.email)) AND u.status = 'Ativo' ";
+
     @Transactional(readOnly = true)
     public List<SolicitacaoAlteracaoAnaliseResponse> listar() {
         return jdbcTemplate.query(
-                "SELECT s.idusuario, s.email, s.nome, s.ra, s.perfil, s.turma, s.status, s.motivo, "
-                        + "s.dtregistro, s.dtanalise, u.nome AS nomeatual, u.ra AS raatual, "
-                        + "u.perfil AS perfilatual, COALESCE((SELECT string_agg(t.nome, ', ' ORDER BY t.nome) "
-                        + "FROM usuariosturmas ut JOIN turmas t ON t.idturma = ut.idturma "
-                        + "WHERE ut.idusuario = u.idusuario), '-') AS turmaatual "
-                        + "FROM usuariossolicitacoes s LEFT JOIN usuarios u "
-                        + "ON LOWER(TRIM(u.email)) = LOWER(TRIM(s.email)) AND u.status = 'Ativo' "
+                SELECT_SQL
                         + "ORDER BY CASE WHEN " + STATUS_PENDENTE_SELECT_SQL + " THEN 0 ELSE 1 END, "
-                        + "s.dtregistro DESC, s.idusuario DESC",
-                (result, rowNumber) -> response(result)
+                        + "s.dtregistro DESC, s.idsolicitacaoalteracao DESC",
+                (result, rowNumber) -> resumo(result)
+        );
+    }
+
+    @Transactional
+    public SolicitacaoAlteracaoAnaliseResponse detalhar(Long id) {
+        List<SolicitacaoAlteracaoAnaliseResponse> encontradas = jdbcTemplate.query(
+                SELECT_SQL + "WHERE s.idsolicitacaoalteracao = ?",
+                (result, rowNumber) -> response(result),
+                id
+        );
+        if (encontradas.isEmpty()) {
+            throw new RegistroNaoEncontradoException("Solicitação não encontrada.");
+        }
+        auditoriaService.registrar("LGPD", "DADO_SENSIVEL_VISUALIZADO",
+                "Dados da solicitação de alteração " + id + " visualizados para análise", true);
+        return encontradas.get(0);
+    }
+
+    private SolicitacaoAlteracaoAnaliseResponse resumo(ResultSet result) throws SQLException {
+        return new SolicitacaoAlteracaoAnaliseResponse(
+                result.getLong("idusuario"),
+                DadoSensivel.mascararEmail(result.getString("email")),
+                null, null, null, null,
+                normalizarStatus(result.getString("status")),
+                result.getString("motivo"),
+                data(result, "dtregistro"),
+                data(result, "dtanalise"),
+                null, null, null, null
         );
     }
 
@@ -72,8 +104,8 @@ public class SolicitacaoAlteracaoService {
         aplicarAlteracoes(solicitacao, usuario);
         databaseUserContext.setCurrentUser();
         int atualizados = jdbcTemplate.update(
-                "UPDATE usuariossolicitacoes SET status = ?, motivo = NULL, dtanalise = CURRENT_TIMESTAMP, "
-                        + "usranalise = ? WHERE idusuario = ? AND " + STATUS_PENDENTE_SQL,
+                "UPDATE solicitacoesalteracoes SET status = ?, motivo = NULL, dtanalise = CURRENT_TIMESTAMP, "
+                        + "usranalise = ? WHERE idsolicitacaoalteracao = ? AND " + STATUS_PENDENTE_SQL,
                 DEFERIDO, emailAnalista, id
         );
         if (atualizados == 0) {
@@ -95,8 +127,8 @@ public class SolicitacaoAlteracaoService {
 
         Solicitacao solicitacao = buscarPendenteParaAtualizacao(id);
         int atualizados = jdbcTemplate.update(
-                "UPDATE usuariossolicitacoes SET status = ?, motivo = ?, dtanalise = CURRENT_TIMESTAMP, "
-                        + "usranalise = ? WHERE idusuario = ? AND " + STATUS_PENDENTE_SQL,
+                "UPDATE solicitacoesalteracoes SET status = ?, motivo = ?, dtanalise = CURRENT_TIMESTAMP, "
+                        + "usranalise = ? WHERE idsolicitacaoalteracao = ? AND " + STATUS_PENDENTE_SQL,
                 INDEFERIDO, motivoValidado, emailAnalista, id
         );
         if (atualizados == 0) {
@@ -162,8 +194,8 @@ public class SolicitacaoAlteracaoService {
 
     private Solicitacao buscarPendenteParaAtualizacao(Long id) {
         List<Solicitacao> solicitacoes = jdbcTemplate.query(
-                "SELECT idusuario, email, nome, ra, perfil, turma, status FROM usuariossolicitacoes "
-                        + "WHERE idusuario = ? FOR UPDATE",
+                "SELECT idsolicitacaoalteracao AS idusuario, email, nome, ra, perfil, turma, status "
+                        + "FROM solicitacoesalteracoes WHERE idsolicitacaoalteracao = ? FOR UPDATE",
                 (result, rowNumber) -> new Solicitacao(
                         result.getLong("idusuario"), result.getString("email"), result.getString("nome"),
                         result.getString("ra"), result.getString("perfil"), result.getString("turma"),

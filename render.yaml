@@ -32,8 +32,6 @@ services:
       - key: SECURITY_ADMIN_PASSWORD
         sync: false
 
-      - key: APP_TERMO_VERSAO
-        value: "0.3"
       - key: APP_EXCLUSAO_INTERVALO_MS
         value: "3600000"
 
@@ -46,4 +44,6 @@ services:
       - key: GMAIL_CLIENT_SECRET
         sync: false
       - key: GMAIL_REFRESH_TOKEN
+        sync: false
+      - key: GMAIL_REDIRECT_URI
         sync: false

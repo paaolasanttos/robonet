@@ -1,0 +1,51 @@
+--17/11/2026 Paola
+1. Importado o DB no Supabase.
+2. Importado o frontend no Versel.
+3. Importado o backend no Render.
+4. Validado o deploy do sistema.
+5. Adequada as variáveis de ambiente para funcionar no deploy.
+
+--19/11/2026 Bruno
+1. Ocultado o e-mail nas telas. Para visualizar a informação, o usuario deverá clicar no botão e com isso o log será armazenado.
+2. Adequações visuais na tela de Solicitações de Exclusão.
+3. Adequação no acesso do Administrador que ora não apresentava o menu da auditoria.
+4. Adequação no acesso do Administrador para ter a opção de cadastro do termo de uso e privacidade.
+5. Disponibilizado job para aprovar os pedidos de exclusão a partir de 14 dias sem análise.
+6. Validada responsividade do sistema no mobile
+7. Disponibilizada opção de "Não sou Cadastrado".
+
+--19/11/2026 Paola
+1. Reestruturada as pastas do "database" e as tabelas de uso.
+2. Disponibilizada a API do Google Calender para o usuario cadastrar o evento na sua agenda pessoal. O sistema não armazerá os dados pessoais do usuario.
+
+--20/11/2026 Paola
+1. Adicionada imagem de background na tela de login.
+2. Conferido os schemas das tabelas utlizadas no sistema.
+3. Melhorada a apresentação da tela de login e não sou cadastrado.
+4. Melhorada a apresentação da tela de auditoria e tratada a apresentação do e-mail.
+5. Melhorada a apresentação da tela de usuários.
+6. Criada a pasta docs para armazenar informações de diagramas e demais conteudos uteis do projeto.
+7. Melhorada a apresentação da tela de simulados já efetuados.
+
+--20/11/2026 Bruno
+1. Desenvolvido o slide da apresentação
+2. Validada a aplicação para identificar melhorias ou inconsistencias.
+
+--21/11/2026 Paola
+1. Finalização dos testes unitários utilizando 
+2. Validada a aplicação para identificar melhorias ou inconsistencias.
+
+--21/11/2026 Bruno
+1. Corrigido a falha de ocultação do e-mail
+2. Validada a aplicação para identificar melhorias ou inconsistencias.
+
+--22/11/2026 Paola
+1. Melhorada a apresentação da tela de cadastro de aulas.
+2. Melhorada a apresentação da tela de cadastro de simulados.
+3. Melhorada a apresentação da tela de cadastro de torneios.
+4. Renomeada a aba "Excluir Conta" para "Solicitar Exclusão" em Meus Dados.
+5. Renomeada a aba "Verificação Login" para "Ativar MFV" em Meus Dados.
+6. Melhorada a apresentação da tela de recuperar senha.
+7. Criado o menu e rodapé padrão para evitar erros de rota/acesso não permitido.
+8. Corrigida as credenciais do SMTP (Gmail API)
+9. Correção do horario salvo na auditoria e log

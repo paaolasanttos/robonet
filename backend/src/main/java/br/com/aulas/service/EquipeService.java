@@ -7,6 +7,7 @@ import br.com.aulas.dto.MinhaEquipeResponse;
 import br.com.aulas.dto.TurmaResponse;
 import br.com.aulas.exception.RegistroNaoEncontradoException;
 import br.com.aulas.model.Equipe;
+import br.com.aulas.model.Torneio;
 import br.com.aulas.model.TorneioEquipe;
 import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.EquipeMembroRepository;
@@ -68,8 +69,15 @@ public class EquipeService {
         }
 
         EquipeResponse equipe = montarRespostas(List.of(buscar(idEquipe))).get(0);
+        List<MinhaEquipeResponse.Torneio> torneios = torneioRepository.findAllById(
+                        torneioEquipeRepository.findByIdEquipe(idEquipe).stream().map(TorneioEquipe::getIdTorneio).toList())
+                .stream()
+                .sorted(Comparator.comparing(Torneio::getDtInicio))
+                .map(torneio -> new MinhaEquipeResponse.Torneio(torneio.getId(), torneio.getNome(), torneio.getLocal(),
+                        torneio.getDtInicio(), torneio.getDtFim(), torneio.getStatus()))
+                .toList();
         return new MinhaEquipeResponse(equipe.nome(), equipe.turma(),
-                equipe.membros().stream().map(EquipeResponse.Membro::nome).sorted().toList());
+                equipe.membros().stream().map(EquipeResponse.Membro::nome).sorted().toList(), torneios);
     }
 
     @Transactional(readOnly = true)

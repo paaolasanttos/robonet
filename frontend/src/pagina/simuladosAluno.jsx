@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import Alert from "../componentes/aulaModalAlert";
 import { simuladosAlunoApi } from "../servicos/api";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
 
 export default function SimuladosAlunoPagina() {
-  const { session, logout } = useAuth();
   const [simulados, setSimulados] = useState([]);
   const [realizados, setRealizados] = useState([]);
   const [aba, setAba] = useState("abertos");
@@ -13,6 +12,7 @@ export default function SimuladosAlunoPagina() {
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [selectedSimulado, setSelectedSimulado] = useState(null);
+  const [selectedRealizado, setSelectedRealizado] = useState(null);
   const [respostas, setRespostas] = useState({});
   const [resultado, setResultado] = useState(null);
   const [enviando, setEnviando] = useState(false);
@@ -99,17 +99,7 @@ export default function SimuladosAlunoPagina() {
 
   return (
     <main className="app-shell">
-      <nav className="navbar" aria-label="Navegação principal">
-        <a className="navbar-brand" href="/home" aria-label="ROBONET, página inicial"><span className="brand-mark">R</span><span><strong>ROBONET</strong><small>Aluno</small></span></a>
-        <div className="navbar-menu">
-          <Link className="navbar-link" to="/home">Dashboard</Link>
-          <Link className="navbar-link" to="/aulas-aluno">Aulas</Link>
-          <Link className="navbar-link navbar-link-active" to="/simulados-aluno" aria-current="page">Simulados</Link>
-          <Link className="navbar-link" to="/torneios">Torneios</Link>
-          <Link className="navbar-link" to="/meus-dados">Meus dados</Link>
-        </div>
-        <div className="navbar-user"><div className="user-copy"><strong>{session.usuario.nome}</strong><span>{session.usuario.perfil}</span></div><button className="logout-button" onClick={logout}>Sair</button></div>
-      </nav>
+      <MenuPadrao />
 
       <section className="page">
         <div className="content-card student-aulas-panel">
@@ -168,28 +158,22 @@ export default function SimuladosAlunoPagina() {
                   <article className="student-aula-card student-simulado-realizado-card" key={`${realizado.simuladoId}-${realizado.tentativa}`}>
                     <div className="student-aula-top"><span className="student-aula-tema">{realizado.tema || "Tema geral"}</span></div>
                     <h2>{realizado.titulo}</h2>
-                    <p className="student-simulado-tentativa">Tentativa {realizado.tentativa} · {new Date(realizado.dataRealizacao).toLocaleString("pt-BR")}</p>
                     <div className="simulado-result">
-                      <strong>{realizado.acertos}/{realizado.total} questões</strong>
+                      <strong>{realizado.acertos} de {realizado.total} acertos</strong>
                       <span>{Math.round(realizado.percentual)}% de aproveitamento</span>
                     </div>
-                    <ul className="student-simulado-perguntas">
-                      {realizado.perguntas.map((pergunta) => (
-                        <li key={pergunta.id}>
-                          <span>{pergunta.enunciado}</span>
-                          <strong className={pergunta.correta ? "student-simulado-correta" : "student-simulado-incorreta"}>
-                            {pergunta.correta ? "Acertou" : "Errou"}
-                          </strong>
-                        </li>
-                      ))}
-                    </ul>
-                    <button
-                      className="button button-secondary"
-                      onClick={() => refazer(realizado.simuladoId)}
-                      disabled={carregandoSimulado === realizado.simuladoId}
-                    >
-                      {carregandoSimulado === realizado.simuladoId ? "Carregando..." : "Refazer simulado"}
-                    </button>
+                    <div className="student-simulado-actions">
+                      <button className="button button-secondary" onClick={() => setSelectedRealizado(realizado)}>
+                        Visualizar conteúdo
+                      </button>
+                      <button
+                        className="button button-secondary"
+                        onClick={() => refazer(realizado.simuladoId)}
+                        disabled={carregandoSimulado === realizado.simuladoId}
+                      >
+                        {carregandoSimulado === realizado.simuladoId ? "Carregando..." : "Refazer simulado"}
+                      </button>
+                    </div>
                   </article>
                 ))}
               </div>}
@@ -240,6 +224,54 @@ export default function SimuladosAlunoPagina() {
           </section>
         </div>
       )}
+
+      {selectedRealizado && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedRealizado(null)}>
+          <section className="modal modal-student-simulado" role="dialog" aria-modal="true" aria-labelledby="student-simulado-review-title">
+            <div className="modal-header modal-header-compact">
+              <div><span className="eyebrow">{selectedRealizado.tema || "Tema geral"}</span><h2 id="student-simulado-review-title">{selectedRealizado.titulo}</h2></div>
+              <button className="icon-button" onClick={() => setSelectedRealizado(null)} aria-label="Fechar">×</button>
+            </div>
+            <div className="student-simulado-body">
+              <div className="simulado-result" role="status">
+                <strong>{selectedRealizado.acertos} de {selectedRealizado.total} acertos</strong>
+                <span>{Math.round(selectedRealizado.percentual)}% de aproveitamento</span>
+              </div>
+              {selectedRealizado.perguntas.map((pergunta, index) => (
+                <section className="student-simulado-review-question" key={pergunta.id}>
+                  <h3>{index + 1}. {pergunta.enunciado}</h3>
+                  <strong className={pergunta.correta ? "student-simulado-correta" : "student-simulado-incorreta"}>
+                    {pergunta.correta ? "Você acertou" : "Você errou"}
+                  </strong>
+                  <ul className="student-simulado-review-options">
+                    {pergunta.opcoes.map((opcao) => (
+                      <li
+                        className={`${opcao.correta ? "student-simulado-review-correct" : ""}${opcao.selecionada ? " student-simulado-review-selected" : ""}`}
+                        key={opcao.id}
+                      >
+                        <span>{opcao.texto}</span>
+                        <span className="student-simulado-review-label">
+                          {opcao.correta && opcao.selecionada
+                            ? "Resposta correta · sua resposta"
+                            : opcao.correta
+                              ? "Resposta correta"
+                              : opcao.selecionada
+                                ? "Sua resposta (incorreta)"
+                                : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+            <div className="modal-footer">
+              <button className="button button-secondary" type="button" onClick={() => setSelectedRealizado(null)}>Fechar</button>
+            </div>
+          </section>
+        </div>
+      )}
+      <RodapePadrao />
     </main>
   );
 }

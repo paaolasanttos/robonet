@@ -44,7 +44,7 @@ A versão proposta da RoboNet contempla as seguintes funcionalidades:
 * 🔒 Proteção de dados pessoais
 * 🛡️ Práticas de segurança da informação
 * 🗑️ Mecanismos de retenção e exclusão de dados quando aplicáveis
-* 📅 Integração com Google Calendar
+* 📅 Atalho para adicionar torneios ao Google Agenda
 * 📧 Envio de mensagens e notificações por e-mail
 
 ---
@@ -85,7 +85,7 @@ A aplicação segue uma arquitetura baseada no padrão **MVC (Model-View-Control
        ▼         ▼                 ▼
 ┌───────────┐ ┌──────────────┐ ┌─────────────┐
 │ PostgreSQL│ │ Google       │ │   Serviço   │
-│           │ │ Calendar API │ │  de E-mail  │
+│           │ │ Google Agenda│ │  de E-mail  │
 └───────────┘ └──────────────┘ └─────────────┘
 ```
 
@@ -120,7 +120,7 @@ Responsável pelo armazenamento estruturado das informações da plataforma, inc
 
 ### Integrações
 
-* **Google Calendar API**
+* **Link para criação de eventos no Google Agenda**
 * **Serviço de e-mail**
 
 As integrações têm como objetivo auxiliar no gerenciamento de eventos e no envio de mensagens e notificações aos usuários.
@@ -262,17 +262,12 @@ Sem Docker: `cd backend && mvn spring-boot:run` e `cd frontend && npm install &&
 
 ---
 
-## 📝 Alterações recentes
+## 📝 Testes unitários: Tecnologias aplicadas
 
-Alterações realizadas pela feature:
-
-- Adicionada opção para controlar o acesso por MFV.
-- Criada a tabela de solicitações de alteração dos dados pelo usuario o qual ficará sob analise do administrador aceitar ou não.
-- Criada opção para o Administrador analisar as solicitações de alteração dos dados dos usuários.
-- Alterada a application properties para application profile.
-- Ajustada a configuração das variáveis de ambiente.
-- Remodelada a visualização do "Meus Dados", "Aulas", "Simulados" para uma melhor experiência de usuário.
-- Desenvolvido o Dashboard
+- JUnit 5: criação e execução dos cenários.
+- Mockito: simulação de repositórios, serviços e dependências externas.
+- Spring Boot Test: dependências já disponibilizadas pelo spring-boot-starter-test.
+- Verificações de respostas HTTP, exceções, regras de validação e chamadas aos repositórios.
 
 ---
 
@@ -288,11 +283,15 @@ As configurações de conexão com o banco de dados devem ser definidas nas conf
 
 ### Google Calendar
 
-A integração com o Google Calendar tem como finalidade auxiliar no gerenciamento de eventos e compromissos relacionados aos torneios.
+Na agenda de “Minha Equipe”, o aluno pode abrir um formulário pré-preenchido no Google Agenda para cada torneio futuro. O aluno confirma e salva o evento na própria conta Google; a RoboNet não acessa essa conta nem salva o evento automaticamente.
 
 ### E-mail
 
-O serviço de e-mail poderá ser utilizado para o envio de mensagens e notificações aos usuários da plataforma.
+O Gmail envia códigos de login com MFV e de recuperação de senha. Para configurar o OAuth, defina `GMAIL_CLIENT_ID`,
+`GMAIL_CLIENT_SECRET`, `GMAIL_SENDER`, `GMAIL_ENABLED=true` e `GMAIL_REDIRECT_URI` (o endereço de callback deve
+também estar cadastrado no cliente OAuth do Google). Execute `GET /auth/gmail/oauth/authorize` com uma conta
+administradora e abra a URL retornada; o callback grava o refresh token no banco. Em instalações novas, aplique
+`database/09-gmail-oauth.sql` antes de iniciar o back-end.
 
 ---
 

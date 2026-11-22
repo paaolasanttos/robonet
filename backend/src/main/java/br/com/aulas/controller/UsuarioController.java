@@ -3,13 +3,21 @@ package br.com.aulas.controller;
 import br.com.aulas.dto.UsuarioDTO;
 import br.com.aulas.dto.IndeferirSolicitacaoRequest;
 import br.com.aulas.dto.SolicitacaoAlteracaoAnaliseResponse;
+import br.com.aulas.dto.UsuarioListaResponse;
+import br.com.aulas.dto.AnaliseCadastroRequest;
+import br.com.aulas.dto.ExclusaoAnaliseResponse;
+import br.com.aulas.dto.SolicitacaoCadastroResponse;
+import br.com.aulas.service.ExclusaoContaService;
+import br.com.aulas.service.SolicitacaoCadastroService;
 import br.com.aulas.model.Usuario;
 import br.com.aulas.repository.EquipeMembroRepository;
 import br.com.aulas.repository.UsuarioRepository;
+import br.com.aulas.security.DadoSensivel;
 import br.com.aulas.security.DatabaseUserContext;
 import br.com.aulas.security.SenhaPolitica;
 import br.com.aulas.service.AuditoriaService;
 import br.com.aulas.service.SolicitacaoAlteracaoService;
+import br.com.aulas.service.TermoService;
 import br.com.aulas.service.TurmaService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Locale;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -53,17 +62,82 @@ public class UsuarioController {
     @Autowired
     private SolicitacaoAlteracaoService solicitacaoAlteracaoService;
 
+    @Autowired
+    private TermoService termoService;
+
+    @Autowired
+    private SolicitacaoCadastroService solicitacaoCadastroService;
+
+    @Autowired
+    private ExclusaoContaService exclusaoContaService;
+
 
     @GetMapping
-    public List<Usuario> listar() {
+    public List<UsuarioListaResponse> listar() {
         List<Usuario> usuarios = repo.findAll();
         usuarios.forEach(this::carregarTurmas);
-        return usuarios;
+        Set<Long> aceitaram = termoService.usuariosQueAceitaramVersaoAtual();
+        return usuarios.stream()
+                .map(usuario -> new UsuarioListaResponse(usuario.getId(), usuario.getNome(),
+                        DadoSensivel.mascararEmailComPrefixo(usuario.getEmail()), usuario.getRa(), usuario.getPerfil(),
+                        usuario.getAtivo(), usuario.getAcessoMFV(), usuario.getCriadoEm(), usuario.getIdTurma(),
+                        usuario.getTurmas(),
+                        "admin".equals(usuario.getPerfil()) ? null : aceitaram.contains(usuario.getId())))
+                .toList();
+    }
+
+    @GetMapping("/{id}/email")
+    public ResponseEntity<?> visualizarEmail(@PathVariable Long id) {
+        Optional<Usuario> encontrado = repo.findById(id);
+        if (encontrado.isEmpty()) return ResponseEntity.notFound().build();
+        auditoriaService.registrar("LGPD", "DADO_SENSIVEL_VISUALIZADO",
+                "E-mail do usuário " + id + " visualizado pelo administrador", true);
+        return ResponseEntity.ok(Map.of("email", encontrado.get().getEmail()));
     }
 
     @GetMapping("/solicitacoes")
     public List<SolicitacaoAlteracaoAnaliseResponse> listarSolicitacoes() {
         return solicitacaoAlteracaoService.listar();
+    }
+
+    @GetMapping("/solicitacoes/{id}")
+    public SolicitacaoAlteracaoAnaliseResponse detalharSolicitacao(@PathVariable Long id) {
+        return solicitacaoAlteracaoService.detalhar(id);
+    }
+
+    @GetMapping("/cadastros")
+    public List<SolicitacaoCadastroResponse> listarCadastros() {
+        return solicitacaoCadastroService.listar();
+    }
+
+    @GetMapping("/cadastros/{id}")
+    public SolicitacaoCadastroResponse detalharCadastro(@PathVariable Long id) {
+        return solicitacaoCadastroService.detalhar(id);
+    }
+
+    @PostMapping("/cadastros/{id}/aprovar")
+    public ResponseEntity<Void> aprovarCadastro(@PathVariable Long id, Authentication authentication,
+                                                @RequestBody(required = false) AnaliseCadastroRequest request) {
+        solicitacaoCadastroService.aprovar(id, request == null ? null : request.turmaId(), authentication.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/cadastros/{id}/recusar")
+    public ResponseEntity<Void> recusarCadastro(@PathVariable Long id, Authentication authentication,
+                                                @RequestBody AnaliseCadastroRequest request) {
+        solicitacaoCadastroService.recusar(id, request.motivo(), authentication.getName());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/exclusoes")
+    public List<ExclusaoAnaliseResponse> listarExclusoes() {
+        return exclusaoContaService.listarParaAnalise();
+    }
+
+    @PostMapping("/exclusoes/{id}/aprovar")
+    public ResponseEntity<Void> aprovarExclusao(@PathVariable Long id, Authentication authentication) {
+        exclusaoContaService.aprovar(id, authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/solicitacoes/{id}/deferir")

@@ -8,6 +8,8 @@ public final class SenhaPolitica {
     }
 
     public static boolean valida(String senha) {
-        return senha != null && senha.matches(REGEX);
+        return senha != null
+                && !senha.matches(".*\\s.*")
+                && senha.matches(REGEX);
     }
 }

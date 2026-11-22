@@ -69,9 +69,9 @@ public class MeusDadosService {
 
     private List<SolicitacaoAlteracaoResponse> solicitacoesAlteracao(String email) {
         return jdbcTemplate.query(
-                "SELECT idusuario, nome, ra, perfil, turma, status, motivo, dtregistro "
-                        + "FROM usuariossolicitacoes WHERE LOWER(email) = LOWER(?) "
-                        + "ORDER BY dtregistro DESC, idusuario DESC",
+                "SELECT idsolicitacaoalteracao AS idusuario, nome, ra, perfil, turma, status, motivo, dtregistro "
+                        + "FROM solicitacoesalteracoes WHERE LOWER(email) = LOWER(?) "
+                        + "ORDER BY dtregistro DESC, idsolicitacaoalteracao DESC",
                 (result, rowNumber) -> new SolicitacaoAlteracaoResponse(
                         result.getLong("idusuario"),
                         result.getString("nome"),
@@ -131,8 +131,8 @@ public class MeusDadosService {
                         dataHora(result.getTimestamp("dttentativa"))),
                 usuario.getId());
         List<MeusDadosExportResponse.SolicitacaoAlteracao> alteracoes = jdbcTemplate.query(
-                "SELECT nome, email, ra, perfil, turma, status, motivo, dtregistro, dtanalise FROM usuariossolicitacoes "
-                        + "WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?) ORDER BY dtregistro, idusuario",
+                "SELECT nome, email, ra, perfil, turma, status, motivo, dtregistro, dtanalise FROM solicitacoesalteracoes "
+                        + "WHERE LOWER(email) = LOWER(?) OR LOWER(usrregistro) = LOWER(?) ORDER BY dtregistro, idsolicitacaoalteracao",
                 (result, rowNumber) -> new MeusDadosExportResponse.SolicitacaoAlteracao(
                         result.getString("nome"), result.getString("email"), result.getString("ra"),
                         result.getString("perfil"), result.getString("turma"),
@@ -184,8 +184,9 @@ public class MeusDadosService {
         }
 
         jdbcTemplate.update(
-                "INSERT INTO usuariossolicitacoes (nome, email, ra, perfil, turma, dtregistro, usrregistro) "
-                        + "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
+                "INSERT INTO solicitacoesalteracoes (idusuario, nome, email, ra, perfil, turma, dtregistro, usrregistro) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
+                usuario.getId(),
                 dados.nome().trim(),
                 usuario.getEmail(),
                 dados.ra() == null || dados.ra().isBlank() ? null : dados.ra().trim(),
