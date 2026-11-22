@@ -1,0 +1,277 @@
+import { useEffect, useState } from "react";
+import Alert from "../componentes/aulaModalAlert";
+import { simuladosAlunoApi } from "../servicos/api";
+import MenuPadrao from "../componentes/menuPadrao";
+import RodapePadrao from "../componentes/rodapePadrao";
+
+export default function SimuladosAlunoPagina() {
+  const [simulados, setSimulados] = useState([]);
+  const [realizados, setRealizados] = useState([]);
+  const [aba, setAba] = useState("abertos");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [selectedSimulado, setSelectedSimulado] = useState(null);
+  const [selectedRealizado, setSelectedRealizado] = useState(null);
+  const [respostas, setRespostas] = useState({});
+  const [resultado, setResultado] = useState(null);
+  const [enviando, setEnviando] = useState(false);
+  const [carregandoSimulado, setCarregandoSimulado] = useState(null);
+
+  useEffect(() => {
+    async function carregar() {
+      try {
+        const [abertos, concluidos] = await Promise.all([
+          simuladosAlunoApi.listar(),
+          simuladosAlunoApi.listarRealizados(),
+        ]);
+        setSimulados(Array.isArray(abertos) ? abertos : []);
+        setRealizados(Array.isArray(concluidos) ? concluidos : []);
+      } catch (err) {
+        setError(err.message || "Não foi possível carregar os simulados.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    carregar();
+  }, []);
+
+  useEffect(() => {
+    if (!feedback) return undefined;
+    const timer = setTimeout(() => setFeedback(""), 5000);
+    return () => clearTimeout(timer);
+  }, [feedback]);
+
+  function abrir(simulado) {
+    setSelectedSimulado(simulado);
+    setRespostas({});
+    setResultado(null);
+    setError("");
+  }
+
+  async function refazer(simuladoId) {
+    setCarregandoSimulado(simuladoId);
+    setError("");
+    try {
+      abrir(await simuladosAlunoApi.buscar(simuladoId));
+    } catch (err) {
+      setError(err.message || "Não foi possível abrir o simulado.");
+    } finally {
+      setCarregandoSimulado(null);
+    }
+  }
+
+  async function enviarRespostas(event) {
+    event.preventDefault();
+    if (!selectedSimulado || Object.keys(respostas).length !== selectedSimulado.perguntas.length) {
+      setError("Responda a todas as perguntas antes de enviar.");
+      return;
+    }
+
+    setEnviando(true);
+    setError("");
+    try {
+      const resultadoObtido = await simuladosAlunoApi.responder(
+        selectedSimulado.id,
+        Object.entries(respostas).map(([perguntaId, opcaoId]) => ({
+          perguntaId: Number(perguntaId),
+          opcaoId: Number(opcaoId),
+        }))
+      );
+      setResultado(resultadoObtido);
+      setFeedback(`Simulado concluído: ${resultadoObtido.acertos} de ${resultadoObtido.total} acertos na tentativa ${resultadoObtido.tentativa}.`);
+      try {
+        const [abertos, concluidos] = await Promise.all([
+          simuladosAlunoApi.listar(),
+          simuladosAlunoApi.listarRealizados(),
+        ]);
+        setSimulados(Array.isArray(abertos) ? abertos : []);
+        setRealizados(Array.isArray(concluidos) ? concluidos : []);
+      } catch (err) {
+        setError(`Suas respostas foram registradas, mas não foi possível atualizar o histórico: ${err.message || "tente novamente."}`);
+      }
+    } catch (err) {
+      setError(err.message || "Não foi possível enviar suas respostas.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <main className="app-shell">
+      <MenuPadrao />
+
+      <section className="page">
+        <div className="content-card student-aulas-panel">
+          <header className="page-header student-page-header">
+            <div><span className="eyebrow">Aluno</span><h1>Simulados</h1><p>Pratique os temas das aulas disponíveis para você.</p></div>
+          </header>
+          {feedback && <Alert type="success" message={feedback} onClose={() => setFeedback("")} />}
+          {error && !selectedSimulado && <Alert type="error" message={error} onClose={() => setError("")} />}
+
+          <div className="student-simulado-tabs" role="tablist" aria-label="Lista de simulados">
+            <button
+              className={`student-simulado-tab${aba === "abertos" ? " student-simulado-tab-active" : ""}`}
+              id="tab-simulados-abertos"
+              type="button"
+              role="tab"
+              aria-selected={aba === "abertos"}
+              aria-controls="painel-simulados-abertos"
+              onClick={() => setAba("abertos")}
+            >
+              Simulados em Aberto
+            </button>
+            <button
+              className={`student-simulado-tab${aba === "realizados" ? " student-simulado-tab-active" : ""}`}
+              id="tab-simulados-realizados"
+              type="button"
+              role="tab"
+              aria-selected={aba === "realizados"}
+              aria-controls="painel-simulados-realizados"
+              onClick={() => setAba("realizados")}
+            >
+              Simulados já realizados
+            </button>
+          </div>
+
+          {loading ? <div className="empty-state"><h2>Carregando simulados...</h2></div> : aba === "abertos" ? (
+            <div id="painel-simulados-abertos" role="tabpanel" aria-labelledby="tab-simulados-abertos">
+              {simulados.length === 0 ? (
+                <div className="empty-state"><h2>Nenhum simulado em aberto.</h2><p>Os simulados aparecem aqui quando são vinculados aos temas das suas aulas.</p></div>
+              ) : <div className="student-grid">
+                {simulados.map((simulado) => (
+                <article className="student-aula-card" key={simulado.id}>
+                  <div className="student-aula-top"><span className="student-aula-tema">{simulado.tema || "Tema geral"}</span></div>
+                  <h2>{simulado.titulo}</h2>
+                  <p>{simulado.perguntas.length} {simulado.perguntas.length === 1 ? "pergunta" : "perguntas"} de múltipla escolha.</p>
+                  <button className="button button-primary" onClick={() => abrir(simulado)}>Iniciar simulado</button>
+                </article>
+              ))}
+              </div>}
+            </div>
+          ) : (
+            <div id="painel-simulados-realizados" role="tabpanel" aria-labelledby="tab-simulados-realizados">
+              {realizados.length === 0 ? (
+                <div className="empty-state"><h2>Você ainda não realizou simulados.</h2><p>Quando concluir um simulado, seu resultado aparecerá aqui.</p></div>
+              ) : <div className="student-grid">
+                {realizados.map((realizado) => (
+                  <article className="student-aula-card student-simulado-realizado-card" key={`${realizado.simuladoId}-${realizado.tentativa}`}>
+                    <div className="student-aula-top"><span className="student-aula-tema">{realizado.tema || "Tema geral"}</span></div>
+                    <h2>{realizado.titulo}</h2>
+                    <div className="simulado-result">
+                      <strong>{realizado.acertos} de {realizado.total} acertos</strong>
+                      <span>{Math.round(realizado.percentual)}% de aproveitamento</span>
+                    </div>
+                    <div className="student-simulado-actions">
+                      <button className="button button-secondary" onClick={() => setSelectedRealizado(realizado)}>
+                        Visualizar conteúdo
+                      </button>
+                      <button
+                        className="button button-secondary"
+                        onClick={() => refazer(realizado.simuladoId)}
+                        disabled={carregandoSimulado === realizado.simuladoId}
+                      >
+                        {carregandoSimulado === realizado.simuladoId ? "Carregando..." : "Refazer simulado"}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {selectedSimulado && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && !enviando && setSelectedSimulado(null)}>
+          <section className="modal modal-student-simulado" role="dialog" aria-modal="true" aria-labelledby="student-simulado-title">
+            <div className="modal-header modal-header-compact">
+              <div><span className="eyebrow">{selectedSimulado.tema}</span><h2 id="student-simulado-title">{selectedSimulado.titulo}</h2></div>
+              <button className="icon-button" onClick={() => setSelectedSimulado(null)} disabled={enviando} aria-label="Fechar">×</button>
+            </div>
+            <form onSubmit={enviarRespostas}>
+              <div className="student-simulado-body">
+                {error && <Alert type="error" message={error} onClose={() => setError("")} />}
+                {resultado && (
+                  <div className="simulado-result" role="status">
+                    <strong>Resultado: {resultado.acertos} de {resultado.total} acertos</strong>
+                    <span>{Math.round(resultado.percentual)}% de aproveitamento</span>
+                  </div>
+                )}
+                {selectedSimulado.perguntas.map((pergunta, index) => (
+                  <fieldset className="student-simulado-question" key={pergunta.id} disabled={Boolean(resultado)}>
+                    <legend>{index + 1}. {pergunta.enunciado}</legend>
+                    {pergunta.opcoes.map((opcao) => (
+                      <label className="student-simulado-option" key={opcao.id}>
+                        <input
+                          type="radio"
+                          name={`resposta-${pergunta.id}`}
+                          value={opcao.id}
+                          checked={respostas[pergunta.id] === opcao.id}
+                          onChange={() => setRespostas((atuais) => ({ ...atuais, [pergunta.id]: opcao.id }))}
+                        />
+                        <span>{opcao.texto}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                ))}
+              </div>
+              <div className="modal-footer">
+                <button className="button button-secondary" type="button" onClick={() => setSelectedSimulado(null)} disabled={enviando}>Fechar</button>
+                {!resultado && <button className="button button-primary" type="submit" disabled={enviando}>{enviando ? "Enviando..." : "Enviar respostas"}</button>}
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {selectedRealizado && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedRealizado(null)}>
+          <section className="modal modal-student-simulado" role="dialog" aria-modal="true" aria-labelledby="student-simulado-review-title">
+            <div className="modal-header modal-header-compact">
+              <div><span className="eyebrow">{selectedRealizado.tema || "Tema geral"}</span><h2 id="student-simulado-review-title">{selectedRealizado.titulo}</h2></div>
+              <button className="icon-button" onClick={() => setSelectedRealizado(null)} aria-label="Fechar">×</button>
+            </div>
+            <div className="student-simulado-body">
+              <div className="simulado-result" role="status">
+                <strong>{selectedRealizado.acertos} de {selectedRealizado.total} acertos</strong>
+                <span>{Math.round(selectedRealizado.percentual)}% de aproveitamento</span>
+              </div>
+              {selectedRealizado.perguntas.map((pergunta, index) => (
+                <section className="student-simulado-review-question" key={pergunta.id}>
+                  <h3>{index + 1}. {pergunta.enunciado}</h3>
+                  <strong className={pergunta.correta ? "student-simulado-correta" : "student-simulado-incorreta"}>
+                    {pergunta.correta ? "Você acertou" : "Você errou"}
+                  </strong>
+                  <ul className="student-simulado-review-options">
+                    {pergunta.opcoes.map((opcao) => (
+                      <li
+                        className={`${opcao.correta ? "student-simulado-review-correct" : ""}${opcao.selecionada ? " student-simulado-review-selected" : ""}`}
+                        key={opcao.id}
+                      >
+                        <span>{opcao.texto}</span>
+                        <span className="student-simulado-review-label">
+                          {opcao.correta && opcao.selecionada
+                            ? "Resposta correta · sua resposta"
+                            : opcao.correta
+                              ? "Resposta correta"
+                              : opcao.selecionada
+                                ? "Sua resposta (incorreta)"
+                                : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+            <div className="modal-footer">
+              <button className="button button-secondary" type="button" onClick={() => setSelectedRealizado(null)}>Fechar</button>
+            </div>
+          </section>
+        </div>
+      )}
+      <RodapePadrao />
+    </main>
+  );
+}

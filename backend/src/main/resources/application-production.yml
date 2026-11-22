@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    show-sql: false
+
+server:
+  forward-headers-strategy: native
+
+app:
+  cors:
+    origins: ${APP_CORS_ORIGINS}

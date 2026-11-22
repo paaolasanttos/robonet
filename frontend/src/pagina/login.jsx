@@ -1,0 +1,106 @@
+import { useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { authApi } from "../servicos/api";
+
+function destinoAposLogin(usuario) {
+  if (!usuario) return "/login";
+  if (String(usuario.perfil || "").toLowerCase() === "admin") return "/home";
+  return usuario.termoAceito ? "/home" : "/termo";
+}
+
+export default function LoginPagina() {
+  const { session, login } = useAuth();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [codigo, setCodigo] = useState("");
+  const [codeRequested, setCodeRequested] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  if (session?.token) return <Navigate to={destinoAposLogin(session.usuario)} replace />;
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      if (!codeRequested) {
+        const data = await authApi.solicitarCodigo({ email, senha });
+        if (data?.token) {
+          login(data);
+          const destino = destinoAposLogin(data?.usuario);
+          navigate(destino, { replace: true });
+          return;
+        }
+        setCodeRequested(true);
+        return;
+      }
+      const data = await authApi.verificarCodigo({ email, codigo });
+      login(data);
+      const destino = destinoAposLogin(data?.usuario);
+      navigate(destino, { replace: true });
+    } catch (err) {
+      setError(err.message || "Não foi possível entrar.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="login-shell login-page">
+      <section className="login-panel">
+        <div className="login-brand">
+          <span className="brand-mark">R</span>
+          <div>
+            <strong>ROBONET</strong>
+          </div>
+        </div>
+        <div className="login-heading">
+          <span className="eyebrow">Acesso seguro</span>
+          <h1>{codeRequested ? "Confirme seu acesso" : "Entrar na plataforma"}</h1>
+          <p>{codeRequested ? `Informe o código enviado para ${email}.` : ""}</p>
+        </div>
+        {error && <div className="login-error" role="alert">{error}</div>}
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-field">
+            <label htmlFor="login-email">E-mail</label>
+            <input id="login-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required />
+          </div>
+          {!codeRequested && 
+            <div className="form-field">
+              <label htmlFor="login-password">Senha</label>
+              <div className="login-password-field">
+                <input id="login-password" type={mostrarSenha ? "text" : "password"} value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required />
+                <button className="login-password-toggle" type="button" onClick={() => setMostrarSenha((mostrar) => !mostrar)} aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"} aria-pressed={mostrarSenha}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                    <circle cx="12" cy="12" r="3" />
+                    {!mostrarSenha && <path d="m3 3 18 18" />}
+                  </svg>
+                </button>
+              </div>
+            </div>
+          }
+          {codeRequested && 
+            <div className="form-field">
+              <label htmlFor="login-code">Código de acesso</label>
+              <input id="login-code" inputMode="numeric" pattern="[0-9]{6}" maxLength="6" value={codigo} onChange={(event) => setCodigo(event.target.value.replace(/\D/g, ""))} autoComplete="one-time-code" placeholder="000000" required />
+            </div>
+          }
+          <button className="button button-primary" type="submit" disabled={loading}>{loading ? (codeRequested ? "Validando..." : "Enviando código...") : (codeRequested ? "Validar código" : "Acessar")}</button>
+          {codeRequested && <button className="button button-secondary recovery-button" type="button" onClick={() => { setCodeRequested(false); setCodigo(""); setError(""); }}>Usar outro e-mail</button>}
+        </form>
+        {!codeRequested && 
+          <div className="login-options" aria-label="Opções de acesso">
+            <Link className="button button-primary login-option-button" to="/recuperar-senha">Esqueci minha senha</Link>
+            <Link className="button button-primary login-option-button" to="/solicitar-cadastro">Não sou cadastrado</Link>
+            <Link className="button button-primary login-option-button" to="/politicas">Políticas de uso</Link>
+          </div>
+        }
+      </section>
+    </main>
+  );
+}
