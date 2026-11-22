@@ -26,3 +26,6 @@
 5. Melhorada a apresentação da tela de usuários.
 6. Criada a pasta docs para armazenar informações de diagramas e demais conteudos uteis do projeto.
 7. Melhorada a apresentação da tela de simulados já efetuados.
+
+--21/11/2026 Paola
+1. Finalização dos testes unitários utilizando 

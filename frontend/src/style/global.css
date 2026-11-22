@@ -354,6 +354,82 @@ tbody tr:hover {
   gap: 7px;
 }
 
+.tabela-usuarios th,
+.tabela-usuarios td {
+  padding: 14px 12px;
+}
+
+.tabela-usuarios .actions-column {
+  min-width: 0;
+}
+
+.tabela-usuarios .row-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.email-mascarado {
+  display: inline-block;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+@media (max-width: 1000px) {
+  .tabela-usuarios thead {
+    display: none;
+  }
+
+  .tabela-usuarios,
+  .tabela-usuarios tbody,
+  .tabela-usuarios tr {
+    display: block;
+    width: 100%;
+  }
+
+  .tabela-usuarios tr {
+    padding: 10px 14px;
+    border-bottom: 1px solid #edf0f4;
+  }
+
+  .tabela-usuarios th,
+  .tabela-usuarios td {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(96px, 30%) 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .tabela-usuarios td::before {
+    content: attr(data-label);
+    color: #697386;
+    font-size: .74rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .tabela-usuarios .row-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .tabela-usuarios .status-pill {
+    justify-self: start;
+  }
+
+  .email-mascarado {
+    max-width: 100%;
+  }
+}
+
 .button {
   min-height: 40px;
   border: 0;
@@ -2760,7 +2836,6 @@ tbody tr:hover {
     justify-content: flex-start;
     flex-wrap: wrap;
   }
-
   .tabela-responsiva .auditoria-data {
     white-space: normal;
   }

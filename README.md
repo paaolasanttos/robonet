@@ -262,17 +262,12 @@ Sem Docker: `cd backend && mvn spring-boot:run` e `cd frontend && npm install &&
 
 ---
 
-## 📝 Alterações recentes
+## 📝 Testes unitários: Tecnologias aplicadas
 
-Alterações realizadas pela feature:
-
-- Adicionada opção para controlar o acesso por MFV.
-- Criada a tabela de solicitações de alteração dos dados pelo usuario o qual ficará sob analise do administrador aceitar ou não.
-- Criada opção para o Administrador analisar as solicitações de alteração dos dados dos usuários.
-- Alterada a application properties para application profile.
-- Ajustada a configuração das variáveis de ambiente.
-- Remodelada a visualização do "Meus Dados", "Aulas", "Simulados" para uma melhor experiência de usuário.
-- Desenvolvido o Dashboard
+- JUnit 5: criação e execução dos cenários.
+- Mockito: simulação de repositórios, serviços e dependências externas.
+- Spring Boot Test: dependências já disponibilizadas pelo spring-boot-starter-test.
+- Verificações de respostas HTTP, exceções, regras de validação e chamadas aos repositórios.
 
 ---
 
