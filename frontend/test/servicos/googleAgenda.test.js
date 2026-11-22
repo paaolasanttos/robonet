@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { aindaVaiAcontecer, hoje, linkGoogleAgenda } from "./googleAgenda.js";
+import { aindaVaiAcontecer, hoje, linkGoogleAgenda } from "../../src/servicos/googleAgenda.js";
 
 function deslocarDia(data, quantidade) {
   const resultado = new Date(`${data}T00:00:00Z`);

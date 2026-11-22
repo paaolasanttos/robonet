@@ -29,6 +29,8 @@ class GmailOAuthServiceTest {
 
         when(flow.newAuthorizationUrl()).thenReturn(authorizationUrl);
         when(authorizationUrl.setRedirectUri(anyString())).thenReturn(authorizationUrl);
+        when(authorizationUrl.setResponseTypes(org.mockito.ArgumentMatchers.anyCollection()))
+                .thenReturn(authorizationUrl);
         when(authorizationUrl.setState(anyString())).thenReturn(authorizationUrl);
         when(authorizationUrl.set("prompt", "consent")).thenReturn(authorizationUrl);
         when(authorizationUrl.build()).thenReturn("https://accounts.google.com/authorize");
@@ -38,6 +40,7 @@ class GmailOAuthServiceTest {
         when(tokenResponse.getRefreshToken()).thenReturn("refresh-token");
 
         service.createAuthorizationUrl();
+        verify(authorizationUrl).setResponseTypes(java.util.List.of("code"));
         org.mockito.ArgumentCaptor<String> stateCaptor = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(authorizationUrl).setState(stateCaptor.capture());
         service.completeAuthorization("auth-code", stateCaptor.getValue());

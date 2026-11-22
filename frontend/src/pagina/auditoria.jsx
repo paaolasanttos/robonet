@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import Alert from "../componentes/aulaModalAlert";
 import Loading from "../componentes/aulaModalCarregando";
 import { auditoriaApi } from "../servicos/api";
+import { formatarDataHoraAuditoria } from "../servicos/dataHoraAuditoria";
 import MenuPadrao from "../componentes/menuPadrao";
 import RodapePadrao from "../componentes/rodapePadrao";
+import { REGISTROS_POR_PAGINA } from "../componentes/paginacao";
 
 const categorias = [
   { value: "", label: "Todas as categorias" },
@@ -19,11 +21,36 @@ const categorias = [
 ];
 
 const operacoes = { INSERT: "Inclusão", UPDATE: "Alteração", DELETE: "Exclusão" };
-const registrosPorPagina = 10;
-
 function formatarData(data) {
   if (!data) return "-";
-  return new Date(data).toLocaleString("pt-BR");
+  return formatarDataHoraAuditoria(data);
+}
+
+function valorOuTraco(valor) {
+  return valor == null || valor === "" ? "-" : valor;
+}
+
+function mascararEmail(email) {
+  if (!email) return "-";
+  return `${email.slice(0, 5)}${"*".repeat(Math.max(0, email.length - 5))}`;
+}
+
+function Paginacao({ pagina, total, aoMudar }) {
+  const totalPaginas = Math.max(1, Math.ceil(total / REGISTROS_POR_PAGINA));
+
+  if (total === 0) return null;
+
+  return (
+    <div className="auditoria-paginacao" aria-label="Paginação dos registros">
+      <button type="button" className="button button-secondary button-small" onClick={() => aoMudar(pagina - 1)} disabled={pagina <= 1}>
+        Anterior
+      </button>
+      <span>Página {pagina} de {totalPaginas}</span>
+      <button type="button" className="button button-secondary button-small" onClick={() => aoMudar(pagina + 1)} disabled={pagina >= totalPaginas}>
+        Próxima
+      </button>
+    </div>
+  );
 }
 
 function valorOuTraco(valor) {
@@ -107,15 +134,15 @@ export default function AuditoriaPagina() {
   }, [alteracoes, search, tabela]);
 
   const total = aba === "acoes" ? filteredLogs.length : filteredAlteracoes.length;
-  const logsPaginados = filteredLogs.slice((paginaAcoes - 1) * registrosPorPagina, paginaAcoes * registrosPorPagina);
-  const alteracoesPaginadas = filteredAlteracoes.slice((paginaAlteracoes - 1) * registrosPorPagina, paginaAlteracoes * registrosPorPagina);
+  const logsPaginados = filteredLogs.slice((paginaAcoes - 1) * REGISTROS_POR_PAGINA, paginaAcoes * REGISTROS_POR_PAGINA);
+  const alteracoesPaginadas = filteredAlteracoes.slice((paginaAlteracoes - 1) * REGISTROS_POR_PAGINA, paginaAlteracoes * REGISTROS_POR_PAGINA);
 
   useEffect(() => {
-    setPaginaAcoes((pagina) => Math.min(pagina, Math.max(1, Math.ceil(filteredLogs.length / registrosPorPagina))));
+    setPaginaAcoes((pagina) => Math.min(pagina, Math.max(1, Math.ceil(filteredLogs.length / REGISTROS_POR_PAGINA))));
   }, [filteredLogs.length]);
 
   useEffect(() => {
-    setPaginaAlteracoes((pagina) => Math.min(pagina, Math.max(1, Math.ceil(filteredAlteracoes.length / registrosPorPagina))));
+    setPaginaAlteracoes((pagina) => Math.min(pagina, Math.max(1, Math.ceil(filteredAlteracoes.length / REGISTROS_POR_PAGINA))));
   }, [filteredAlteracoes.length]);
 
   function pesquisar(event) {

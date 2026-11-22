@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Alert from "./aulaModalAlert";
 import Loading from "./aulaModalCarregando";
+import Paginacao, { REGISTROS_POR_PAGINA } from "./paginacao";
 import { equipesApi, turmasApi } from "../servicos/api";
 
 const MAXIMO_MEMBROS = 4;
@@ -13,6 +14,8 @@ export default function TorneioEquipes({ perfil }) {
   const [alunos, setAlunos] = useState([]);
   const [form, setForm] = useState(formularioInicial);
   const [editingId, setEditingId] = useState(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [pagina, setPagina] = useState(1);
   const [search, setSearch] = useState("");
   const [buscaAluno, setBuscaAluno] = useState("");
   const [loading, setLoading] = useState(true);
@@ -55,6 +58,13 @@ export default function TorneioEquipes({ perfil }) {
         .filter(Boolean).join(" ").toLowerCase().includes(term)
     );
   }, [equipes, search]);
+
+  const totalPaginas = Math.max(1, Math.ceil(filteredEquipes.length / REGISTROS_POR_PAGINA));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const equipesDaPagina = filteredEquipes.slice(
+    (paginaAtual - 1) * REGISTROS_POR_PAGINA,
+    paginaAtual * REGISTROS_POR_PAGINA
+  );
 
   const alunosFiltrados = useMemo(() => {
     const term = buscaAluno.trim().toLowerCase();
@@ -102,11 +112,18 @@ export default function TorneioEquipes({ perfil }) {
     return equipes.find((equipe) => equipe.id === idEquipe)?.nome || "outra equipe";
   }
 
-  function cancelEditing() {
+  function limparFormulario() {
     setEditingId(null);
     setForm(formularioInicial);
     setAlunos([]);
     setBuscaAluno("");
+    setFormOpen(false);
+  }
+
+  function abrirCadastro() {
+    limparFormulario();
+    setError("");
+    setFormOpen(true);
   }
 
   function startEditing(equipe) {
@@ -114,7 +131,7 @@ export default function TorneioEquipes({ perfil }) {
     setForm({ nome: equipe.nome, turmaId: String(equipe.turmaId), membros: equipe.membros.map((membro) => membro.id) });
     carregarAlunos(equipe.turmaId);
     setError("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setFormOpen(true);
   }
 
   async function handleSubmit(event) {
@@ -141,7 +158,7 @@ export default function TorneioEquipes({ perfil }) {
         setEquipes((current) => [...current, equipe].sort((a, b) => a.nome.localeCompare(b.nome)));
         setFeedback("Equipe criada com sucesso.");
       }
-      cancelEditing();
+      limparFormulario();
     } catch (err) {
       setError(err.message || "Não foi possível salvar a equipe.");
     } finally {
@@ -155,7 +172,6 @@ export default function TorneioEquipes({ perfil }) {
     try {
       await equipesApi.excluir(equipe.id);
       setEquipes((current) => current.filter((item) => item.id !== equipe.id));
-      if (editingId === equipe.id) cancelEditing();
       setFeedback("Equipe excluída com sucesso.");
     } catch (err) {
       setError(err.message || "Não foi possível excluir a equipe.");
@@ -165,71 +181,20 @@ export default function TorneioEquipes({ perfil }) {
   return (
     <>
       {feedback && <Alert type="success" message={feedback} onClose={() => setFeedback("")} />}
-      {error && <Alert type="error" message={error} onClose={() => setError("")} />}
-
-      {podeEditar && (
-        <section className="content-card user-create-card">
-          <div className="section-heading"><span className="eyebrow">Equipes</span><h2>{editingId ? "Editar equipe" : "Nova equipe"}</h2></div>
-
-          {turmas.length === 0 ? (
-            <p className="torneio-ajuda">{perfil === "admin" ? "Nenhuma turma cadastrada. Cadastre as turmas na tela de Turmas." : "Você ainda não está vinculado a nenhuma turma. Peça ao administrador para vincular suas turmas na tela de Usuários."}</p>
-          ) : (
-            <form className="equipe-form" onSubmit={handleSubmit}>
-              <div className="form-field">
-                <label htmlFor="equipe-nome">Nome da equipe *</label>
-                <input id="equipe-nome" value={form.nome} onChange={updateNome} placeholder="Ex.: Robôs do Futuro" maxLength="120" disabled={saving} />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="equipe-turma">Turma *</label>
-                <select id="equipe-turma" value={form.turmaId} onChange={updateTurma} disabled={saving}>
-                  <option value="">Selecione a turma</option>
-                  {turmas.map((turma) => <option key={turma.id} value={turma.id}>{turma.nome}</option>)}
-                </select>
-              </div>
-
-              <div className="form-field equipe-busca">
-                <label htmlFor="equipe-busca-aluno">Pesquisar aluno</label>
-                <input id="equipe-busca-aluno" type="search" value={buscaAluno} onChange={(event) => setBuscaAluno(event.target.value)} placeholder="Nome ou RA do aluno" disabled={saving || !form.turmaId} />
-              </div>
-
-              <fieldset className="equipe-alunos" disabled={saving}>
-                <legend>Integrantes ({form.membros.length}/{MAXIMO_MEMBROS})</legend>
-                {!form.turmaId ? <span className="turmas-vazio">Selecione a turma para ver os alunos.</span>
-                  : alunos.length === 0 ? <span className="turmas-vazio">Nenhum aluno ativo nesta turma.</span>
-                  : alunosFiltrados.length === 0 ? <span className="turmas-vazio">Nenhum aluno encontrado com esse nome ou RA.</span>
-                  : alunosFiltrados.map((aluno) => {
-                    const emOutraEquipe = aluno.equipeId && aluno.equipeId !== editingId;
-                    const selecionado = form.membros.includes(aluno.id);
-                    return (
-                      <label key={aluno.id} className="checkbox-item">
-                        <input type="checkbox" checked={selecionado} disabled={emOutraEquipe || (!selecionado && form.membros.length >= MAXIMO_MEMBROS)} onChange={() => toggleMembro(aluno.id)} />
-                        {aluno.nome}{aluno.ra && <small> - RA {aluno.ra}</small>}{emOutraEquipe && <small> (já está na equipe {nomeEquipe(aluno.equipeId)})</small>}
-                      </label>
-                    );
-                  })}
-              </fieldset>
-
-              <div className="user-form-actions">
-                <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar equipe"}</button>
-                {editingId && <button className="button button-light" type="button" onClick={cancelEditing} disabled={saving}>Cancelar edição</button>}
-              </div>
-            </form>
-          )}
-        </section>
-      )}
+      {error && !formOpen && <Alert type="error" message={error} onClose={() => setError("")} />}
 
       <section className="content-card">
         <div className="toolbar">
           <div className="search-wrapper">
             <label htmlFor="search-equipes">Pesquisar equipes</label>
-            <input id="search-equipes" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Equipe, turma ou integrante..." />
+            <input id="search-equipes" type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPagina(1); }} placeholder="Equipe, turma ou integrante..." />
           </div>
           <span className="result-count">{filteredEquipes.length} {filteredEquipes.length === 1 ? "equipe" : "equipes"}</span>
+          {podeEditar && <button className="button button-primary" type="button" onClick={abrirCadastro}>+ Nova Equipe</button>}
         </div>
 
         {loading ? <Loading text="Carregando equipes..." /> : filteredEquipes.length === 0 ? (
-          <div className="empty-state"><h2>Nenhuma equipe encontrada.</h2><p>{search ? "Tente alterar os termos da pesquisa." : podeEditar ? "Cadastre a primeira equipe acima." : "Ainda não há equipes cadastradas."}</p></div>
+          <div className="empty-state"><h2>Nenhuma equipe encontrada.</h2><p>{search ? "Tente alterar os termos da pesquisa." : podeEditar ? "Cadastre a primeira equipe pelo botão Nova Equipe." : "Ainda não há equipes cadastradas."}</p></div>
         ) : (
           <div className="table-container">
             <table className="tabela-responsiva">
@@ -237,7 +202,7 @@ export default function TorneioEquipes({ perfil }) {
                 <tr><th>Equipe</th><th>Turma</th><th>Integrantes</th><th>Situação</th>{podeEditar && <th className="actions-column">Ações</th>}</tr>
               </thead>
               <tbody>
-                {filteredEquipes.map((equipe) => (
+                {equipesDaPagina.map((equipe) => (
                   <tr key={equipe.id}>
                     <td data-label="Equipe"><strong>{equipe.nome}</strong></td>
                     <td data-label="Turma">{equipe.turma || "-"}</td>
@@ -257,7 +222,67 @@ export default function TorneioEquipes({ perfil }) {
             </table>
           </div>
         )}
+        {!loading && filteredEquipes.length > 0 && <Paginacao pagina={paginaAtual} total={filteredEquipes.length} aoMudar={setPagina} />}
       </section>
+
+      {formOpen && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && !saving && limparFormulario()}>
+          <section className="modal" role="dialog" aria-modal="true" aria-labelledby="equipe-form-titulo">
+            <div className="modal-header">
+              <div><span className="eyebrow">{editingId ? "Edição" : "Cadastro"}</span><h2 id="equipe-form-titulo">{editingId ? "Editar equipe" : "Nova Equipe"}</h2></div>
+              <button type="button" className="icon-button" onClick={limparFormulario} disabled={saving} aria-label="Fechar">×</button>
+            </div>
+
+            {error && <Alert type="error" message={error} onClose={() => setError("")} />}
+
+            {turmas.length === 0 ? (
+              <div className="modal-body"><p className="torneio-ajuda">{perfil === "admin" ? "Nenhuma turma cadastrada. Cadastre as turmas na tela de Turmas." : "Você ainda não está vinculado a nenhuma turma. Peça ao administrador para vincular suas turmas na tela de Usuários."}</p></div>
+            ) : (
+              <form className="equipe-form" onSubmit={handleSubmit}>
+                <div className="form-field">
+                  <label htmlFor="equipe-nome">Nome da equipe *</label>
+                  <input id="equipe-nome" value={form.nome} onChange={updateNome} placeholder="Ex.: Robôs do Futuro" maxLength="120" disabled={saving} />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="equipe-turma">Turma *</label>
+                  <select id="equipe-turma" value={form.turmaId} onChange={updateTurma} disabled={saving}>
+                    <option value="">Selecione a turma</option>
+                    {turmas.map((turma) => <option key={turma.id} value={turma.id}>{turma.nome}</option>)}
+                  </select>
+                </div>
+
+                <div className="form-field equipe-busca">
+                  <label htmlFor="equipe-busca-aluno">Pesquisar aluno</label>
+                  <input id="equipe-busca-aluno" type="search" value={buscaAluno} onChange={(event) => setBuscaAluno(event.target.value)} placeholder="Nome ou RA do aluno" disabled={saving || !form.turmaId} />
+                </div>
+
+                <fieldset className="equipe-alunos" disabled={saving}>
+                  <legend>Integrantes ({form.membros.length}/{MAXIMO_MEMBROS})</legend>
+                  {!form.turmaId ? <span className="turmas-vazio">Selecione a turma para ver os alunos.</span>
+                    : alunos.length === 0 ? <span className="turmas-vazio">Nenhum aluno ativo nesta turma.</span>
+                    : alunosFiltrados.length === 0 ? <span className="turmas-vazio">Nenhum aluno encontrado com esse nome ou RA.</span>
+                    : alunosFiltrados.map((aluno) => {
+                      const emOutraEquipe = aluno.equipeId && aluno.equipeId !== editingId;
+                      const selecionado = form.membros.includes(aluno.id);
+                      return (
+                        <label key={aluno.id} className="checkbox-item">
+                          <input type="checkbox" checked={selecionado} disabled={emOutraEquipe || (!selecionado && form.membros.length >= MAXIMO_MEMBROS)} onChange={() => toggleMembro(aluno.id)} />
+                          {aluno.nome}{aluno.ra && <small> - RA {aluno.ra}</small>}{emOutraEquipe && <small> (já está na equipe {nomeEquipe(aluno.equipeId)})</small>}
+                        </label>
+                      );
+                    })}
+                </fieldset>
+
+                <div className="user-form-actions modal-footer">
+                  <button className="button button-light" type="button" onClick={limparFormulario} disabled={saving}>Cancelar</button>
+                  <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Criar equipe"}</button>
+                </div>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
     </>
   );
 }

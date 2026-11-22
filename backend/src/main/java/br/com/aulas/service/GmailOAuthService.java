@@ -56,6 +56,7 @@ public class GmailOAuthService {
         String state = newState();
         String url = createFlow().newAuthorizationUrl()
                 .setRedirectUri(redirectUri)
+                .setResponseTypes(List.of("code"))
                 .setState(state)
                 .set("prompt", "consent")
                 .build();

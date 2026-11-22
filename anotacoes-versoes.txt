@@ -27,8 +27,17 @@
 6. Criada a pasta docs para armazenar informações de diagramas e demais conteudos uteis do projeto.
 7. Melhorada a apresentação da tela de simulados já efetuados.
 
+--20/11/2026 Bruno
+1. Desenvolvido o slide da apresentação
+2. Validada a aplicação para identificar melhorias ou inconsistencias.
+
 --21/11/2026 Paola
-1. Finalização dos testes unitários 
+1. Finalização dos testes unitários utilizando 
+2. Validada a aplicação para identificar melhorias ou inconsistencias.
+
+--21/11/2026 Bruno
+1. Corrigido a falha de ocultação do e-mail
+2. Validada a aplicação para identificar melhorias ou inconsistencias.
 
 --22/11/2026 Paola
 1. Melhorada a apresentação da tela de cadastro de aulas.
@@ -39,3 +48,4 @@
 6. Melhorada a apresentação da tela de recuperar senha.
 7. Criado o menu e rodapé padrão para evitar erros de rota/acesso não permitido.
 8. Corrigida as credenciais do SMTP (Gmail API)
+9. Correção do horario salvo na auditoria e log
