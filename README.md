@@ -290,8 +290,7 @@ Na agenda de “Minha Equipe”, o aluno pode abrir um formulário pré-preenchi
 O Gmail envia códigos de login com MFV e de recuperação de senha. Para configurar o OAuth, defina `GMAIL_CLIENT_ID`,
 `GMAIL_CLIENT_SECRET`, `GMAIL_SENDER`, `GMAIL_ENABLED=true` e `GMAIL_REDIRECT_URI` (o endereço de callback deve
 também estar cadastrado no cliente OAuth do Google). Execute `GET /auth/gmail/oauth/authorize` com uma conta
-administradora e abra a URL retornada; o callback grava o refresh token no banco. Em instalações novas, aplique
-`database/09-gmail-oauth.sql` antes de iniciar o back-end.
+administradora e abra a URL retornada; o callback grava o refresh token no banco. 
 
 ---
 
